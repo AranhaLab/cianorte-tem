@@ -1,0 +1,14 @@
+{
+  "name": "Cianorte Tem",
+  "short_name": "Cianorte Tem",
+  "description": "Marketplace das lojas de Cianorte.",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F6F2",
+  "theme_color": "#14213D",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

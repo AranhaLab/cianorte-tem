@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useCaminho } from '@/hooks/useCaminho';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icone } from '@/components/ui/Icone';
-import { useComprador } from '@/stores/comprador';
+import type { Categoria } from '@/types/domain';
+import { MegaMenu } from './MegaMenu';
 
 type Item = { href: string; rotulo: string };
 
@@ -21,12 +22,14 @@ const useMedida = typeof window === 'undefined' ? useEffect : useLayoutEffect;
  * "Mais" no fim da barra, em vez de ficar cortado (ajuste pedido em 18/11/2026).
  * A largura de cada item é medida numa cópia invisível da barra.
  */
-export function BarraCategorias({ itens }: { itens: Item[] }) {
-  const path = usePathname();
+export function BarraCategorias({ itens, categorias }: { itens: Item[]; categorias: Categoria[] }) {
+  const path = useCaminho();
   const barra = useRef<HTMLDivElement>(null);
   const regua = useRef<HTMLDivElement>(null);
   const [cabem, setCabem] = useState(itens.length);
   const [aberto, setAberto] = useState(false);
+  const [mega, setMega] = useState(false);
+  const botaoMega = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const lista = useRef<HTMLDivElement>(null);
 
@@ -59,7 +62,21 @@ export function BarraCategorias({ itens }: { itens: Item[] }) {
   }, [itens.length]);
 
   // Fecha o "Mais" ao clicar fora, com Esc ou ao trocar de página.
-  useEffect(() => setAberto(false), [path]);
+  useEffect(() => {
+    setAberto(false);
+    setMega(false);
+  }, [path]);
+  // Fecha o mega menu ao clicar fora dele.
+  useEffect(() => {
+    if (!mega) return;
+    const fora = (e: MouseEvent) => {
+      const alvo = e.target as Node;
+      if (!document.getElementById('mega-menu')?.contains(alvo) && !botaoMega.current?.contains(alvo))
+        setMega(false);
+    };
+    document.addEventListener('mousedown', fora);
+    return () => document.removeEventListener('mousedown', fora);
+  }, [mega]);
   useEffect(() => {
     if (!aberto) return;
     const fora = (e: MouseEvent) => {
@@ -80,12 +97,16 @@ export function BarraCategorias({ itens }: { itens: Item[] }) {
 
   const botaoCategorias = (
     <button
+      ref={botaoMega}
       type="button"
-      onClick={() => useComprador.getState().abrir('cats')}
+      aria-expanded={mega}
+      aria-controls="mega-menu"
+      onClick={() => setMega((m) => !m)}
       className="inline-flex min-h-10 flex-none items-center gap-1.5 border-0 bg-transparent px-3 text-sm font-semibold text-branco"
     >
       <Icone nome="menu" tamanho="sm" />
       Categorias
+      <Icone nome="chevD" tamanho="sm" className={mega ? 'rotate-180' : ''} />
     </button>
   );
 
@@ -101,6 +122,7 @@ export function BarraCategorias({ itens }: { itens: Item[] }) {
           <span className="inline-flex items-center gap-1.5 px-3 text-sm font-semibold">
             <Icone nome="menu" tamanho="sm" />
             Categorias
+            <Icone nome="chevD" tamanho="sm" />
           </span>
           {itens.map((i) => (
             <span key={i.href} className="px-3 py-2.5 text-sm">
@@ -140,6 +162,16 @@ export function BarraCategorias({ itens }: { itens: Item[] }) {
             </div>
           )}
         </div>
+
+        {mega && (
+          <MegaMenu
+            categorias={categorias}
+            aoFechar={() => {
+              setMega(false);
+              botaoMega.current?.focus();
+            }}
+          />
+        )}
 
         {aberto && sobra.length > 0 && (
           <div

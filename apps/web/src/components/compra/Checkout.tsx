@@ -52,10 +52,13 @@ export function Checkout() {
     entrega: g.loja.entrega && naCidade,
     retirada: podeRetirar(g.loja, naCidade),
   });
+  /** Loja só com produtos digitais: download, sem frete e sem depender do CEP (PRD-15). */
+  const soDigital = (g: GrupoLoja) => g.linhas.every((l) => l.produto.digital);
   const modoDe = (g: GrupoLoja): ModoEntrega | null => {
+    if (soDigital(g)) return 'digital';
     const o = opcoes(g);
     const escolhido = rascunho.modos[g.loja.id];
-    if (escolhido && o[escolhido]) return escolhido;
+    if ((escolhido === 'entrega' || escolhido === 'retirada') && o[escolhido]) return escolhido;
     return o.entrega ? 'entrega' : o.retirada ? 'retirada' : null;
   };
 
@@ -99,6 +102,15 @@ export function Checkout() {
         lojaId: g.loja.id,
         modo: modoDe(g) ?? 'entrega',
         status: 'realizado',
+        // Cópia do que foi comprado (preço e nome do momento da compra).
+        itens: g.linhas.map((l) => ({
+          produtoId: l.produto.id,
+          nome: l.produto.nome,
+          quantidade: l.item.quantidade,
+          precoUnitarioCentavos: l.precoUnitario,
+          opcao: l.item.opcao,
+          digital: l.produto.digital,
+        })),
       })),
     };
     const criado = await api.checkout.criarPedido(tenant.slug, pedido, chaveIdempotencia);
@@ -153,28 +165,30 @@ export function Checkout() {
         <div className="flex flex-col gap-3.5">
           {etapa === 'entrega' && (
             <>
-              <div className="card flex flex-col gap-3">
-                <h2>Endereço de entrega</h2>
-                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-                  {campo('cep', 'CEP', { inputMode: 'numeric', autoComplete: 'postal-code' })}
-                  {campo('bairro', 'Bairro', { autoComplete: 'address-level3' })}
-                  {campo('rua', 'Rua', { autoComplete: 'address-line1' })}
-                  <div className="grid grid-cols-2 gap-3.5">
-                    {campo('numero', 'Número')}
-                    {campo('complemento', 'Complemento', { autoComplete: 'address-line2' })}
+              {grupos.some((g) => !soDigital(g)) && (
+                <div className="card flex flex-col gap-3">
+                  <h2>Endereço de entrega</h2>
+                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                    {campo('cep', 'CEP', { inputMode: 'numeric', autoComplete: 'postal-code' })}
+                    {campo('bairro', 'Bairro', { autoComplete: 'address-level3' })}
+                    {campo('rua', 'Rua', { autoComplete: 'address-line1' })}
+                    <div className="grid grid-cols-2 gap-3.5">
+                      {campo('numero', 'Número')}
+                      {campo('complemento', 'Complemento', { autoComplete: 'address-line2' })}
+                    </div>
                   </div>
+                  <span className="dica">
+                    Cidade: {tenant.nome}/{tenant.uf}. Ao trocar o CEP, revalidamos se cada loja entrega ou
+                    permite retirada.
+                  </span>
+                  {soDigitos(end.cep).length === 8 && !naCidade && (
+                    <div className="banner-info bg-acento-claro text-acento-escuro" role="alert">
+                      <Icone nome="alert" />
+                      <span>Este CEP está fora da área atendida pelas lojas de {tenant.nome}.</span>
+                    </div>
+                  )}
                 </div>
-                <span className="dica">
-                  Cidade: {tenant.nome}/{tenant.uf}. Ao trocar o CEP, revalidamos se cada loja entrega ou
-                  permite retirada.
-                </span>
-                {soDigitos(end.cep).length === 8 && !naCidade && (
-                  <div className="banner-info bg-acento-claro text-acento-escuro" role="alert">
-                    <Icone nome="alert" />
-                    <span>Este CEP está fora da área atendida pelas lojas de {tenant.nome}.</span>
-                  </div>
-                )}
-              </div>
+              )}
 
               {grupos.map((g) => {
                 const o = opcoes(g);
@@ -187,43 +201,57 @@ export function Checkout() {
                       <b className="flex-1">{g.loja.nome}</b>
                       <span className="text-xs text-grafite-2">{g.linhas.length} item(ns)</span>
                     </div>
-                    <label className="cartao-opcao">
-                      <input
-                        type="radio"
-                        name={`m-${g.loja.id}`}
-                        checked={modo === 'entrega'}
-                        disabled={!o.entrega}
-                        onChange={() =>
-                          atualizarCheckout({ modos: { ...rascunho.modos, [g.loja.id]: 'entrega' } })
-                        }
-                      />
-                      <span className="flex flex-1 flex-col gap-0.5">
-                        <b>Entrega · {g.loja.prazo}</b>
-                        <span className="text-[13px] text-grafite-2">
-                          Frete {g.frete ? reais(g.frete) : <b className="text-verde-texto">grátis</b>} ·
-                          previsão após confirmação do pagamento
+                    {modo === 'digital' ? (
+                      <div className="cartao-opcao border-azul bg-azul-nevoa">
+                        <Icone nome="download" />
+                        <span className="flex flex-1 flex-col gap-0.5">
+                          <b>Entrega digital · sem frete</b>
+                          <span className="text-[13px] text-grafite-2">
+                            O download é liberado em Conta › Downloads assim que o pagamento for confirmado.
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                    <label className="cartao-opcao">
-                      <input
-                        type="radio"
-                        name={`m-${g.loja.id}`}
-                        checked={modo === 'retirada'}
-                        disabled={!o.retirada}
-                        onChange={() =>
-                          atualizarCheckout({ modos: { ...rascunho.modos, [g.loja.id]: 'retirada' } })
-                        }
-                      />
-                      <span className="flex flex-1 flex-col gap-0.5">
-                        <b>Retirar na loja · grátis</b>
-                        <span className="text-[13px] text-grafite-2">
-                          {o.retirada
-                            ? `${g.loja.bairro}, ${tenant.nome} · avisamos quando estiver pronto`
-                            : 'Indisponível para este endereço ou loja'}
-                        </span>
-                      </span>
-                    </label>
+                      </div>
+                    ) : (
+                      <>
+                        <label className="cartao-opcao">
+                          <input
+                            type="radio"
+                            name={`m-${g.loja.id}`}
+                            checked={modo === 'entrega'}
+                            disabled={!o.entrega}
+                            onChange={() =>
+                              atualizarCheckout({ modos: { ...rascunho.modos, [g.loja.id]: 'entrega' } })
+                            }
+                          />
+                          <span className="flex flex-1 flex-col gap-0.5">
+                            <b>Entrega · {g.loja.prazo}</b>
+                            <span className="text-[13px] text-grafite-2">
+                              Frete {g.frete ? reais(g.frete) : <b className="text-verde-texto">grátis</b>} ·
+                              previsão após confirmação do pagamento
+                            </span>
+                          </span>
+                        </label>
+                        <label className="cartao-opcao">
+                          <input
+                            type="radio"
+                            name={`m-${g.loja.id}`}
+                            checked={modo === 'retirada'}
+                            disabled={!o.retirada}
+                            onChange={() =>
+                              atualizarCheckout({ modos: { ...rascunho.modos, [g.loja.id]: 'retirada' } })
+                            }
+                          />
+                          <span className="flex flex-1 flex-col gap-0.5">
+                            <b>Retirar na loja · grátis</b>
+                            <span className="text-[13px] text-grafite-2">
+                              {o.retirada
+                                ? `${g.loja.bairro}, ${tenant.nome} · avisamos quando estiver pronto`
+                                : 'Indisponível para este endereço ou loja'}
+                            </span>
+                          </span>
+                        </label>
+                      </>
+                    )}
                   </fieldset>
                 );
               })}
@@ -318,8 +346,12 @@ export function Checkout() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <b>{g.loja.nome}</b>
-                        <span className={`pill ${modo === 'entrega' ? 'pill-indicada' : 'pill-local'}`}>
-                          {modo === 'entrega' ? `Entrega · ${g.loja.prazo}` : 'Retirada na loja'}
+                        <span className={`pill ${modo === 'retirada' ? 'pill-local' : 'pill-indicada'}`}>
+                          {modo === 'entrega'
+                            ? `Entrega · ${g.loja.prazo}`
+                            : modo === 'digital'
+                              ? 'Download após o pagamento'
+                              : 'Retirada na loja'}
                         </span>
                       </div>
                       {g.linhas.map((l) => (
@@ -327,8 +359,13 @@ export function Checkout() {
                           <span>
                             {l.item.quantidade}× {l.produto.nome}
                             {l.item.opcao ? ` (${l.item.opcao})` : ''}
+                            {l.itensDoKit.length > 0 && (
+                              <span className="block text-xs">
+                                Inclui: {l.itensDoKit.map((k) => `${k.quantidade}× ${k.nome}`).join(', ')}
+                              </span>
+                            )}
                           </span>
-                          <span>{reais(l.produto.precoCentavos * l.item.quantidade)}</span>
+                          <span>{reais(l.precoUnitario * l.item.quantidade)}</span>
                         </div>
                       ))}
                       {modo === 'entrega' && (

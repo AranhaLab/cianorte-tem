@@ -245,7 +245,7 @@ function SacolaLateral() {
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="text-[13px]">{l.produto.nome}</span>
                     <span className="text-xs text-grafite-2">
-                      {l.item.quantidade} × {reais(l.produto.precoCentavos)}
+                      {l.item.quantidade} × {reais(l.precoUnitario)}
                       {l.item.opcao ? ` · ${l.item.opcao}` : ''}
                     </span>
                   </span>

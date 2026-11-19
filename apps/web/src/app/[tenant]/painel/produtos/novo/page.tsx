@@ -1,7 +1,7 @@
-import { NovoProduto } from '@/components/painel/TelasOperacao';
+import { EditorProduto } from '@/components/painel/EditorProduto';
 
 export const metadata = { title: 'Novo produto' };
 
 export default function Pagina() {
-  return <NovoProduto />;
+  return <EditorProduto />;
 }

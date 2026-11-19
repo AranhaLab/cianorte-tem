@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { reais } from '@/lib/regras/dinheiro';
 import { proximoStatus, ROTULO_STATUS } from '@/lib/regras/pedidos';
 import { useComprador } from '@/stores/comprador';
+import { useAdmin } from '@/stores/admin';
 import { usePainel } from '@/stores/painel';
 import type { PedidoLojista, StatusSubpedido } from '@/types/domain';
 
@@ -56,6 +57,7 @@ export function StatusPedido({ s }: { s: StatusSubpedido }) {
  * loja avança apenas a sua parte (CLAUDE.md §5.6).
  */
 export function TabelaPedidos({ pedidos }: { pedidos: PedidoLojista[] }) {
+  const analises = useAdmin((s) => s.analises);
   const avancar = (id: string) => {
     const novo = usePainel.getState().avancarPedido(id);
     if (novo) avisar(`Pedido ${id}: ${ROTULO_STATUS[novo]}.`);
@@ -83,7 +85,9 @@ export function TabelaPedidos({ pedidos }: { pedidos: PedidoLojista[] }) {
         </thead>
         <tbody>
           {pedidos.map((o) => {
-            const prox = proximoStatus(o.modo, o.status);
+            // Análise administrativa bloqueia o avanço (CLAUDE.md §5.6).
+            const bloqueado = analises[o.id];
+            const prox = bloqueado ? null : proximoStatus(o.modo, o.status);
             return (
               <tr key={o.id}>
                 <td>
@@ -107,6 +111,10 @@ export function TabelaPedidos({ pedidos }: { pedidos: PedidoLojista[] }) {
                     >
                       {ROTULO_STATUS[prox]}
                     </button>
+                  ) : bloqueado ? (
+                    <span className="status st-amber" title={bloqueado.motivo}>
+                      Em análise pela plataforma
+                    </span>
                   ) : (
                     <span className="text-xs text-grafite-2">Concluído</span>
                   )}

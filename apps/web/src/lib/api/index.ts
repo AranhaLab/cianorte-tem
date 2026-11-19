@@ -22,4 +22,4 @@ export const api = {
 };
 
 export { ApiError, usandoMocks } from './http';
-export type { Ordem, Filtro, VitrineHome, VitrineCategoria } from './catalogo';
+export type { Ordem, Filtro, VitrineHome, VitrineCategoria, FiltrosLaterais, Facetas } from './catalogo';

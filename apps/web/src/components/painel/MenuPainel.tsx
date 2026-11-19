@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useCaminho } from '@/hooks/useCaminho';
 import { Marca } from '@/components/marca/Marca';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
@@ -14,6 +14,7 @@ import { useLojaPainel } from './PainelContexto';
 const ITENS: Array<[string, NomeIcone, string]> = [
   ['', 'chart', 'Visão geral'],
   ['pedidos', 'receipt', 'Pedidos'],
+  ['conversas', 'chat', 'Conversas'],
   ['produtos', 'tag', 'Produtos'],
   ['estoque', 'box', 'Estoque e integração'],
   ['anuncios', 'megaphone', 'Anúncios'],
@@ -35,7 +36,7 @@ export const STATUS_LOJA: Record<StatusCadastroLoja, [string, string]> = {
 /** Menu lateral do painel (protótipo: panelLayout). */
 export function MenuPainel() {
   const tenant = useTenant();
-  const path = usePathname();
+  const path = useCaminho();
   const { loja } = useLojaPainel();
   const status = usePainel((s) => s.status);
   const visivel = usePainel((s) => s.visivel);

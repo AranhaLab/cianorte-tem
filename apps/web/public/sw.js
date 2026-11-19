@@ -4,15 +4,15 @@
  * - Arquivos estáticos versionados do Next (/_next/static), ícones e fontes: cache primeiro.
  * - Páginas públicas (vitrine, categoria, produto, loja): REDE PRIMEIRO, cópia em cache
  *   só para abrir offline. Preço e estoque nunca saem do cache se houver rede.
- * - Áreas pessoais (conta, checkout, pedido, painel, sacola): nunca vão para o cache.
+ * - Áreas pessoais (conta, checkout, pedido, painel, admin, sacola): nunca vão para o cache.
  * - Sem rede e sem cópia: página /offline.
  * - Requisições que não são GET ou de outra origem: o navegador cuida, sem interferência.
  */
-const VERSAO = 'ct-v1';
+const VERSAO = 'ct-v2'; // v2: /admin entrou na lista de áreas privadas
 const ESTATICO = `${VERSAO}-estatico`;
 const PAGINAS = `${VERSAO}-paginas`;
 const OFFLINE = '/offline';
-const PRIVADO = /^\/(conta|checkout|pedido|painel|sacola|entrar|cadastro)(\/|$)/;
+const PRIVADO = /^\/(conta|checkout|pedido|painel|admin|sacola|entrar|cadastro)(\/|$)/;
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

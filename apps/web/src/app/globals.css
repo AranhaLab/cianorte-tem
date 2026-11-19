@@ -243,6 +243,22 @@
   .dica {
     @apply text-xs text-grafite-3;
   }
+  .input[aria-invalid='true'] {
+    @apply border-acento;
+  }
+  .erro-campo {
+    @apply text-xs font-semibold text-acento-escuro;
+  }
+}
+
+/* Barra de progresso do vídeo de demonstração */
+@keyframes progresso {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(200%);
+  }
 }
 
 @layer utilities {

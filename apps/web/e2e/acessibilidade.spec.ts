@@ -15,6 +15,17 @@ const PAGINAS = [
   '/cadastro',
   '/painel',
   '/painel/anuncios',
+  '/painel/produtos/p1',
+  '/painel/produtos/novo',
+  '/painel/loja',
+  '/painel/conversas',
+  '/admin',
+  '/admin/lojas',
+  '/admin/moderacao',
+  '/admin/pedidos',
+  '/admin/financeiro',
+  '/admin/regras',
+  '/admin/auditoria',
 ];
 
 for (const caminho of PAGINAS) {

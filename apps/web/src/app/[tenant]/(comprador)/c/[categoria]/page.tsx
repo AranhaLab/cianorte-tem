@@ -11,7 +11,10 @@ import { CaixaVazia, Migalhas } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
 import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { CartaoProduto } from '@/components/vitrine/CartaoProduto';
+import { ChipsSubcategoria, FiltrosAtivos } from '@/components/vitrine/FiltrosAtivos';
 import { FiltrosVitrine, lerFiltros } from '@/components/vitrine/FiltrosVitrine';
+import { PainelFiltros } from '@/components/vitrine/PainelFiltros';
+import { lerLaterais } from '@/lib/filtros';
 import { GradeProdutos } from '@/components/vitrine/GradeProdutos';
 import { SecaoCarrossel } from '@/components/vitrine/SecaoCarrossel';
 import { api } from '@/lib/api';
@@ -41,10 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 export default async function PaginaCategoria({ params, searchParams }: Props) {
   const { tenant: slug, categoria: id } = await params;
-  const { ord, f } = lerFiltros(await searchParams);
+  const sp = await searchParams;
+  const { ord, f } = lerFiltros(sp);
+  const laterais = lerLaterais(sp);
   const [t, v, lojas, categorias] = await Promise.all([
     getTenant(slug),
-    api.vitrine.categoria(slug, id, { ord, f }),
+    api.vitrine.categoria(slug, id, { ord, f, laterais }),
     api.lojas.listar(slug),
     api.categorias.listar(slug),
   ]);
@@ -107,7 +112,16 @@ export default async function PaginaCategoria({ params, searchParams }: Props) {
             <h2>Todos os produtos</h2>
             <span className="text-[13px] text-grafite-2">{lista.length} resultados</span>
           </div>
-          <FiltrosVitrine base={`/c/${id}`} ord={ord} f={f} />
+          <ChipsSubcategoria
+            base={`/c/${id}`}
+            subs={v.subcategoriasComProdutos}
+            atual={laterais.sub}
+            manter={{ ord, f }}
+          />
+          <FiltrosVitrine base={`/c/${id}`} ord={ord} f={f} laterais={laterais}>
+            <PainelFiltros base={`/c/${id}`} facetas={v.facetas} atuais={laterais} manter={{ ord, f }} />
+          </FiltrosVitrine>
+          <FiltrosAtivos base={`/c/${id}`} atuais={laterais} facetas={v.facetas} manter={{ ord, f }} />
           {lista.length ? (
             <GradeProdutos>
               {lista.map((it, i) => (

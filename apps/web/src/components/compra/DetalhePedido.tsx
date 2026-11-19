@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { MODO_DEMO } from '@/lib/demo';
 import { reais } from '@/lib/regras/dinheiro';
 import { FLUXO, ROTULO_STATUS } from '@/lib/regras/pedidos';
+import { chatLiberado } from '@/lib/regras/posVenda';
 import { useComprador } from '@/stores/comprador';
 import type { Loja } from '@/types/domain';
 
@@ -123,10 +124,21 @@ export function DetalhePedido({ id }: { id: string }) {
                 <b>
                   {sp.id} · {loja?.nome ?? '…'}
                 </b>
-                <span className={`pill ${sp.modo === 'entrega' ? 'pill-indicada' : 'pill-local'}`}>
-                  {sp.modo === 'entrega' ? 'Entrega' : 'Retirada'}
+                <span className={`pill ${sp.modo === 'retirada' ? 'pill-local' : 'pill-indicada'}`}>
+                  {sp.modo === 'entrega' ? 'Entrega' : sp.modo === 'digital' ? 'Digital' : 'Retirada'}
                 </span>
               </div>
+              {(sp.itens ?? []).length > 0 && (
+                <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[13px] text-grafite-2">
+                  {sp.itens.map((it) => (
+                    <li key={it.produtoId + (it.opcao ?? '')} className="flex items-center gap-1.5">
+                      {it.digital && <Icone nome="download" tamanho="sm" />}
+                      {it.quantidade}× {it.nome}
+                      {it.opcao ? ` (${it.opcao})` : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <ol className="m-0 flex list-none flex-col p-0">
                 {fluxo.map((st, i) => (
                   <li
@@ -144,10 +156,25 @@ export function DetalhePedido({ id }: { id: string }) {
                   </li>
                 ))}
               </ol>
-              <Link href="/conta/pedidos" className="btn btn-sm btn-ghost self-start">
-                <Icone nome="receipt" tamanho="sm" />
-                Chat com a loja (após a compra)
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                {chatLiberado(sp.status) ? (
+                  <Link href={`/pedido/${pedido.id}/chat/${sp.id}`} className="btn btn-sm btn-ghost">
+                    <Icone nome="chat" tamanho="sm" />
+                    Conversar com a loja
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-[13px] text-grafite-2">
+                    <Icone nome="chat" tamanho="sm" />
+                    Conversa com a loja abre após o pagamento
+                  </span>
+                )}
+                {(sp.itens ?? []).some((it) => it.digital) && pedido.pago && (
+                  <Link href="/conta/downloads" className="btn btn-sm btn-soft">
+                    <Icone nome="download" tamanho="sm" />
+                    Baixar arquivos
+                  </Link>
+                )}
+              </div>
             </div>
           );
         })}

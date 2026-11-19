@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { useAdmin } from '@/stores/admin';
 import { usePainel } from '@/stores/painel';
 import type { Categoria, Loja, Produto } from '@/types/domain';
 
@@ -16,6 +17,7 @@ const Ctx = createContext<DadosLoja | null>(null);
 export function PainelProvider({ dados, children }: { dados: DadosLoja; children: ReactNode }) {
   useEffect(() => {
     void usePainel.persist.rehydrate();
+    void useAdmin.persist.rehydrate(); // análises e comissão decididas pela plataforma
   }, []);
   return <Ctx.Provider value={dados}>{children}</Ctx.Provider>;
 }

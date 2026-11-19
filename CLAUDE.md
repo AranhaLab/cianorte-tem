@@ -288,6 +288,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 
 ### 13.3 Rotas
 - **Comprador:** `/`, `/categorias`, `/c/[categoria]`, `/p/[produto]`, `/loja/[loja]`, `/lojas`, `/busca`, `/ofertas`, `/sacola`, `/checkout`, `/pedido/[id]`, `/entrar`, `/cadastro`, `/conta/[aba]` (`/conta` → `/conta/dados`), `/termos`, `/privacidade`, `/vender`.
+- **Admin:** `/admin`, `/admin/lojas` (`?aba=cadastros|lojas|filiais`), `/admin/moderacao`, `/admin/pedidos` (`?f=todos|abertos|analise|concluidos`), `/admin/financeiro`, `/admin/regras`, `/admin/auditoria`.
 - **Painel:** `/painel`, `/painel/pedidos`, `/painel/produtos`, `/painel/produtos/novo`, `/painel/estoque`, `/painel/anuncios`, `/painel/financeiro`, `/painel/vitrine`, `/painel/loja`, `/painel/equipe`, `/painel/cadastro`.
 - **Renderização por rota:** home, categorias e lojas em ISR (5 min); produto em ISR (60 s, pré-gerado por cidade); loja em ISR (5 min); categoria, busca e ofertas renderizadas no servidor a cada requisição, porque ordenação e filtros vêm da URL (`?ord=vendidos|menor|desconto&f=hoje|retirada|oficial`). Os filtros são links: funcionam sem JavaScript e podem ser compartilhados.
 - **SEO:** título, descrição e canonical por página; dados estruturados `WebSite` (home), `Product` com `Offer` e disponibilidade (produto) e `Store` (loja). O JSON-LD escapa `<` porque os textos vêm do lojista (proteção contra XSS). A busca não é indexada (`noindex`).
@@ -355,6 +356,87 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 4. Sacola, checkout, pedido, entrar, cadastro, conta, termos, privacidade e vender. **[FEITO]**
 5. Painel do lojista e central de anúncios. **[FEITO]**
 6. PWA (manifest por cidade, ícones, service worker) e testes (Vitest + Playwright). **[FEITO]**
+7. Catálogo: mega menu com subcategorias, filtros laterais, galeria com fotos e vídeo, kits aberto e fechado. **[FEITO]**
+8. Pós-compra: chat por subpedido e área de downloads de produtos digitais. **[FEITO]**
+9. Lojista: editor de produto completo e logística da loja. **[FEITO]**
+10. Administração da plataforma (`/admin`). **[FEITO]**
+
+### 13.8 Catálogo ampliado (etapa 7)
+- **Subcategorias:** cada categoria tem subcategorias (`Categoria.subcategorias`, `Produto.subcategoriaId`). No desktop, o botão "Categorias" abre um **mega menu**: categorias à esquerda, subcategorias da categoria em foco à direita, mais atalhos para Ofertas e Lojas. Na página da categoria, chips "Todas · Camisaria · …" filtram por `?sub=`.
+- **Filtros laterais** (categoria, busca e ofertas): botão "Filtros" abre um painel (direita no desktop, de baixo no celular) com faixa de preço, marca, loja e característica, com a contagem de cada opção. Tudo vai para a URL (`marca=`, `loja=`, `car=`, `min=`, `max=` em reais) e o servidor filtra; os filtros aplicados aparecem como chips removíveis. Trocar a ordenação mantém os filtros. **[PROPOSTA]** O filtro "cidade" do protótipo anterior não entrou: cada cidade é um domínio e nenhuma consulta cruza cidades (§2).
+- **Galeria do produto:** até 20 mídias (`MAX_MIDIAS`) na ordem do lojista; fotos 4:5 (moda) ou 1:1 e vídeo em quadro 9:16; desliza no celular, setas e teclado no desktop, miniaturas e contador "3/6". Na demonstração não há arquivos: fotos e vídeo são desenhos de exemplo (`Midia.variante`); com o back-end, `Midia.url`.
+- **Vídeo como capa do cartão:** quando a 1ª mídia é vídeo, o cartão mostra o selo "Vídeo". Na versão real, vídeo mudo em loop, sem som automático, respeitando "reduzir movimento".
+- **Kits (PRD-05):** pelo menos 2 produtos distintos da mesma loja; o kit não tem estoque próprio.
+    - **Fechado:** composição fixa e preço próprio; a página mostra "O que vem no kit"; disponibilidade = a pior entre os componentes.
+    - **Aberto ("monte o seu")** **[PROPOSTA]:** o comprador escolhe entre as opções (mínimo e máximo definidos pela loja); preço = soma dos escolhidos − desconto do kit (ex.: 10%), arredondado no fim. O cartão mostra "a partir de" (os itens mais baratos disponíveis). Escolhas diferentes viram linhas diferentes na sacola, que lista "Inclui: …".
+    - **Estoque:** a demanda de kits e de itens avulsos é somada por produto (`demandaPorProduto`), base para a reserva no servidor.
+- **Indisponível no cartão:** só o desenho fica apagado; o selo "Indisponível" mantém contraste.
+
+### 13.9 Pós-compra (etapa 8)
+- **Produtos digitais (PRD-15):** categoria "Livros e digitais" (e-books e moldes). `Produto.digital` traz formato (PDF, EPUB, ZIP) e tamanho.
+    - **[PROPOSTA]** Sem frete e sem endereço: a loja só com itens digitais aparece no checkout como "Entrega digital · sem frete", e o bloco de endereço some quando a sacola é só digital.
+    - **[PROPOSTA]** O CEP fora da área não bloqueia produto digital (não há entrega física).
+    - O subpedido digital segue o fluxo realizado → pagamento confirmado → entregue (§5.6): ao confirmar o pagamento, o arquivo é liberado.
+    - **[PROPOSTA]** Acesso: até 5 downloads em 30 dias, contados do pagamento (`acessoDownload` em `lib/regras/posVenda.ts`). Depois disso, o comprador fala com a loja.
+    - A área fica em Conta › Downloads. Na versão real, "Baixar" pede ao servidor um link temporário e privado; o arquivo nunca fica em pasta pública. Na demonstração, baixa um `.txt` de exemplo.
+- **Chat por subpedido (PRD-13):** uma conversa por subpedido, entre o comprador e aquela loja.
+    - **[PROPOSTA]** Abre quando o pagamento é confirmado e continua aberto depois da entrega; antes disso, o pedido mostra "Conversa com a loja abre após o pagamento". Fechada em pedido cancelado.
+    - Texto até 1000 caracteres e imagem JPG, PNG ou WebP de até 5 MB (§16). Aviso fixo: não compartilhar dados de cartão nem senhas.
+    - Comprador: botão "Conversar com a loja" em cada subpedido (`/pedido/[id]/chat/[sub]`) e Conta › Conversas, com contagem de não lidas.
+    - Lojista: Painel › Conversas, só as conversas da própria loja, com contagem de não lidas.
+    - **Demonstração:** as conversas ficam salvas no aparelho e são vistas pelos dois lados no mesmo navegador. No modo demo, a loja responde sozinha depois de 1,5 s. A prévia da imagem não é guardada, só o nome e o tamanho.
+    - **Back-end:** acesso só para quem participa do subpedido (tenant + dono), imagens em armazenamento privado com checagem do tipo real, mensagens em tempo real e trilha de auditoria. Equipe do lojista precisa da permissão "Pedidos" **[PENDENTE: matriz PO-07]**.
+- **Testes da etapa 8:** Vitest (`posVenda.test.ts`) e Playwright (`e2e/posvenda.spec.ts`): compra de e-book sem endereço, download bloqueado antes do pagamento e contado depois, digital fora da área, chat com recusa de imagem grande e resposta da demo, e resposta do lojista no painel.
+
+### 13.10 Editor de produto e logística da loja (etapa 9)
+- **Editor de produto** em `/painel/produtos/novo` e `/painel/produtos/[id]` (o servidor confere se o produto é da loja). Seções: Informações, Tipo de produto, Fotos e vídeo, Preço e estoque. Regras em `lib/regras/produto.ts`.
+    - **Informações:** nome (3 a 120 caracteres), categoria, subcategoria, marca, descrição (até 2000) e até 10 características (usadas nos filtros laterais).
+    - **Tipos:** simples; com variações (nome da variação e ao menos 2 opções distintas, cada uma com **SKU e estoque próprios**); kit fechado ou "monte o seu" (≥ 2 produtos distintos da própria loja, sem estoque próprio, §13.8); digital (PDF, EPUB ou ZIP).
+    - **SKU único por loja** (§8), também entre as opções de variação. GTIN/EAN opcional com dígito verificador.
+    - **Aviso de preço comparado** (§16) só aparece com GTIN válido, porque a equivalência é pelo código, nunca pelo título. A faixa da demonstração é fixa.
+    - **Galeria:** até 20 mídias, ordem por botões (antes/depois), a 1ª é a capa, texto alternativo obrigatório em cada mídia e ao menos uma foto além do vídeo.
+    - **[PROPOSTA]** Limites de arquivo: foto JPG/PNG/WebP até 10 MB; vídeo MP4/WebM até 50 MB; arquivo digital até 200 MB.
+    - **Prévia** do que o comprador vê ("Disponível" / "Últimas unidades", com a reserva de segurança), sem mostrar o número.
+- **Moderação (§7.3):** ao salvar, a tela diz o que "vale na hora" e o que "vai para a moderação".
+    - Preço, preço "de", estoque e estoque mínimo (inclusive o saldo de cada opção) valem na hora.
+    - Nome, descrição, categoria, marca, características, mídias e **[PROPOSTA]** opções de variação, composição do kit e arquivo digital vão para análise. Até a aprovação, a vitrine mostra a versão publicada.
+    - Aprovar o conteúdo **não restaura** preço nem estoque antigos (`aplicarAprovacao`).
+    - Voltar o conteúdo ao publicado cancela a análise. Produto novo só aparece depois de aprovado. "Simular aprovação" só no modo demo.
+    - Lista de produtos: Publicado, Alteração em análise ou Novo · em análise.
+- **Logística (Painel › Minha loja, §7.4 e §16):** entrega e/ou retirada (ao menos uma), tarifa por km, frete grátis a partir de (custeado pela loja) e horário de corte. Regras em `lib/regras/logistica.ts`.
+    - **[PROPOSTA]** Distância máxima de entrega entre 1 e 50 km (padrão 10 km) e tarifa até R$ 20/km.
+    - **Trajeto de teste:** o lojista digita um CEP e vê distância, frete (com o mínimo de R$ 6) e se sai hoje ou amanhã pelo corte (hora de São Paulo). Também mostra se o CEP está fora da cidade, fora do raio ou sem entrega.
+    - Na demonstração a distância é calculada a partir do CEP (estável, de 1 a 15 km). Na versão real é a rota pelas ruas.
+    - O prazo só considera o corte; calendário e fórmula de prazo seguem em **[PENDENTE: PO-05]**.
+    - **[PROPOSTA]** A vitrine do comprador ainda usa os dados fixos da loja; a distância máxima e o novo corte passam a valer para o comprador quando o back-end existir.
+- **Unidades (PRD-02):** "Adicionar filial" pede nome, endereço, bairro, CEP e horário. A unidade entra **em análise** e só vende depois de aprovada ("Simular aprovação" no modo demo).
+- **Correção:** no carregamento direto de uma página, o `usePathname` devolvia o caminho com a cidade (`/cianorte/painel/...`) e o menu do painel marcava "Visão geral". O hook `useCaminho` remove o segmento da cidade e é usado no menu do painel, na barra de categorias, na barra inferior e no modal de localização.
+- **Testes:** Vitest (`produto.test.ts`, `logistica.test.ts`) e Playwright (`e2e/editor.spec.ts`). A checagem de acessibilidade (axe) passou a incluir o editor, Minha loja e Conversas.
+
+### 13.11 Administração da plataforma (etapa 10)
+- **Rotas `/admin/*`** com layout próprio (menu lateral com contagem de pendências), `noindex`. O service worker não guarda essas rotas em cache (versão do cache `ct-v2`).
+    - Na demonstração a área é aberta, como o painel. Na versão real, só a sessão com papel **admin** entra, e cada rota `/v1/admin/*` confere o papel e o tenant no servidor.
+    - Cada cidade tem a sua administração e nenhuma consulta cruza cidades (§2).
+- **Toda decisão que nega, bloqueia, revoga ou muda regra exige motivo** e vai para a **Auditoria** (quem, quando, ação, alvo e motivo). **[PROPOSTA]** O motivo tem no mínimo 10 caracteres. Os registros não são editáveis.
+- **Visão geral:** vendas pagas, comissão, lojas ativas, pedidos pagos e a lista de pendências.
+- **Lojas e filiais:**
+    - **Cadastros:** documentos de cada pedido de adesão. Sem cartão CNPJ e aceite do contrato, o botão "Aprovar" fica bloqueado. Reprovar exige motivo, e o lojista vê o texto.
+    - **Lojas:** suspender (a vitrine some e os pedidos em andamento continuam) e reativar, ambos com motivo.
+    - **Selo Loja oficial:** conceder só com registro de marca + cartão CNPJ + contrato social. Revogar exige motivo, e a vitrine personalizada volta ao padrão.
+    - **Selo Indicada:** é automático; o admin só acompanha a situação (conquista com 100 pedidos em um dia, mantém com média de 100 por dia em 6 meses, perde na revisão).
+    - **Filiais:** aprovar ou reprovar cada unidade.
+- **Moderação:** produtos novos e alterações editoriais, com o que mudou, nome atual × proposto, descrição e prévia das mídias na ordem do lojista.
+    - Aprovar publica sem mexer no preço e no estoque atuais (§7.3).
+    - Reprovar mantém a versão publicada. O lojista vê "Reprovado pela moderação" com o motivo, no editor e na lista de produtos.
+- **Pedidos:** todos os subpedidos da cidade, com situação do pagamento e da operação. "Colocar em análise" (com motivo) **bloqueia o avanço no painel da loja** (§5.6) até "Liberar" (com motivo). Pós-venda segue em **[PENDENTE: PO-04]**.
+- **Financeiro:** repasse por loja: produtos, frete, comissão, taxa e líquido (`repasse` em `lib/regras/admin.ts`). A comissão incide só sobre produtos; a taxa do provedor incide uma vez sobre o valor cobrado.
+- **Regras da cidade:**
+    - A comissão (ilustrativa, PO-03) pode ser alterada com motivo, até **[PROPOSTA]** 30%. O financeiro do lojista passa a usar esse percentual.
+    - Faixas de CEP, frete mínimo e taxa aparecem só para leitura.
+    - Cupons e frete grátis da plataforma (PO-08), notificações por e-mail e WhatsApp (PO-09), vitrines globais da home e logística por transportadora aparecem como "Pendente".
+- **Demonstração:** o admin e o painel conversam pelo aparelho, no mesmo navegador. O que o lojista da demo envia (cadastro, produto, filial) aparece para o admin, e as decisões voltam para o painel.
+    - Decisões sobre as outras lojas e a troca de selo valem só nas telas do admin; a vitrine do comprador continua com os dados fixos até existir o back-end.
+- **Testes:** Vitest (`admin.test.ts`) e Playwright (`e2e/admin.spec.ts`). A checagem de acessibilidade (axe) passou a incluir as 7 telas do admin.
 
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 
@@ -425,10 +507,6 @@ O protótipo anterior (pasta `Marketplace-Local`, v0.16, com 26 documentos) foi 
 - **Área de Administração:** sellers e filiais, aprovação de produtos com prévia das mídias, pedidos globais, financeiro, pagamentos, logística, cupons, notificações por e-mail/WhatsApp, selos, vitrines globais da home, regras de CEP/comissão e auditoria.
 - **Chat pós-compra:** imagens de até 5 MB.
 - **Área de downloads** para produtos digitais.
-- **Kits aberto e fechado.**
-- **Mega menu com subcategorias.**
-- **Vídeo como capa do card** e galeria com fotos e vídeos ordenáveis (até 20 mídias).
-- **Filtros em painel lateral:** marca, cidade, loja, característica e faixa de preço.
 - **Logística da loja:** distância máxima, trajeto de teste e horário de corte.
 
 **Divergência a resolver:** o doc 09 do protótipo anterior fala em "mais de 200 pedidos em um dia" para o selo Indicada. O PRD v0.2 (mais recente) fala em 100. Este projeto segue o **PRD (100)** até decisão do PO.

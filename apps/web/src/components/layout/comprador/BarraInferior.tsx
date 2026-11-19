@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useCaminho } from '@/hooks/useCaminho';
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
 import { totalItens, useComprador } from '@/stores/comprador';
 
@@ -11,7 +11,7 @@ import { totalItens, useComprador } from '@/stores/comprador';
  * e na página de produto, onde a barra de compra fixa ocupa o lugar.
  */
 export function BarraInferior() {
-  const path = usePathname();
+  const path = useCaminho();
   const usuario = useComprador((s) => (s.hidratado ? s.usuario : null));
   const qtd = useComprador((s) => (s.hidratado ? totalItens(s.itens) : 0));
   if (path.startsWith('/p/')) return null;

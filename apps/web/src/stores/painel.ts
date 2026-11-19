@@ -3,14 +3,25 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { VAGAS } from '@/mocks/anuncios';
+import { useAdmin } from './admin';
+import { CATALOGO } from '@/mocks/catalogo';
 import { PAINEL_DEMO } from '@/mocks/painel';
 import { limitarQuantidade, lanceMinimo, type UnidadeTempo } from '@/lib/regras/anuncios';
+import type { LogisticaLoja } from '@/lib/regras/logistica';
 import { proximoStatus } from '@/lib/regras/pedidos';
+import {
+  aplicarAprovacao,
+  aplicarEdicao,
+  rascunhoDeProduto,
+  saldoTotal,
+  type RascunhoProduto,
+} from '@/lib/regras/produto';
 import type {
   Campanha,
   ModoSincronizacao,
   PainelLojista,
   StatusSubpedido,
+  Unidade,
   VagaAnuncio,
   VagaId,
 } from '@/types/domain';
@@ -21,7 +32,21 @@ import type {
  * PATCH /v1/painel/pedidos, PUT de estoque, POST /v1/anuncios/lances etc., e a
  * autorização (dono/equipe com permissão) é verificada no servidor.
  */
+/** Produto editado no painel: versão publicada (preço/estoque já valendo) e versão em análise. */
+export interface EdicaoProduto {
+  atual: RascunhoProduto;
+  emAnalise: RascunhoProduto | null;
+  pendentes: string[]; // campos editoriais aguardando moderação
+  novo: boolean;
+  /** Motivo da última reprovação da moderação (o lojista vê no editor). */
+  reprovacao?: string;
+}
+
 interface Persistido extends PainelLojista {
+  edicoes: Record<string, EdicaoProduto>;
+  /** null = ainda não configurada (usa os dados da loja). */
+  logistica: LogisticaLoja | null;
+  filiais: Unidade[];
   vagas: VagaAnuncio[];
   vagaSelecionada: VagaId;
   unidade: UnidadeTempo;
@@ -44,6 +69,29 @@ interface Acoes {
   definirQuantidade: (q: number) => void;
   contratar: () => void;
   darLance: (valorDiaCentavos: number) => 'ok' | 'abaixo_do_minimo';
+  salvarProduto: (
+    publicado: RascunhoProduto | null,
+    rascunho: RascunhoProduto,
+  ) => { id: string; editoriais: string[]; imediatas: string[] };
+  aprovarProduto: (id: string) => void;
+  reprovarProduto: (id: string, motivo: string) => void;
+  reprovarFilial: (id: string) => void;
+  salvarLogistica: (l: LogisticaLoja) => void;
+  adicionarFilial: (u: Omit<Unidade, 'id' | 'status'>) => void;
+  aprovarFilial: (id: string) => void;
+}
+
+/** Demonstração: a calça (p2) tem uma descrição nova aguardando a moderação (como no protótipo). */
+function edicoesDemo(): Record<string, EdicaoProduto> {
+  const p = CATALOGO.cianorte?.produtos.find((x) => x.id === 'p2');
+  const est = PAINEL_DEMO.estoque.find((x) => x.produtoId === 'p2');
+  if (!p) return {};
+  const atual = rascunhoDeProduto(p, est);
+  const emAnalise = {
+    ...atual,
+    descricao: 'Jeans com elastano, cintura alta e lavagem média. Modelagem da casa.',
+  };
+  return { p2: { atual, emAnalise, pendentes: ['descricao'], novo: false } };
 }
 
 const inicial = (): Persistido => ({
@@ -52,6 +100,9 @@ const inicial = (): Persistido => ({
   vagaSelecionada: 'H1',
   unidade: 'dias',
   quantidade: 7,
+  edicoes: edicoesDemo(),
+  logistica: null,
+  filiais: [],
 });
 
 export const usePainel = create<Persistido & Acoes>()(
@@ -69,6 +120,7 @@ export const usePainel = create<Persistido & Acoes>()(
       enviarCadastro: () => set((s) => (s.status === 'aprovada' ? {} : { status: 'em_analise' })),
 
       avancarPedido: (id) => {
+        if (useAdmin.getState().analises[id]) return null; // em análise administrativa
         const p = get().pedidos.find((x) => x.id === id);
         const prox = p && proximoStatus(p.modo, p.status);
         if (!prox) return null;
@@ -130,6 +182,80 @@ export const usePainel = create<Persistido & Acoes>()(
         });
         return 'ok';
       },
+
+      salvarProduto: (publicado, rascunho) => {
+        if (!publicado) {
+          // Produto novo: tudo passa pela moderação antes de aparecer.
+          const id = `novo-${Date.now().toString(36)}`;
+          const r = { ...rascunho, id };
+          set((s) => ({
+            edicoes: {
+              ...s.edicoes,
+              [id]: { atual: r, emAnalise: r, pendentes: ['produto novo'], novo: true },
+            },
+          }));
+          return { id, editoriais: ['produto novo'], imediatas: [] };
+        }
+        const id = publicado.id!;
+        const novo = get().edicoes[id]?.novo ?? false;
+        const e = novo
+          ? { editoriais: ['produto novo'], imediatas: [], atual: rascunho, emAnalise: rascunho }
+          : aplicarEdicao(publicado, rascunho);
+        set((s) => ({
+          edicoes: {
+            ...s.edicoes,
+            [id]: { atual: e.atual, emAnalise: e.emAnalise, pendentes: [...e.editoriais], novo },
+          },
+          // Estoque muda na hora (CLAUDE.md §7.3 e §8).
+          estoque: s.estoque.some((x) => x.produtoId === id)
+            ? s.estoque.map((x) =>
+                x.produtoId === id ? { ...x, saldo: saldoTotal(rascunho), minimo: rascunho.minimo } : x,
+              )
+            : rascunho.tipo === 'kit' || rascunho.tipo === 'digital'
+              ? s.estoque
+              : [
+                  ...s.estoque,
+                  { produtoId: id, sku: rascunho.sku, saldo: saldoTotal(rascunho), minimo: rascunho.minimo },
+                ],
+        }));
+        return { id, editoriais: [...e.editoriais], imediatas: [...e.imediatas] };
+      },
+      aprovarProduto: (id) =>
+        set((s) => {
+          const e = s.edicoes[id];
+          if (!e?.emAnalise) return {};
+          return {
+            edicoes: {
+              ...s.edicoes,
+              [id]: {
+                atual: aplicarAprovacao(e.atual, e.emAnalise),
+                emAnalise: null,
+                pendentes: [],
+                novo: false,
+              },
+            },
+          };
+        }),
+
+      reprovarProduto: (id, motivo) =>
+        set((s) => {
+          const e = s.edicoes[id];
+          if (!e?.emAnalise) return {};
+          // Reprovado: a versão publicada continua; o conteúdo proposto volta para o lojista corrigir.
+          return {
+            edicoes: { ...s.edicoes, [id]: { ...e, emAnalise: null, pendentes: [], reprovacao: motivo } },
+          };
+        }),
+      reprovarFilial: (id) =>
+        set((s) => ({ filiais: s.filiais.map((f) => (f.id === id ? { ...f, status: 'reprovada' } : f)) })),
+
+      salvarLogistica: (logistica) => set({ logistica }),
+      adicionarFilial: (u) =>
+        set((s) => ({
+          filiais: [...s.filiais, { ...u, id: `u${s.filiais.length + 2}`, status: 'em_analise' }],
+        })),
+      aprovarFilial: (id) =>
+        set((s) => ({ filiais: s.filiais.map((f) => (f.id === id ? { ...f, status: 'aprovada' } : f)) })),
     }),
     {
       name: 'ct-painel-v1',
@@ -151,6 +277,9 @@ export const usePainel = create<Persistido & Acoes>()(
         vagaSelecionada: s.vagaSelecionada,
         unidade: s.unidade,
         quantidade: s.quantidade,
+        edicoes: s.edicoes,
+        logistica: s.logistica,
+        filiais: s.filiais,
       }),
       onRehydrateStorage: () => () => usePainel.setState({ hidratado: true }),
     },

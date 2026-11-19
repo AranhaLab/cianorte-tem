@@ -2,7 +2,15 @@
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { Endereco, FormaPagamento, ItemSacola, ModoEntrega, Pedido, Usuario } from '@/types/domain';
+import type {
+  ComponenteKit,
+  Endereco,
+  FormaPagamento,
+  ItemSacola,
+  ModoEntrega,
+  Pedido,
+  Usuario,
+} from '@/types/domain';
 
 /**
  * Estado do comprador no navegador: sacola, favoritos, CEP, escolha de cookies e
@@ -38,6 +46,8 @@ interface Persistido {
   /** Pedidos da DEMO. No back-end: GET /v1/me/pedidos. */
   pedidos: Pedido[];
   checkout: RascunhoCheckout;
+  /** Downloads já feitos por 'pedidoId:produtoId' (no back-end: contados no servidor). */
+  downloads: Record<string, number>;
 }
 
 interface Efemero {
@@ -48,7 +58,13 @@ interface Efemero {
 }
 
 interface Acoes {
-  adicionar: (produtoId: string, opcao: string | null, quantidade: number, rotulo: string) => void;
+  adicionar: (
+    produtoId: string,
+    opcao: string | null,
+    quantidade: number,
+    rotulo: string,
+    composicao?: ComponenteKit[],
+  ) => void;
   alterarQuantidade: (chave: string, delta: number) => void;
   remover: (chave: string) => void;
   limparSacola: () => void;
@@ -63,6 +79,7 @@ interface Acoes {
   atualizarCheckout: (dados: Partial<RascunhoCheckout>) => void;
   registrarPedido: (p: Pedido) => void;
   confirmarPagamento: (pedidoId: string) => void;
+  registrarDownload: (pedidoId: string, produtoId: string) => void;
   abrir: (s: Sheet) => void;
   fechar: () => void;
   avisar: (texto: string) => void;
@@ -83,21 +100,38 @@ export const useComprador = create<EstadoComprador>()(
       usuario: null,
       pedidos: [],
       checkout: CHECKOUT_INICIAL,
+      downloads: {},
 
       hidratado: false,
       sheet: null,
       ultimoAdicionado: null,
       toast: null,
 
-      adicionar: (produtoId, opcao, quantidade, rotulo) =>
+      adicionar: (produtoId, opcao, quantidade, rotulo, composicao) =>
         set((s) => {
-          const chave = `${produtoId}|${opcao ?? ''}`;
+          // Kits abertos com escolhas diferentes viram linhas diferentes na sacola.
+          const escolha = composicao
+            ? composicao
+                .map((c) => c.produtoId)
+                .sort()
+                .join('+')
+            : '';
+          const chave = `${produtoId}|${opcao ?? ''}|${escolha}`;
           const existe = s.itens.find((i) => i.chave === chave);
           const itens = existe
             ? s.itens.map((i) =>
                 i.chave === chave ? { ...i, quantidade: Math.min(QTD_MAX, i.quantidade + quantidade) } : i,
               )
-            : [...s.itens, { chave, produtoId, opcao, quantidade: Math.min(QTD_MAX, quantidade) }];
+            : [
+                ...s.itens,
+                {
+                  chave,
+                  produtoId,
+                  opcao,
+                  quantidade: Math.min(QTD_MAX, quantidade),
+                  ...(composicao ? { composicao } : {}),
+                },
+              ];
           return { itens, ultimoAdicionado: rotulo, sheet: 'sacola' };
         }),
       alterarQuantidade: (chave, delta) =>
@@ -133,6 +167,11 @@ export const useComprador = create<EstadoComprador>()(
       registrarPedido: (p) =>
         set((s) => ({ pedidos: [p, ...s.pedidos], itens: [], checkout: CHECKOUT_INICIAL })),
       /** Só a DEMO chama isto. No real, a confirmação vem do webhook do provedor (idempotente). */
+      registrarDownload: (pedidoId, produtoId) =>
+        set((s) => {
+          const k = `${pedidoId}:${produtoId}`;
+          return { downloads: { ...s.downloads, [k]: (s.downloads[k] ?? 0) + 1 } };
+        }),
       confirmarPagamento: (id) =>
         set((s) => ({
           pedidos: s.pedidos.map((p) =>
@@ -140,7 +179,12 @@ export const useComprador = create<EstadoComprador>()(
               ? {
                   ...p,
                   pago: true,
-                  subpedidos: p.subpedidos.map((sp) => ({ ...sp, status: 'pagamento_confirmado' as const })),
+                  pagoEm: new Date().toISOString(),
+                  // Digital: o pagamento libera o arquivo e o subpedido já fica entregue.
+                  subpedidos: p.subpedidos.map((sp) => ({
+                    ...sp,
+                    status: sp.modo === 'digital' ? ('entregue' as const) : ('pagamento_confirmado' as const),
+                  })),
                 }
               : p,
           ),
@@ -164,6 +208,7 @@ export const useComprador = create<EstadoComprador>()(
         usuario: s.usuario,
         pedidos: s.pedidos,
         checkout: s.checkout,
+        downloads: s.downloads,
       }),
       onRehydrateStorage: () => () => useComprador.setState({ hidratado: true }),
     },

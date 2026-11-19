@@ -30,7 +30,7 @@ export interface Tenant {
 
 /* ---------- Catálogo ---------- */
 export type IconeCategoria =
-  'shirt' | 'hammer' | 'bed' | 'sofa' | 'cart' | 'phone' | 'ball' | 'drop' | 'baby' | 'paw';
+  'shirt' | 'hammer' | 'bed' | 'sofa' | 'cart' | 'phone' | 'ball' | 'drop' | 'baby' | 'paw' | 'book';
 
 export interface Categoria {
   id: string;
@@ -39,6 +39,12 @@ export interface Categoria {
   tom: string; // cor de fundo da arte (dado, não token)
   destaque: string;
   proporcaoMidia: '4:5' | '1:1'; // moda 4:5, demais 1:1 (CLAUDE.md §3)
+  subcategorias: Subcategoria[];
+}
+
+export interface Subcategoria {
+  id: string; // único dentro da categoria
+  nome: string;
 }
 
 export type Selo = 'oficial' | 'indicada' | null;
@@ -77,9 +83,52 @@ export interface Produto {
   precoDeCentavos: Centavos | null;
   disponibilidade: Disponibilidade;
   variacao: Variacao | null;
-  kit: boolean;
+  kit: Kit | null;
+  subcategoriaId: string | null;
+  marca: string | null;
+  caracteristicas: string[]; // usadas nos filtros laterais
+  /** Galeria em ordem definida pelo lojista (até 20). A 1ª é a capa do cartão. */
+  midias: Midia[];
+  /** Produto digital (download): não gera frete e é liberado após o pagamento (PRD-15). */
+  digital: ArquivoDigital | null;
   vendidos: number; // ordena "Mais vendidos"
   emAlta: number; // ordena "Em alta"
+}
+
+/** Arquivo de produto digital. Fica em armazenamento PRIVADO; o link de download é temporário. */
+export interface ArquivoDigital {
+  formato: 'PDF' | 'EPUB' | 'ZIP';
+  tamanhoBytes: number;
+  limiteDownloads: number; // [PROPOSTA] downloads permitidos por compra
+  validadeDias: number; // [PROPOSTA] dias de acesso após o pagamento
+}
+
+/** Foto ou vídeo do produto. Fotos: 4:5 (moda) ou 1:1; vídeo sempre 9:16 (CLAUDE.md §3). */
+export interface Midia {
+  id: string;
+  tipo: 'imagem' | 'video';
+  legenda: string; // texto alternativo
+  /** Só na demonstração: variação do desenho de exemplo. Some quando houver arquivo real (url). */
+  variante: number;
+  url?: string;
+}
+
+/**
+ * Kit (PRD-05): pelo menos 2 produtos distintos da mesma loja; consome o estoque dos componentes.
+ * - fechado: composição fixa, preço do próprio kit;
+ * - aberto ("monte o seu"): o comprador escolhe entre as opções; preço = soma − desconto do kit.
+ */
+export interface Kit {
+  tipo: 'fechado' | 'aberto';
+  componentes: ComponenteKit[]; // fechado: composição; aberto: opções de escolha
+  minimoItens: number; // aberto: mínimo de itens distintos escolhidos (≥ 2)
+  maximoItens: number;
+  descontoPercentual: number; // aberto: desconto sobre a soma dos escolhidos
+}
+
+export interface ComponenteKit {
+  produtoId: string;
+  quantidade: number;
 }
 
 /* ---------- Publicidade ---------- */
@@ -125,7 +174,7 @@ export type StatusSubpedido =
   | 'retirado'
   | 'cancelado';
 
-export type ModoEntrega = 'entrega' | 'retirada';
+export type ModoEntrega = 'entrega' | 'retirada' | 'digital';
 export type FormaPagamento = 'pix' | 'cartao';
 
 export interface Subpedido {
@@ -133,6 +182,37 @@ export interface Subpedido {
   lojaId: string;
   modo: ModoEntrega;
   status: StatusSubpedido;
+  /** Cópia do que foi comprado no momento da compra (CLAUDE.md §10). */
+  itens: ItemPedido[];
+}
+
+export interface ItemPedido {
+  produtoId: string;
+  nome: string;
+  quantidade: number;
+  precoUnitarioCentavos: Centavos;
+  opcao: string | null;
+  digital: ArquivoDigital | null;
+}
+
+/* ---------- Chat pós-compra (PRD-13) ---------- */
+export interface MensagemChat {
+  id: string;
+  autor: 'comprador' | 'loja';
+  texto: string;
+  imagem?: { nome: string; tamanhoBytes: number; tipo: string; previa?: string };
+  enviadaEm: string; // ISO
+}
+
+/** Uma conversa por subpedido: comprador e a loja daquele subpedido, mais ninguém. */
+export interface Conversa {
+  subpedidoId: string; // '10501-A'
+  pedidoId: string;
+  lojaId: string;
+  cliente: string;
+  mensagens: MensagemChat[];
+  lidaPelaLoja: number; // quantas mensagens a loja já viu
+  lidaPeloComprador: number;
 }
 
 export interface Pedido {
@@ -141,15 +221,18 @@ export interface Pedido {
   totalCentavos: Centavos;
   pagamento: FormaPagamento;
   pago: boolean;
+  pagoEm?: string; // confirmação do pagamento (conta o prazo e libera downloads)
   subpedidos: Subpedido[];
 }
 
 /* ---------- Sacola ---------- */
 export interface ItemSacola {
-  chave: string; // `${produtoId}|${opcao}`
+  chave: string; // `${produtoId}|${opcao}|${composição}`
   produtoId: string;
   opcao: string | null;
   quantidade: number;
+  /** Kit aberto: o que o comprador escolheu (sai do estoque de cada componente). */
+  composicao?: ComponenteKit[];
 }
 
 /* ---------- Comprador ---------- */
@@ -209,6 +292,17 @@ export interface Campanha {
 export interface ModuloVitrine {
   tipo: string;
   detalhe: string;
+}
+
+/** Unidade/filial (Estabelecimento, §4): cadastro e aprovação próprios; não aprovada não vende. */
+export interface Unidade {
+  id: string;
+  nome: string;
+  endereco: string;
+  bairro: string;
+  cep: string;
+  horario: string;
+  status: StatusCadastroLoja;
 }
 
 export interface PainelLojista {

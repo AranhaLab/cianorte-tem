@@ -7,6 +7,7 @@ import { useTenant } from '@/components/providers/TenantProvider';
 import { CabecalhoPagina, CaixaVazia } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
 import { ABAS_CONTA as ABAS } from '@/lib/conta';
+import { Conversas, Downloads } from './AbasPosVenda';
 import { CartaoProduto } from '@/components/vitrine/CartaoProduto';
 import { GradeProdutos } from '@/components/vitrine/GradeProdutos';
 import { api } from '@/lib/api';
@@ -60,6 +61,8 @@ export function Conta({ aba }: { aba: string }) {
         <div className="flex flex-col gap-3.5">
           {aba === 'dados' && <MeusDados />}
           {aba === 'pedidos' && <MeusPedidos />}
+          {aba === 'downloads' && <Downloads />}
+          {aba === 'conversas' && <Conversas />}
           {aba === 'enderecos' && <Enderecos />}
           {aba === 'favoritos' && <Favoritos />}
           {aba === 'privacidade' && <Privacidade />}

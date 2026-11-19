@@ -1,17 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
 import { ArteProduto } from '@/components/vitrine/ArteProduto';
 import { MODO_DEMO } from '@/lib/demo';
-import { paraCentavos, reais } from '@/lib/regras/dinheiro';
+import { reais } from '@/lib/regras/dinheiro';
+import { disponibilidadePublica } from '@/lib/regras/disponibilidade';
 import { usePainel } from '@/stores/painel';
 import { AguardaPainel, TabelaPedidos, TituloPainel, avisar } from './Comum';
 import { useLojaPainel } from './PainelContexto';
+import type { Disponibilidade } from '@/types/domain';
 
 const hoje = () =>
   new Date().toLocaleDateString('pt-BR', {
@@ -206,8 +207,61 @@ export function PedidosLojista() {
 
 /* ---------------- Produtos (protótipo: vProdutosLojista) ---------------- */
 export function ProdutosLojista() {
+  return (
+    <AguardaPainel>
+      <ProdutosConteudo />
+    </AguardaPainel>
+  );
+}
+
+function ProdutosConteudo() {
   const { produtos, categorias } = useLojaPainel();
-  const cat = (id: string) => categorias.find((c) => c.id === id)!;
+  const edicoes = usePainel((s) => s.edicoes);
+  const estoque = usePainel((s) => s.estoque);
+  const reserva = usePainel((s) => s.integracao.reservaSeguranca);
+  const cat = (id: string) => categorias.find((c) => c.id === id) ?? categorias[0]!;
+
+  // Catálogo publicado + edições do painel (preço e estoque já valendo) + produtos novos em análise.
+  const linhas = [
+    ...produtos.map((p) => {
+      const e = edicoes[p.id];
+      return {
+        id: p.id,
+        nome: e?.atual.nome ?? p.nome,
+        categoriaId: e?.atual.categoriaId ?? p.categoriaId,
+        preco: e?.atual.precoCentavos ?? p.precoCentavos,
+        opcoes: e ? (e.atual.variacao?.opcoes.length ?? 0) : (p.variacao?.opcoes.length ?? 0),
+        capa: (e?.atual.midias[0] ?? p.midias[0])?.variante ?? 0,
+        disp: p.disponibilidade,
+        pendentes: e?.pendentes.length ?? 0,
+        novo: false,
+        reprovado: !!e?.reprovacao,
+      };
+    }),
+    ...Object.entries(edicoes)
+      .filter(([, e]) => e.novo)
+      .map(([id, e]) => ({
+        id,
+        nome: e.atual.nome,
+        categoriaId: e.atual.categoriaId,
+        preco: e.atual.precoCentavos,
+        opcoes: e.atual.variacao?.opcoes.length ?? 0,
+        capa: e.atual.midias[0]?.variante ?? 0,
+        disp: 'disponivel' as Disponibilidade,
+        pendentes: e.pendentes.length,
+        novo: true,
+        reprovado: !!e.reprovacao,
+      })),
+  ].map((l) => {
+    const est = estoque.find((x) => x.produtoId === l.id);
+    return est
+      ? {
+          ...l,
+          disp: disponibilidadePublica({ saldo: est.saldo, reservaSeguranca: reserva, minimo: est.minimo }),
+        }
+      : l;
+  });
+
   return (
     <>
       <TituloPainel
@@ -238,12 +292,13 @@ export function ProdutosLojista() {
             </tr>
           </thead>
           <tbody>
-            {produtos.map((p, i) => (
+            {linhas.map((p) => (
               <tr key={p.id}>
                 <td>
                   <span className="flex items-center gap-2.5">
                     <ArteProduto
                       categoria={cat(p.categoriaId)}
+                      variante={p.capa}
                       className="!aspect-square h-11 w-11 flex-none rounded-[12px]"
                       tamanhoIcone="h-1/2 w-1/2"
                     />
@@ -251,31 +306,35 @@ export function ProdutosLojista() {
                       <b className="font-semibold">{p.nome}</b>
                       <span className="text-xs text-grafite-2">
                         {cat(p.categoriaId).nome}
-                        {p.variacao ? ` · ${p.variacao.opcoes.length} variações` : ''}
+                        {p.opcoes ? ` · ${p.opcoes} variações` : ''}
                       </span>
                     </span>
                   </span>
                 </td>
-                <td>{reais(p.precoCentavos)}</td>
+                <td>{reais(p.preco)}</td>
                 <td>
-                  <StatusDisponibilidade disp={p.disponibilidade} />
+                  <StatusDisponibilidade disp={p.disp} />
                 </td>
                 <td>
-                  {i === 1 ? (
+                  {p.reprovado && !p.pendentes ? (
+                    <span className="status st-red">Reprovado</span>
+                  ) : p.novo ? (
+                    <span className="status st-amber">Novo · em análise</span>
+                  ) : p.pendentes ? (
                     <span className="status st-amber">Alteração em análise</span>
                   ) : (
                     <span className="status st-green">Publicado</span>
                   )}
                 </td>
                 <td>
-                  <button
-                    type="button"
+                  <Link
+                    href={`/painel/produtos/${p.id}`}
                     className="btn btn-sm btn-ghost min-h-toque"
-                    onClick={() => avisar('Editor do produto (demo).')}
+                    aria-label={`Editar ${p.nome}`}
                   >
                     <Icone nome="edit" tamanho="sm" />
                     Editar
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -285,132 +344,6 @@ export function ProdutosLojista() {
       <span className="text-[13px] text-grafite-2">
         Preço e estoque mudam na hora. Nome, fotos e descrição passam por moderação antes de aparecer.
       </span>
-    </>
-  );
-}
-
-/* ---------------- Novo produto (protótipo: vNovoProduto) ---------------- */
-/** Faixa de ofertas equivalentes (GTIN/EAN) no marketplace — exemplo fixo da demo (CLAUDE.md §16). */
-const FAIXA_EQUIVALENTES: [number, number] = [8490, 9990];
-
-export function NovoProduto() {
-  const router = useRouter();
-  const { categorias } = useLojaPainel();
-  const [preco, setPreco] = useState('');
-  const centavos = paraCentavos(preco);
-  const [min, max] = FAIXA_EQUIVALENTES;
-  const posicao = centavos < min ? 'abaixo' : centavos > max ? 'acima' : 'dentro da faixa';
-
-  const enviar = (e: FormEvent) => {
-    e.preventDefault();
-    avisar('Produto enviado para moderação.');
-    router.push('/painel/produtos');
-  };
-
-  return (
-    <>
-      <TituloPainel
-        titulo="Novo produto"
-        acao={
-          <Link href="/painel/produtos" className="text-[13px]">
-            Cancelar
-          </Link>
-        }
-      />
-      <form method="post" className="flex flex-col gap-4" onSubmit={enviar}>
-        <div className="card flex flex-col gap-3">
-          <h2>Informações</h2>
-          <div className="campo">
-            <label htmlFor="np-nome">Nome do produto</label>
-            <input id="np-nome" className="input" required />
-          </div>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <div className="campo">
-              <label htmlFor="np-cat">Categoria</label>
-              <select id="np-cat" className="input">
-                {categorias.map((c) => (
-                  <option key={c.id}>{c.nome}</option>
-                ))}
-              </select>
-            </div>
-            <div className="campo">
-              <label htmlFor="np-tipo">Tipo</label>
-              <select id="np-tipo" className="input">
-                <option>Simples</option>
-                <option>Com variações (tamanho, cor…)</option>
-                <option>Kit (2 ou mais produtos)</option>
-                <option>Digital (download)</option>
-              </select>
-            </div>
-          </div>
-          <div className="campo">
-            <label htmlFor="np-desc">Descrição</label>
-            <textarea id="np-desc" className="input min-h-24 resize-y py-3" />
-          </div>
-        </div>
-
-        <div className="card flex flex-col gap-3">
-          <h2>Fotos e vídeo</h2>
-          <div className="area-envio">
-            <span className="text-azul">
-              <Icone nome="upload" tamanho="lg" />
-            </span>
-            <b>Arraste as fotos ou clique para enviar</b>
-            <span className="text-[13px] text-grafite-2">
-              Moda: 4:5 · demais categorias: 1:1 · vídeo 9:16 · ordem da galeria configurável
-            </span>
-          </div>
-        </div>
-
-        <div className="card flex flex-col gap-3">
-          <h2>Preço e estoque</h2>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <div className="campo">
-              <label htmlFor="np-preco">Preço de venda (R$)</label>
-              <input
-                id="np-preco"
-                className="input"
-                inputMode="decimal"
-                value={preco}
-                onChange={(e) => setPreco(e.target.value)}
-              />
-              {centavos > 0 && (
-                <div className="banner-info bg-azul-nevoa text-azul-escuro" role="status">
-                  <Icone nome="info" />
-                  <span className="text-[13px]">
-                    Seu preço está <b>{posicao}</b> de 2 ofertas equivalentes no marketplace ({reais(min)} a{' '}
-                    {reais(max)}, sem frete). Aviso informativo: você decide o preço. <i>(demo)</i>
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="campo">
-              <label htmlFor="np-de">Preço &quot;de&quot; (opcional)</label>
-              <input id="np-de" className="input" inputMode="decimal" />
-            </div>
-            <div className="campo">
-              <label htmlFor="np-sku">SKU</label>
-              <input id="np-sku" className="input" aria-describedby="h-sku" />
-              <span id="h-sku" className="dica">
-                Use o mesmo código do seu sistema para a API ligar o estoque.
-              </span>
-            </div>
-            <div className="campo">
-              <label htmlFor="np-qtd">Estoque inicial</label>
-              <input id="np-qtd" className="input" inputMode="numeric" />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Link href="/painel/produtos" className="btn btn-ghost">
-            Cancelar
-          </Link>
-          <button type="submit" className="btn btn-primary btn-lg flex-1">
-            Enviar para aprovação
-          </button>
-        </div>
-      </form>
     </>
   );
 }

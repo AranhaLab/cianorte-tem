@@ -8,11 +8,14 @@ import { StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
 import { reais } from '@/lib/regras/dinheiro';
 import { disponibilidadePublica } from '@/lib/regras/disponibilidade';
+import { TAXA_PAGAMENTO as TAXA_PERCENTUAL } from '@/lib/regras/admin';
+import { useAdmin } from '@/stores/admin';
 import { usePainel } from '@/stores/painel';
 import type { ModoSincronizacao } from '@/types/domain';
 import { AguardaPainel, StatusPedido, TituloPainel, avisar } from './Comum';
 import { InterruptorVisivel } from './MenuPainel';
 import { useLojaPainel } from './PainelContexto';
+import { LogisticaLoja, UnidadesLoja } from './LogisticaLoja';
 
 /* ---------------- Estoque e API aberta (protótipo: vEstoque; CLAUDE.md §8) ---------------- */
 const EXEMPLO_API = `# Atualizar o saldo de um SKU
@@ -213,11 +216,11 @@ function EstoqueConteudo() {
 }
 
 /* ---------------- Financeiro (protótipo: vFinanceiro) ---------------- */
-/** Percentuais ILUSTRATIVOS — comissão e taxa reais estão pendentes (PO-03). */
-const COMISSAO = 0.1;
-const TAXA_PAGAMENTO = 0.02;
+/** Percentuais ILUSTRATIVOS — comissão e taxa reais estão pendentes (PO-03). A comissão vem do admin. */
+const TAXA_PAGAMENTO = TAXA_PERCENTUAL / 100;
 
 export function Financeiro() {
+  const COMISSAO = useAdmin((s) => s.comissaoPercentual) / 100;
   const pedidos = usePainel((s) => s.pedidos);
   const validos = pedidos.filter((o) => o.status !== 'cancelado');
   const bruto = validos.reduce((a, o) => a + o.totalCentavos, 0);
@@ -234,7 +237,7 @@ export function Financeiro() {
     <AguardaPainel>
       <TituloPainel
         titulo="Financeiro"
-        apoio="Novembro · valores ilustrativos (comissão 10% sobre produtos e taxa de pagamento 2% — percentuais a definir)"
+        apoio={`Novembro · valores ilustrativos (comissão ${Math.round(COMISSAO * 1000) / 10}% sobre produtos e taxa de pagamento 2% — percentuais a definir)`}
         acao={
           <div className="segmentado" role="group" aria-label="Período">
             <button type="button" aria-pressed={periodo === 'atual'} onClick={() => setPeriodo('atual')}>
@@ -481,52 +484,8 @@ export function MinhaLoja() {
         </span>
         <InterruptorVisivel desabilitarSeNaoAprovada />
       </div>
-      <div className="card flex flex-col gap-3">
-        <h2>Entrega e retirada</h2>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-          <div className="campo">
-            <label htmlFor="ml-tarifa">Tarifa por km (R$)</label>
-            <input
-              id="ml-tarifa"
-              className="input"
-              defaultValue={(loja.tarifaKmCentavos / 100).toFixed(2).replace('.', ',')}
-            />
-            <span className="dica">Frete = distância pelas ruas × tarifa.</span>
-          </div>
-          <div className="campo">
-            <label htmlFor="ml-corte">Horário de corte</label>
-            <input id="ml-corte" className="input" type="time" defaultValue="15:00" />
-            <span className="dica">
-              Pedidos pagos até o corte entram no prazo do dia. Mudar o corte não altera pedidos já feitos.
-            </span>
-          </div>
-        </div>
-        <label className="flex items-start gap-2.5 text-sm">
-          <input
-            type="checkbox"
-            defaultChecked={loja.retirada}
-            className="mt-px h-5 w-5 flex-none accent-azul"
-          />
-          Oferecer retirada na loja (só para compradores de {tenant.nome})
-        </label>
-      </div>
-      <div className="card flex flex-col gap-3">
-        <h2>Unidades</h2>
-        <div className="flex items-center justify-between gap-2.5">
-          <span>
-            {loja.nome} — {loja.bairro}
-          </span>
-          <span className="status st-green">Aprovada</span>
-        </div>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm min-h-toque self-start"
-          onClick={() => avisar('Cada nova unidade tem cadastro e aprovação próprios.')}
-        >
-          <Icone nome="plus" tamanho="sm" />
-          Adicionar filial
-        </button>
-      </div>
+      <LogisticaLoja loja={loja} />
+      <UnidadesLoja loja={loja} />
     </AguardaPainel>
   );
 }

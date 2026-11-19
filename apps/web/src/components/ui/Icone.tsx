@@ -1,5 +1,10 @@
 import {
   Baby,
+  BookOpen,
+  Download,
+  MessageCircle,
+  Paperclip,
+  Send,
   BedDouble,
   ChartColumn,
   Check,
@@ -29,8 +34,10 @@ import {
   Menu,
   Minus,
   Package,
+  Pause,
   PawPrint,
   Pencil,
+  Play,
   Plus,
   Receipt,
   RefreshCw,
@@ -103,6 +110,8 @@ const MAPA = {
   filter: Funnel,
   sparkle: Sparkles,
   medal: Medal,
+  play: Play,
+  pause: Pause,
   // categorias
   shirt: Shirt,
   hammer: Hammer,
@@ -114,6 +123,11 @@ const MAPA = {
   drop: Droplet,
   baby: Baby,
   paw: PawPrint,
+  book: BookOpen,
+  download: Download,
+  chat: MessageCircle,
+  clip: Paperclip,
+  send: Send,
 } satisfies Record<string, LucideIcon>;
 
 export type NomeIcone = keyof typeof MAPA;

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useCaminho } from '@/hooks/useCaminho';
 import { useEffect } from 'react';
 import { useComprador } from '@/stores/comprador';
 
@@ -13,7 +13,7 @@ const SEM_MODAL_LOCAL = ['/termos', '/privacidade'];
  * bloquear a navegação (CLAUDE.md §16).
  */
 export function Hidratar() {
-  const path = usePathname();
+  const path = useCaminho();
   useEffect(() => {
     void useComprador.persist.rehydrate();
   }, []);

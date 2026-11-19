@@ -41,7 +41,7 @@ export function Cabecalho({ tenant, categorias }: { tenant: Tenant; categorias: 
           <Busca cidade={tenant.nome} />
           <AcoesTopo />
         </div>
-        <BarraCategorias itens={itens} />
+        <BarraCategorias itens={itens} categorias={categorias} />
       </header>
     </>
   );

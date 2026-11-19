@@ -102,6 +102,11 @@ export function Sacola() {
                         {l.produto.variacao.nome}: {l.item.opcao}
                       </span>
                     )}
+                    {l.itensDoKit.length > 0 && (
+                      <span className="text-xs text-grafite-2">
+                        Inclui: {l.itensDoKit.map((k) => `${k.quantidade}× ${k.nome}`).join(', ')}
+                      </span>
+                    )}
                     <StatusDisponibilidade disp={l.produto.disponibilidade} className="self-start" />
                     <div className="flex flex-wrap items-center justify-between gap-2.5">
                       <div className="quantidade">
@@ -122,7 +127,7 @@ export function Sacola() {
                         </button>
                       </div>
                       <b className="font-titulo text-lg text-marinho">
-                        {reais(l.produto.precoCentavos * l.item.quantidade)}
+                        {reais(l.precoUnitario * l.item.quantidade)}
                       </b>
                     </div>
                     <button

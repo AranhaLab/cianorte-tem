@@ -2,10 +2,10 @@ import { JsonLd } from '@/components/ui/JsonLd';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { GaleriaProduto } from '@/components/produto/GaleriaProduto';
 import { PainelCompra } from '@/components/produto/PainelCompra';
 import { Migalhas, StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
-import { ArteProduto } from '@/components/vitrine/ArteProduto';
 import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { SecaoCarrossel } from '@/components/vitrine/SecaoCarrossel';
 import { SeloLoja } from '@/components/vitrine/SeloLoja';
@@ -84,29 +84,22 @@ export default async function PaginaProduto({ params }: Props) {
 
       <div className="mt-3.5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-8">
         <div>
-          <ArteProduto
+          <GaleriaProduto
+            midias={p.midias}
             categoria={c}
-            className={`rounded-xl ${c.proporcaoMidia === '4:5' ? 'max-h-[640px]' : ''}`}
-            tamanhoIcone="h-[40%] w-[40%]"
-          >
-            <div className="absolute left-3.5 top-3.5 flex gap-1.5">
-              {off > 0 && <span className="pill pill-sale">−{off}%</span>}
-              {p.kit && <span className="pill pill-indicada">Kit</span>}
-            </div>
-          </ArteProduto>
-          <div className="mt-2.5 flex gap-2" aria-hidden>
-            {[0, 1, 2, 3].map((i) => (
-              <span
-                key={i}
-                className={`h-16 w-16 rounded-[12px] border-2 border-solid ${i === 0 ? 'border-azul' : 'border-transparent'}`}
-                style={{ backgroundColor: c.tom }}
-              />
-            ))}
-          </div>
-          <p className="mb-0 mt-2 text-xs text-grafite-2">
-            Proporção da mídia: {c.proporcaoMidia === '4:5' ? '4:5 (moda)' : '1:1'}. Vídeo do produto em 9:16
-            quando houver.
-          </p>
+            selos={
+              (off > 0 || p.kit) && (
+                <>
+                  {off > 0 && <span className="pill pill-sale">−{off}%</span>}
+                  {p.kit && (
+                    <span className="pill pill-indicada">
+                      {p.kit.tipo === 'aberto' ? 'Monte o seu kit' : 'Kit'}
+                    </span>
+                  )}
+                </>
+              )
+            }
+          />
         </div>
 
         <div className="flex flex-col gap-4">
@@ -131,6 +124,9 @@ export default async function PaginaProduto({ params }: Props) {
               <span className="text-grafite-2 line-through">{reais(p.precoDeCentavos)}</span>
             )}
             <div className="flex items-center gap-2.5">
+              {p.kit?.tipo === 'aberto' && (
+                <span className="text-sm font-semibold text-grafite-2">a partir de</span>
+              )}
               <span className="preco-grande">{reais(p.precoCentavos)}</span>
               {off > 0 && <span className="pill pill-local text-[13px]">{off}% OFF</span>}
             </div>
@@ -139,7 +135,29 @@ export default async function PaginaProduto({ params }: Props) {
             </span>
           </div>
 
-          <PainelCompra produto={p} loja={loja} />
+          {p.kit?.tipo === 'fechado' && (
+            <div className="card flex flex-col gap-2">
+              <h2 className="text-lg">O que vem no kit</h2>
+              <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                {p.kit.componentes.map((k) => {
+                  const c = d.componentes.find((x) => x.id === k.produtoId);
+                  return c ? (
+                    <li key={k.produtoId} className="flex items-center justify-between gap-2.5 text-sm">
+                      <Link href={`/p/${c.id}`} className="min-w-0 flex-1">
+                        {k.quantidade}× {c.nome}
+                      </Link>
+                      <StatusDisponibilidade disp={c.disponibilidade} />
+                    </li>
+                  ) : null;
+                })}
+              </ul>
+              <span className="text-xs text-grafite-2">
+                O kit usa o estoque de cada item: se um acabar, o kit fica indisponível.
+              </span>
+            </div>
+          )}
+
+          <PainelCompra produto={p} loja={loja} componentes={d.componentes} />
 
           <div className="card flex items-center gap-3">
             <AvatarLoja loja={loja} />

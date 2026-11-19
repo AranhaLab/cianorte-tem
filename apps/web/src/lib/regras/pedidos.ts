@@ -19,6 +19,8 @@ export const ROTULO_STATUS: Record<StatusSubpedido, string> = {
 export const FLUXO: Record<ModoEntrega, StatusSubpedido[]> = {
   entrega: ['realizado', 'pagamento_confirmado', 'em_separacao', 'pronto_envio', 'saiu_entrega', 'entregue'],
   retirada: ['realizado', 'pagamento_confirmado', 'em_separacao', 'pronto_retirada', 'retirado'],
+  // Digital: o pagamento confirmado libera o arquivo, e o subpedido já fica entregue (CLAUDE.md §5.6).
+  digital: ['realizado', 'pagamento_confirmado', 'entregue'],
 };
 
 /** Próximo estado que a LOJA pode aplicar. `null` se concluído, cancelado ou ainda sem pagamento. */

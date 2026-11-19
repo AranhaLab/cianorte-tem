@@ -1,0 +1,85 @@
+# Cianorte Tem — ambiente completo em Docker (VPS e máquinas de desenvolvimento).
+#
+#   Só o front (hoje):        docker compose up -d --build web proxy
+#   Com back-end (fase 2):    docker compose --profile backend up -d --build
+#
+# Regras: só o proxy expõe portas públicas (80/443). web, api e db ficam
+# na rede interna. Segredos vêm do .env (ver .env.example), nunca da imagem.
+
+name: cianorte-tem
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-false}
+    environment:
+      DEFAULT_TENANT: ${DEFAULT_TENANT:-cianorte}
+      API_URL: ${API_URL:-}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp, /app/.next/cache]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    networks: [interna]
+    expose: ['3000']
+
+  proxy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    environment:
+      DOMINIOS_WEB: ${DOMINIOS_WEB:-localhost}
+      EMAIL_ACME: ${EMAIL_ACME:-}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web]
+    networks: [interna]
+
+  # ---------- Fase 2: back-end (NestJS em apps/api) ----------
+  api:
+    profiles: [backend]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    security_opt: [no-new-privileges:true]
+    networks: [interna]
+    expose: ['4000']
+
+  db:
+    profiles: [backend]
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [interna]
+    # Sem "ports": o banco nunca fica exposto na internet. Acesso administrativo via túnel SSH.
+
+volumes:
+  pg_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  interna:

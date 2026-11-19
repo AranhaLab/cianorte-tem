@@ -1,0 +1,22 @@
+# Dependências e builds
+node_modules/
+.next/
+dist/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Segredos: só o .env.example vai para o Git
+.env
+.env.*
+!.env.example
+
+# Testes
+coverage/
+playwright-report/
+test-results/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log

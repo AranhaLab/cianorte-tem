@@ -136,6 +136,10 @@ export interface VitrineCategoria {
 }
 
 export const vitrine = {
+  /** GET /v1/vitrine/letreiro — frases patrocinadas da barra do topo (vaga T1) */
+  letreiro: (t: string): Promise<CriativoAnuncio[]> =>
+    mock((CRIATIVOS[t] ?? []).filter((a) => a.vaga === 'T1')),
+
   /** GET /v1/vitrine/home — seções + anúncios ativos por vaga */
   home: (t: string): Promise<VitrineHome> => {
     const ps = visiveis(t).filter((p) => p.disponibilidade !== 'indisponivel');

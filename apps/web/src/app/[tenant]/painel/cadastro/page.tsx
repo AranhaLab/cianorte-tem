@@ -1,4 +1,4 @@
-import { CadastroLojista } from '@/components/painel/TelasLoja';
+import { CadastroLojista } from '@/components/painel/CadastroLoja';
 
 export const metadata = { title: 'Cadastro da loja' };
 

@@ -9,7 +9,7 @@ test.describe('Telas de acesso (página própria, volta para a origem)', () => {
 
     // Página à parte: sem cabeçalho de categorias, com a foto da cidade ao fundo
     await expect(page.getByRole('navigation', { name: 'Categorias' })).toHaveCount(0);
-    await expect(page.locator('img[alt=""][src*="cianorte"]').first()).toBeAttached();
+    await expect(page.locator('img[alt=""][src*="/acesso/cianorte.svg"]').first()).toBeAttached();
     await expect(page.getByRole('heading', { name: 'Entrar', level: 1 })).toBeVisible();
 
     await page.getByRole('textbox', { name: 'E-mail' }).fill('teste@exemplo.com');

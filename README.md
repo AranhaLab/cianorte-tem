@@ -25,6 +25,14 @@ Abra uma cidade pelo subdomínio:
 
 Crie `apps/web/.env.local` a partir do `.env.example` da raiz (`DEFAULT_TENANT` e `NEXT_PUBLIC_DEMO_MODE`).
 
+## Apresentar (rápido)
+
+```
+npm run demo
+```
+
+Gera a versão de produção e abre em http://cianorte.localhost:3000 em modo demonstração. Use sempre este comando para mostrar o sistema: o `npm run dev` compila cada página na primeira visita e fica lento. Feche antes qualquer `npm run dev` aberto na porta 3000, ou use outra porta: `npm run demo -- 3100`.
+
 ## Rodar com Docker
 
 ```

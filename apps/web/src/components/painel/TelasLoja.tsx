@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
@@ -16,7 +15,6 @@ import { AguardaPainel, StatusPedido, TituloPainel, avisar } from './Comum';
 import { InterruptorVisivel } from './MenuPainel';
 import { useLojaPainel } from './PainelContexto';
 import { LogisticaLoja, UnidadesLoja } from './LogisticaLoja';
-import { LogoCadastro } from './LogoCadastro';
 
 /* ---------------- Estoque e API aberta (protótipo: vEstoque; CLAUDE.md §8) ---------------- */
 const EXEMPLO_API = `# Atualizar o saldo de um SKU
@@ -556,124 +554,6 @@ export function Equipe() {
       <span className="text-[13px] text-grafite-2">
         Toda ação sensível (preço, estoque, repasse, equipe) fica registrada com autor e data.
       </span>
-    </AguardaPainel>
-  );
-}
-
-/* ---------------- Cadastro da loja (protótipo: vCadastroLojista; CLAUDE.md §7.1) ---------------- */
-export function CadastroLojista() {
-  const router = useRouter();
-  const { loja } = useLojaPainel();
-  const status = usePainel((s) => s.status);
-  const responsavel = usePainel((s) => s.responsavel);
-  const aprovada = status === 'aprovada';
-
-  const enviar = (e: FormEvent) => {
-    e.preventDefault();
-    usePainel.getState().enviarCadastro();
-    avisar('Cadastro enviado. Prazo de análise: até 2 dias úteis.');
-    router.push('/painel');
-  };
-
-  const campo = (id: string, rotulo: string, props: Record<string, string> = {}) => (
-    <div className="campo">
-      <label htmlFor={id}>{rotulo}</label>
-      <input id={id} className="input" {...props} />
-    </div>
-  );
-
-  return (
-    <AguardaPainel>
-      <TituloPainel
-        titulo="Cadastro da loja"
-        apoio="A aprovação libera a loja para vender. Dados protegidos e usados só para a operação."
-        acao={
-          <span className={`status ${aprovada ? 'st-green' : 'st-amber'}`}>
-            {aprovada ? 'Aprovada' : 'Em análise'}
-          </span>
-        }
-      />
-      <form method="post" className="flex flex-col gap-4" onSubmit={enviar}>
-        <LogoCadastro loja={loja} />
-        <div className="card flex flex-col gap-3">
-          <h2>1. Empresa</h2>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            {campo('cl-cnpj', 'CNPJ', { defaultValue: loja.cnpj, required: 'true' })}
-            {campo('cl-razao', 'Razão social', { defaultValue: '[Razão social]' })}
-            {campo('cl-fantasia', 'Nome fantasia (aparece na vitrine)', { defaultValue: loja.nome })}
-            {campo('cl-ie', 'Inscrição estadual', { placeholder: 'Opcional' })}
-          </div>
-        </div>
-        <div className="card flex flex-col gap-3">
-          <h2>2. Responsável</h2>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            {campo('cl-resp', 'Nome', { defaultValue: responsavel })}
-            {campo('cl-cpf', 'CPF', { inputMode: 'numeric' })}
-            {campo('cl-email', 'E-mail', { type: 'email', autoComplete: 'email' })}
-            {campo('cl-cel', 'Celular', { inputMode: 'tel', autoComplete: 'tel' })}
-          </div>
-        </div>
-        <div className="card flex flex-col gap-3">
-          <h2>3. Unidade (endereço físico)</h2>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            {campo('cl-cep', 'CEP', { defaultValue: '87200-000', inputMode: 'numeric' })}
-            {campo('cl-bairro', 'Bairro', { defaultValue: loja.bairro })}
-            {campo('cl-rua', 'Rua e número')}
-            {campo('cl-horario', 'Horário de funcionamento', { defaultValue: 'Seg a sáb, 8h às 18h' })}
-          </div>
-        </div>
-        <div className="card flex flex-col gap-3">
-          <h2>4. Recebimento</h2>
-          <div className="banner-info bg-azul-nevoa text-azul-escuro">
-            <Icone nome="lock" />
-            <span className="text-[13px]">
-              Os dados bancários são cadastrados direto no provedor de pagamento, que faz a divisão (split)
-              entre loja e plataforma.
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost self-start"
-            onClick={() => avisar('Conexão com o provedor de pagamento (a definir).')}
-          >
-            Conectar conta de recebimento
-          </button>
-        </div>
-        <div className="card flex flex-col gap-3">
-          <h2>5. Documentos</h2>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <div className="cartao-opcao border-azul bg-azul-nevoa">
-              <span className="flex-1">Cartão CNPJ</span>
-              <span className="status st-green">Enviado</span>
-            </div>
-            <div className="cartao-opcao">
-              <span className="flex-1">
-                Contrato social e registro de marca{' '}
-                <span className="text-xs text-grafite-2">(para o selo Loja oficial)</span>
-              </span>
-              <button
-                type="button"
-                className="btn btn-sm btn-soft"
-                onClick={() => avisar('Envio de documento (demo).')}
-              >
-                Enviar
-              </button>
-            </div>
-          </div>
-        </div>
-        <label className="flex items-start gap-2.5 text-sm">
-          <input
-            type="checkbox"
-            required
-            defaultChecked={aprovada}
-            className="mt-px h-5 w-5 flex-none accent-azul"
-          />
-          Li e aceito o Contrato do Lojista e a Política de Privacidade.
-        </label>
-        <button type="submit" className="btn btn-primary btn-lg">
-          {aprovada ? 'Salvar alterações' : 'Enviar para aprovação'}
-        </button>
-      </form>
     </AguardaPainel>
   );
 }

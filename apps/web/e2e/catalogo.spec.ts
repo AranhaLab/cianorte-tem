@@ -24,7 +24,10 @@ test('mega menu leva à subcategoria (desktop)', async ({ page, isMobile }) => {
   await mega.getByRole('link', { name: 'Moda e vestuário', exact: true }).hover();
   await mega.getByRole('link', { name: 'Camisaria' }).click();
   await expect(page).toHaveURL(/\/c\/moda\?sub=camisaria$/);
-  await expect(page.getByRole('link', { name: 'Camisaria' }).first()).toHaveAttribute('aria-current', 'true');
+  await expect(page.locator('main').getByRole('link', { name: 'Camisaria' }).first()).toHaveAttribute(
+    'aria-current',
+    'true',
+  );
 });
 
 test('subcategoria e filtros laterais filtram e podem ser removidos', async ({ page }) => {
@@ -56,8 +59,11 @@ test('galeria tem fotos e vídeo 9:16 e responde às miniaturas', async ({ page 
   // Foto real (otimizada pelo next/image), com texto alternativo
   await expect(page.getByRole('img', { name: /Camisa social slim fit algodão — foto 2/ })).toBeVisible();
   await miniaturas.first().click();
-  await page.getByRole('button', { name: /Reproduzir/ }).click();
-  await expect(page.getByRole('button', { name: /Pausar/ })).toBeVisible();
+  await page
+    .locator('main')
+    .getByRole('button', { name: /Reproduzir/ })
+    .click();
+  await expect(page.locator('main').getByRole('button', { name: /Pausar/ })).toBeVisible();
 });
 
 test('vídeo aparece como capa no cartão', async ({ page }) => {

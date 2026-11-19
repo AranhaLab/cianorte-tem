@@ -24,6 +24,17 @@ export function PainelProvider({ dados, children }: { dados: DadosLoja; children
   return <Ctx.Provider value={dados}>{children}</Ctx.Provider>;
 }
 
+/**
+ * Loja como aparece no painel: com o nome fantasia do cadastro. Um lojista novo (adesão pela
+ * página "Quero vender") não herda a logo da loja de exemplo até enviar a dele.
+ */
+export function useLojaExibida(): Loja {
+  const { loja } = useLojaPainel();
+  const fantasia = usePainel((s) => s.cadastro?.empresa.fantasia);
+  if (!fantasia || fantasia === loja.nome) return loja;
+  return { ...loja, nome: fantasia, logo: undefined };
+}
+
 export function useLojaPainel(): DadosLoja {
   const d = useContext(Ctx);
   if (!d) throw new Error('useLojaPainel fora do PainelProvider');

@@ -269,3 +269,39 @@
     display: none;
   }
 }
+
+/* Letreiro de ofertas (vaga T1): rola sem parar; para com mouse, foco ou botão de pausa. */
+@keyframes letreiro {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.letreiro {
+  mask-image: linear-gradient(90deg, transparent, black 24px, black calc(100% - 24px), transparent);
+}
+.letreiro-trilho {
+  animation: letreiro 55s linear infinite;
+}
+.letreiro:hover .letreiro-trilho,
+.letreiro:focus-within .letreiro-trilho,
+.letreiro[data-pausado] .letreiro-trilho {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .letreiro {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .letreiro-trilho {
+    animation: none;
+  }
+  .letreiro-trilho > ul[aria-hidden] {
+    display: none;
+  }
+  .letreiro-pausa {
+    display: none;
+  }
+}

@@ -108,6 +108,23 @@ export const VAGAS: VagaAnuncio[] = [
   },
 ];
 
+/** [PROPOSTA] T1: letreiro de ofertas na barra do topo (todas as páginas). Só texto, menor destaque, menor preço. */
+VAGAS.push({
+  id: 'T1',
+  modoCompra: 'direta',
+  nome: 'Letreiro de ofertas',
+  pagina: 'home',
+  posicao: 'Barra abaixo do cabeçalho, em todas as páginas da vitrine',
+  formato: { desktop: 'Texto até 80 caracteres', mobile: 'Texto até 80 caracteres', proporcao: 'texto' },
+  precoDiaCentavos: 15000,
+  rotacao: 8,
+  status: 'disponivel',
+  lanceAtualCentavos: null,
+  lances: 0,
+  terminaEm: null,
+  ocupadoAte: null,
+});
+
 const CRIATIVOS_CIANORTE: CriativoAnuncio[] = [
   {
     vaga: 'H1',
@@ -256,6 +273,29 @@ const CRIATIVOS_CIANORTE: CriativoAnuncio[] = [
     efeito: 'veu',
   },
 ];
+
+/** Frases do letreiro (T1), cada uma de uma loja anunciante. */
+const letreiro = (lojaId: string, titulo: string, href: string): CriativoAnuncio => {
+  const marca = marcaDe(lojaId);
+  return {
+    vaga: 'T1',
+    titulo,
+    sub: '',
+    cta: '',
+    fundo: '#14213D',
+    texto: '#FFFFFF',
+    href,
+    anunciante: marca?.nome ?? lojaId,
+    marca,
+  };
+};
+CRIATIVOS_CIANORTE.push(
+  letreiro('vale-azul', 'Semana da Moda: camisaria com até 30% off', '/loja/vale-azul'),
+  letreiro('bom-preco', 'Hortifrúti fresco com entrega em 2 horas', '/loja/bom-preco'),
+  letreiro('casa-obra', 'Tintas e ferramentas: frete grátis acima de R$ 199', '/loja/casa-obra'),
+  letreiro('pet-amigo', 'Banho e tosa com hora marcada pelo app', '/loja/pet-amigo'),
+  letreiro('moveis-vale', 'Sala nova até o Natal, com montagem inclusa', '/loja/moveis-vale'),
+);
 
 /** Criativos no ar por tenant. K1 sem criativo = mostra "Espaço publicitário" (convite para anunciar). */
 const anunciosDeCategoria: CriativoAnuncio[] = (CATALOGO.cianorte?.categorias ?? []).flatMap((categoria) => {

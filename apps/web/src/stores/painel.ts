@@ -9,6 +9,7 @@ import { PAINEL_DEMO } from '@/mocks/painel';
 import { limitarQuantidade, lanceMinimo, UNIDADES, type UnidadeTempo } from '@/lib/regras/anuncios';
 import type { LogisticaLoja } from '@/lib/regras/logistica';
 import { podeEnviarArte } from '@/lib/regras/arteAnuncio';
+import { cadastroVazio, type CadastroLoja } from '@/lib/regras/cadastroLoja';
 import { proximoStatus } from '@/lib/regras/pedidos';
 import {
   aplicarAprovacao,
@@ -49,6 +50,8 @@ interface Persistido extends PainelLojista {
   /** null = ainda não configurada (usa os dados da loja). */
   logistica: LogisticaLoja | null;
   filiais: Unidade[];
+  /** Cadastro da loja (adesão). null = ainda não aberto: o formulário parte dos dados da loja. */
+  cadastro: CadastroLoja | null;
   vagas: VagaAnuncio[];
   vagaSelecionada: VagaId;
   unidade: UnidadeTempo;
@@ -60,6 +63,16 @@ interface Acoes {
   alternarVisivel: () => 'ok' | 'nao_aprovada';
   simularAprovacao: () => void;
   enviarCadastro: () => void;
+  /** Salva o cadastro a cada alteração (como um rascunho no servidor). */
+  salvarCadastro: (c: CadastroLoja) => void;
+  /** Novo lojista (adesão pela página "Quero vender"): começa um cadastro do zero. */
+  novoLojista: (dados: {
+    fantasia: string;
+    cnpj: string;
+    nome: string;
+    email: string;
+    celular: string;
+  }) => void;
   avancarPedido: (id: string) => StatusSubpedido | null;
   definirModoSync: (m: ModoSincronizacao) => void;
   definirReserva: (n: number) => void;
@@ -76,6 +89,8 @@ interface Acoes {
   resultadoLance: (campanhaId: string, venceu: boolean) => void;
   /** Envia a arte (só com o espaço garantido) → arte em análise. */
   enviarArte: (campanhaId: string, arte: ArteAnuncio) => 'ok' | 'sem_espaco';
+  /** T1: envia a frase do letreiro (só com o espaço garantido) → em análise. */
+  enviarLetreiro: (campanhaId: string, letreiro: { texto: string; destino: string }) => 'ok' | 'sem_espaco';
   /** Moderação da plataforma: aprova (no ar) ou reprova com motivo (lojista pode reenviar). */
   decidirArte: (campanhaId: string, aprovar: boolean, motivo?: string) => void;
   salvarProduto: (
@@ -112,6 +127,7 @@ const inicial = (): Persistido => ({
   edicoes: edicoesDemo(),
   logistica: null,
   filiais: [],
+  cadastro: null,
 });
 
 export const usePainel = create<Persistido & Acoes>()(
@@ -127,6 +143,15 @@ export const usePainel = create<Persistido & Acoes>()(
       },
       simularAprovacao: () => set({ status: 'aprovada' }),
       enviarCadastro: () => set((s) => (s.status === 'aprovada' ? {} : { status: 'em_analise' })),
+      salvarCadastro: (cadastro) => set({ cadastro }),
+      novoLojista: (d) => {
+        const c = cadastroVazio();
+        c.empresa.fantasia = d.fantasia;
+        c.empresa.cnpj = d.cnpj;
+        c.responsavel = { ...c.responsavel, nome: d.nome, email: d.email, celular: d.celular };
+        // Loja nova: rascunho, oculta e sem vender até a aprovação (§7.1 e §7.2).
+        set({ cadastro: c, status: 'rascunho', visivel: false, responsavel: d.nome });
+      },
 
       avancarPedido: (id) => {
         if (useAdmin.getState().analises[id]) return null; // em análise administrativa
@@ -220,6 +245,16 @@ export const usePainel = create<Persistido & Acoes>()(
         set((s) => ({
           campanhas: s.campanhas.map((x) =>
             x.id === id ? { ...x, arte, status: 'arte_em_analise', motivoReprovacao: undefined } : x,
+          ),
+        }));
+        return 'ok';
+      },
+      enviarLetreiro: (id, letreiro) => {
+        const c = get().campanhas.find((x) => x.id === id);
+        if (!c || !podeEnviarArte(c.status)) return 'sem_espaco';
+        set((s) => ({
+          campanhas: s.campanhas.map((x) =>
+            x.id === id ? { ...x, letreiro, status: 'arte_em_analise', motivoReprovacao: undefined } : x,
           ),
         }));
         return 'ok';
@@ -357,6 +392,7 @@ export const usePainel = create<Persistido & Acoes>()(
         edicoes: s.edicoes,
         logistica: s.logistica,
         filiais: s.filiais,
+        cadastro: s.cadastro,
       }),
       onRehydrateStorage: () => () => usePainel.setState({ hidratado: true }),
     },

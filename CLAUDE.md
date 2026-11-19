@@ -467,8 +467,13 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ### 13.12 Acesso, anúncios comprados e ajustes após a revisão do Codex (19/11/2026)
 - **[DECIDIDO] Login em página própria**, como nos grandes marketplaces.
     - Rotas `/entrar`, `/cadastro` e `/lojista/entrar`, no grupo `(acesso)`: sem cabeçalho, categorias, rodapé nem barra inferior. O banner de cookies e os avisos continuam.
-    - Fundo: foto da cidade em tela cheia com véu marinho, e o formulário num cartão translúcido com pesponto. No desktop, ao lado, fica uma frase da marca com três destaques.
-    - A foto atual é Cianorte vista do alto, de domínio público (CC0, Wikimedia Commons), otimizada em `public/acesso/cianorte.webp`. **[PENDENTE]** Foto do Portal de Cianorte com licença ou autorização de uso. Para trocar, basta substituir o arquivo; com várias cidades, a foto passa a vir do tenant.
+    - **[DECIDIDO 19/11/2026] Fundo:** ilustração original da cidade, sem fotos de terceiros: o Portal "Cianorte – Capital do Vestuário" (coluna listrada com a estátua, viga com o letreiro, arco com bordado amarelo, carretel, agulhas e a linha vermelha) e a Catedral (arco parabólico com cobogó iluminado), ao anoitecer.
+        - Arquivo: `public/acesso/cianorte.svg`, vetorial, leve e nítido em qualquer tela.
+        - Vem de `tenant.fundoAcesso`; cidade sem ilustração fica com o fundo marinho da marca.
+        - As fotos de referência (Portal, Catedral, galeria da prefeitura) têm dono e não foram usadas. Uma foto autorizada pode substituir o SVG.
+    - **Desktop:** cartão branco à esquerda e frase da marca no alto à direita, com os marcos à vista embaixo. Em telas baixas (menos de 860 px de altura) aparece só o título.
+    - **Celular:** a ilustração é uma faixa no topo, com o cartão logo abaixo.
+    - O cartão é branco sólido (o translúcido baixava o contraste das dicas dos campos, apontado pela checagem de acessibilidade).
 - **[DECIDIDO] Painel exige login do lojista.**
     - Sem sessão, vai para `/lojista/entrar?next=<tela>` e volta para a tela pedida. "Sair do painel" fica no menu.
     - Na demonstração a sessão fica no aparelho (`stores/sessaoLojista.ts`) e qualquer e-mail válido entra na loja de exemplo. Na versão real, o middleware exige cookie httpOnly.
@@ -494,6 +499,29 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - **Selo do anúncio unificado:** "Patrocinado" + logo (ou sigla na cor da loja) + nome da loja num só selo, em todas as vagas. Antes apareciam o selo e a marca com o nome repetido. Não é editável pelo lojista.
 - **Desempenho:** as logos das lojas saíram do estado do painel para `stores/logos.ts` (`ct-logos-v1`). A vitrine não lê mais pedidos, campanhas e artes do painel a cada página. As logos salvas antes são trazidas uma vez. As logos do projeto passam pelo `next/image`; só as enviadas na demo (data URL) dispensam a otimização.
 - **Testes:** Vitest (`arteAnuncio.test.ts`, `redirecionamento.test.ts`) e Playwright (`e2e/acesso.spec.ts`, `e2e/arte-anuncio.spec.ts`).
+- **Build em pasta separada:** `NEXT_DIST_DIR=.next-testes npm run test:e2e` (ou `next build`) gera o build fora do `.next`. Assim um `next dev` aberto não corrompe o build (erro "no direct app page entry found for /_not-found"). As pastas `.next-*` ficam fora do Git e do Docker.
+
+### 13.13 Preparação para a apresentação (19/11/2026)
+- **[DECIDIDO] Apresentar sempre com `npm run demo`** (na raiz): gera a versão de produção e abre em modo demonstração em http://cianorte.localhost:3000 (`npm run demo -- 3100` para outra porta; build em `.next-demo`).
+    - O `npm run dev` compila cada página na primeira visita e fica lento no Windows; ele serve só para desenvolver.
+    - Medido: páginas entre 0,01 s e 0,14 s.
+    - Varredura de 102 rotas e 164 imagens/ícones sem nenhum erro 500.
+    - `/favicon.ico` (ícone da cidade) e `/robots.txt` foram incluídos; antes davam 404 no console.
+- **[DECIDIDO] Cadastro do vendedor de verdade (na demo, salvo no aparelho):**
+    - "Quero vender" leva a `/lojista/cadastro`: o lojista cria o acesso (loja, CNPJ com máscara e dígito, responsável, e-mail, celular, senha, termos) e segue direto para o painel.
+    - `/painel/cadastro` virou um assistente em 6 etapas: empresa, responsável, unidade, recebimento, documentos e revisão.
+    - Tem barra de progresso, validação por etapa e salvamento automático a cada alteração, retomando de onde parou.
+    - Conexão simulada com o provedor de pagamento e anexos reais de documentos (PDF, JPG ou PNG até 5 MB; cartão CNPJ obrigatório).
+    - Envio para análise; na demo, "Simular aprovação". Regras em `lib/regras/cadastroLoja.ts`.
+    - Loja nova começa como rascunho e oculta, com o nome fantasia no menu e sem a logo da loja de exemplo.
+- **[DECIDIDO] Atalhos de categoria da home em carrossel:** uma fileira só, com setas no computador quando não cabem.
+- **[DECIDIDO] Letreiro de ofertas na barra do topo:** o botão "Categorias" (mega menu) continua. Os links de categoria e o "Mais", que repetiam os atalhos da home, deram lugar a um letreiro.
+    - O letreiro intercala frases patrocinadas das lojas (com "Patrocinado" e a marca) e avisos da cidade.
+    - Para com o mouse ou o foco, tem botão de pausa, e para quem pediu menos movimento no sistema a lista fica parada.
+- **[PROPOSTA] Vaga T1 (letreiro):** só texto (até 80 caracteres) e destino do clique, compra direta, R$ 150 por dia, até 8 lojas revezando, em todas as páginas.
+    - Aparece no mapa da central de anúncios. A "arte" é a frase, num editor próprio com prévia, e passa pela mesma moderação no admin.
+    - Valor a confirmar com a tabela comercial.
+- **Testes:** Vitest (`cadastroLoja.test.ts`) e Playwright (`e2e/vendedor.spec.ts`). Testes que procuravam textos que agora também aparecem no letreiro foram restritos ao conteúdo da página (`main`).
 
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 

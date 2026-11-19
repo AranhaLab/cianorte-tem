@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Ilustração de Cianorte ao anoitecer: o Portal da Capital do Vestuário e a Catedral">
+  <!-- Ilustração original do Cianorte Tem (sem uso de fotografias de terceiros).
+       Portal "Cianorte – Capital do Vestuário" (coluna com estátua, viga, arco bordado,
+       carretel e agulhas) e a Catedral (arco parabólico com cobogó), ao anoitecer. -->
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1430"/>
+      <stop offset=".45" stop-color="#14213D"/>
+      <stop offset=".68" stop-color="#2A3B6E"/>
+      <stop offset=".8" stop-color="#6A5478"/>
+      <stop offset=".88" stop-color="#D88A5A"/>
+    </linearGradient>
+    <radialGradient id="brilho" cx=".62" cy=".74" r=".55">
+      <stop offset="0" stop-color="#F6B867" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#F6B867" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="chao" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14243F"/>
+      <stop offset="1" stop-color="#070E1F"/>
+    </linearGradient>
+    <linearGradient id="estrada" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2B3247"/>
+      <stop offset="1" stop-color="#151A28"/>
+    </linearGradient>
+    <linearGradient id="catedral" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6DC"/>
+      <stop offset="1" stop-color="#EEC97C"/>
+    </linearGradient>
+    <radialGradient id="aura" cx=".5" cy=".6" r=".5">
+      <stop offset="0" stop-color="#FFD98A" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#FFD98A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="poste" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FFE7A8" stop-opacity=".95"/>
+      <stop offset=".35" stop-color="#FFD27A" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FFD27A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dourado" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3D27A"/>
+      <stop offset="1" stop-color="#B8862F"/>
+    </linearGradient>
+    <linearGradient id="agulha" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#B9C4D8"/>
+    </linearGradient>
+    <pattern id="cobogo" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect width="16" height="16" fill="#FFE9AE"/>
+      <path d="M8 1 L15 8 L8 15 L1 8 Z" fill="#F7D57F" stroke="#C59443" stroke-width="1.6"/>
+      <circle cx="8" cy="8" r="1.6" fill="#FFF7DE"/>
+    </pattern>
+    <linearGradient id="nevoa" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#070E1F" stop-opacity="0"/>
+      <stop offset="1" stop-color="#070E1F" stop-opacity=".75"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Céu, estrelas e lua -->
+  <rect width="1600" height="900" fill="url(#ceu)"/>
+  <rect width="1600" height="900" fill="url(#brilho)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="70" r="1.6" opacity=".8"/><circle cx="150" cy="190" r="1.2" opacity=".6"/>
+    <circle cx="240" cy="40" r="1.8" opacity=".9"/><circle cx="380" cy="120" r="1.2" opacity=".7"/>
+    <circle cx="470" cy="60" r="1.5" opacity=".8"/><circle cx="560" cy="210" r="1.1" opacity=".5"/>
+    <circle cx="640" cy="90" r="1.7" opacity=".85"/><circle cx="730" cy="30" r="1.2" opacity=".6"/>
+    <circle cx="820" cy="150" r="1.4" opacity=".7"/><circle cx="900" cy="70" r="1.9" opacity=".9"/>
+    <circle cx="990" cy="200" r="1.1" opacity=".5"/><circle cx="1070" cy="40" r="1.5" opacity=".8"/>
+    <circle cx="1150" cy="130" r="1.2" opacity=".6"/><circle cx="1240" cy="60" r="1.7" opacity=".85"/>
+    <circle cx="1330" cy="180" r="1.1" opacity=".5"/><circle cx="1420" cy="90" r="1.6" opacity=".8"/>
+    <circle cx="1510" cy="30" r="1.3" opacity=".7"/><circle cx="1570" cy="160" r="1.5" opacity=".75"/>
+    <circle cx="330" cy="250" r="1" opacity=".45"/><circle cx="1010" cy="260" r="1" opacity=".45"/>
+    <circle cx="700" cy="250" r="1.1" opacity=".5"/><circle cx="110" cy="300" r="1" opacity=".4"/>
+  </g>
+  <circle cx="300" cy="150" r="30" fill="#F7EBCF" opacity=".95"/>
+  <circle cx="314" cy="141" r="27" fill="#0E1936" opacity=".9"/>
+
+  <!-- Cidade ao fundo -->
+  <path fill="#1B2950" d="M0 650 V610 H40 V585 H85 V600 H120 V560 H150 V540 H175 V575 H230 V598 H275 V570 H320 V545 H345 V520 H368 V545 H400 V588 H450 V600 H500 V575 H540 V598 H590 V610 H640 V590 H700 V612 H760 V598 H820 V612 H880 V590 H930 V605 H1000 V585 H1040 V560 H1075 V590 H1120 V603 H1180 V580 H1215 V600 H1600 V650 Z"/>
+  <g fill="#F2C76B" opacity=".55">
+    <rect x="128" y="570" width="5" height="7"/><rect x="140" y="585" width="5" height="7"/>
+    <rect x="160" y="552" width="4" height="6"/><rect x="330" y="556" width="5" height="7"/>
+    <rect x="352" y="532" width="4" height="6"/><rect x="352" y="560" width="4" height="6"/>
+    <rect x="510" y="584" width="5" height="7"/><rect x="1050" y="572" width="5" height="7"/>
+    <rect x="1062" y="590" width="5" height="7"/><rect x="1190" y="590" width="4" height="6"/>
+  </g>
+
+  <!-- Chão, gramados e avenida -->
+  <rect y="630" width="1600" height="270" fill="url(#chao)"/>
+  <path fill="#10303A" opacity=".9" d="M0 660 H1090 L790 900 H0 Z"/>
+  <path fill="#10303A" opacity=".9" d="M1146 660 H1600 V900 H1446 Z"/>
+  <path fill="url(#estrada)" d="M1106 658 H1130 L1430 900 H806 Z"/>
+  <path d="M1106 658 L806 900" stroke="#DCE3F2" stroke-width="4" opacity=".55"/>
+  <path d="M1130 658 L1430 900" stroke="#DCE3F2" stroke-width="4" opacity=".55"/>
+  <path d="M1116 658 L1103 900" stroke="#F2C230" stroke-width="5"/>
+  <path d="M1120 658 L1133 900" stroke="#F2C230" stroke-width="5"/>
+
+  <!-- Marcos da cidade, um pouco menores e ancorados no chão (deixa o céu livre para o texto) -->
+  <g transform="translate(369 167) scale(.78)">
+  <!-- Árvores ao longo da avenida -->
+  <g fill="#0C2230">
+    <circle cx="800" cy="618" r="26"/><circle cx="830" cy="610" r="30"/><circle cx="866" cy="622" r="22"/>
+    <circle cx="1050" cy="620" r="24"/><circle cx="1085" cy="608" r="32"/><circle cx="1122" cy="620" r="22"/>
+    <circle cx="560" cy="626" r="20"/><circle cx="590" cy="616" r="26"/>
+  </g>
+
+  <!-- Postes iluminados -->
+  <g stroke="#3A4766" stroke-width="4">
+    <path d="M1140 760 V690"/><path d="M1075 712 V660"/><path d="M800 712 V660"/><path d="M735 760 V690"/>
+  </g>
+  <g>
+    <circle cx="1140" cy="686" r="40" fill="url(#poste)"/><circle cx="1075" cy="657" r="30" fill="url(#poste)"/>
+    <circle cx="800" cy="657" r="30" fill="url(#poste)"/><circle cx="735" cy="686" r="40" fill="url(#poste)"/>
+  </g>
+
+  <!-- Catedral (arco parabólico com cobogó) -->
+  <ellipse cx="1415" cy="560" rx="230" ry="230" fill="url(#aura)"/>
+  <rect x="1556" y="300" width="38" height="400" rx="4" fill="#24335C"/>
+  <g fill="#F2C76B" opacity=".7">
+    <rect x="1566" y="330" width="6" height="10"/><rect x="1578" y="330" width="6" height="10"/>
+    <rect x="1566" y="380" width="6" height="10"/><rect x="1578" y="430" width="6" height="10"/>
+    <rect x="1566" y="480" width="6" height="10"/><rect x="1578" y="530" width="6" height="10"/>
+  </g>
+  <path fill="url(#catedral)" d="M1265 700 C1265 520 1325 340 1415 340 C1505 340 1565 520 1565 700 Z"/>
+  <path fill="#F8E1A6" d="M1295 700 C1295 545 1345 392 1415 392 C1485 392 1535 545 1535 700 Z"/>
+  <rect x="1362" y="440" width="106" height="150" fill="url(#cobogo)"/>
+  <rect x="1362" y="440" width="106" height="150" fill="none" stroke="#C59443" stroke-width="3"/>
+  <rect x="1330" y="600" width="170" height="16" rx="2" fill="#C08E3E"/>
+  <g fill="#6E4024">
+    <rect x="1367" y="626" width="26" height="64" rx="2"/><rect x="1402" y="626" width="26" height="64" rx="2"/><rect x="1437" y="626" width="26" height="64" rx="2"/>
+  </g>
+  <rect x="1320" y="690" width="190" height="10" fill="#E6CD94"/>
+  <rect x="1300" y="700" width="230" height="8" fill="#D6BB80"/>
+  <rect x="1413" y="306" width="5" height="30" fill="#FFF4D6"/><rect x="1405" y="315" width="21" height="5" fill="#FFF4D6"/>
+  <!-- Palmeiras -->
+  <g stroke="#0B1D29" stroke-linecap="round" fill="none">
+    <path d="M1245 708 C1250 650 1246 600 1258 560" stroke-width="8"/>
+    <path d="M1258 560 C1230 548 1210 556 1196 572 M1258 560 C1280 540 1300 545 1312 556 M1258 560 C1250 530 1232 520 1214 524 M1258 560 C1272 532 1290 526 1302 530" stroke-width="7"/>
+  </g>
+
+  <!-- Portal: arco bordado -->
+  <path d="M735 600 Q960 410 1240 770" fill="none" stroke="#163F8A" stroke-width="34" stroke-linecap="round"/>
+  <path d="M735 600 Q960 410 1240 770" fill="none" stroke="#1F4FA3" stroke-width="24" stroke-linecap="round"/>
+  <path d="M735 600 Q960 410 1240 770" fill="none" stroke="#F2C230" stroke-width="4" stroke-dasharray="12 9"/>
+
+  <!-- Portal: agulhas cruzadas -->
+  <path fill="url(#agulha)" d="M1158 360 L1170 354 L1312 770 L1302 776 Z"/>
+  <ellipse cx="1166" cy="372" rx="3" ry="9" fill="#14213D" transform="rotate(-19 1166 372)"/>
+  <path fill="url(#agulha)" d="M1300 388 L1310 396 L1180 770 L1170 766 Z" opacity=".95"/>
+
+  <!-- Portal: viga com o letreiro -->
+  <rect x="690" y="452" width="540" height="42" rx="6" fill="#1F4FA3"/>
+  <rect x="690" y="452" width="540" height="42" rx="6" fill="none" stroke="#163F8A" stroke-width="3"/>
+  <path d="M704 488 H1216" stroke="#F2C230" stroke-width="4" stroke-dasharray="9 7"/>
+  <text x="955" y="480" text-anchor="middle" font-family="Outfit, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="800" letter-spacing="2.5" fill="#FFFFFF">CIANORTE · CAPITAL DO VESTUÁRIO</text>
+
+  <!-- Portal: carretel -->
+  <circle cx="1238" cy="440" r="50" fill="#F4EAD5" stroke="#C9B48C" stroke-width="7"/>
+  <circle cx="1238" cy="440" r="32" fill="none" stroke="#D7263D" stroke-width="10" stroke-dasharray="4 3"/>
+  <circle cx="1238" cy="440" r="12" fill="#8A6B3E"/>
+
+  <!-- Portal: linha vermelha da estátua até a agulha -->
+  <path d="M724 344 C820 250 1020 230 1166 372" fill="none" stroke="#D7263D" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Portal: coluna listrada com a estátua -->
+  <ellipse cx="700" cy="768" rx="78" ry="16" fill="#0A1226" opacity=".6"/>
+  <path fill="#C8102E" d="M640 700 H760 L752 764 H648 Z"/>
+  <g stroke="#FFFFFF" stroke-width="5" opacity=".9"><path d="M646 716 H754"/><path d="M648 734 H752"/><path d="M650 752 H750"/></g>
+  <rect x="656" y="600" width="88" height="100" rx="6" fill="#1F4FA3"/>
+  <rect x="656" y="640" width="88" height="10" fill="#FFFFFF"/>
+  <circle cx="700" cy="676" r="17" fill="#FFFFFF" stroke="#1F4FA3" stroke-width="5"/>
+  <circle cx="700" cy="676" r="7" fill="#D7263D"/>
+  <rect x="672" y="470" width="56" height="130" rx="4" fill="#FFFFFF"/>
+  <rect x="672" y="470" width="56" height="34" rx="4" fill="#C8102E"/>
+  <rect x="672" y="560" width="56" height="40" fill="#1F4FA3"/>
+  <rect x="682" y="446" width="36" height="26" rx="3" fill="#C8102E"/>
+  <!-- Estátua dourada com o braço erguido -->
+  <circle cx="700" cy="370" r="10" fill="url(#dourado)"/>
+  <path fill="url(#dourado)" d="M690 384 H710 L716 446 H684 Z"/>
+  <path d="M706 392 L724 344" stroke="url(#dourado)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M694 392 L684 420" stroke="url(#dourado)" stroke-width="6" stroke-linecap="round"/>
+
+  </g>
+
+  <!-- Brilho do anoitecer no chão e névoa para leitura -->
+  <rect y="620" width="1600" height="280" fill="url(#nevoa)"/>
+</svg>

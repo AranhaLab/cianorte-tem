@@ -20,6 +20,8 @@ export interface Tenant {
   acento: string; // hex da etiqueta "Tem" (bandeira da cidade)
   associacao: string; // associação comercial parceira (ex.: ACIC)
   slogan: string;
+  /** Ilustração da cidade no fundo das telas de acesso (opcional; sem ela, fundo da marca). */
+  fundoAcesso?: { src: string; legenda: string };
   cepsAtendidos: string[]; // prefixos de 5 dígitos
   dominios: string[]; // hosts que resolvem para este tenant
   razaoSocialOperadora: string; // identificação do fornecedor (Decreto 7.962/2013)
@@ -134,7 +136,7 @@ export interface ComponenteKit {
 }
 
 /* ---------- Publicidade ---------- */
-export type VagaId = 'H1' | 'M1' | 'M2' | 'C1' | 'K1' | 'L1';
+export type VagaId = 'H1' | 'M1' | 'M2' | 'C1' | 'K1' | 'L1' | 'T1';
 export type StatusVaga = 'disponivel' | 'leilao' | 'ocupado';
 
 /** [PROPOSTA] Como a vaga é comprada: só por lance (H1) ou compra direta pelo valor de tabela. */
@@ -334,6 +336,8 @@ export interface Campanha {
   valorDiaCentavos: Centavos;
   periodo: string;
   arte?: ArteAnuncio;
+  /** T1 (letreiro): só texto curto e destino do clique. */
+  letreiro?: { texto: string; destino: string };
   motivoReprovacao?: string;
 }
 

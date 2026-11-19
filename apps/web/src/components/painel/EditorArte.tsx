@@ -94,7 +94,7 @@ function Carregar({ campanhaId }: { campanhaId: string }) {
         acao={voltar}
       />
     );
-  if (!podeEnviarArte(campanha.status) && !campanha.arte)
+  if (!podeEnviarArte(campanha.status) && !campanha.arte && !campanha.letreiro)
     return (
       <CaixaVazia
         icone="lock"
@@ -107,6 +107,7 @@ function Carregar({ campanhaId }: { campanhaId: string }) {
         acao={voltar}
       />
     );
+  if (vaga.id === 'T1') return <EditorLetreiro key={campanha.id} campanha={campanha} />;
   return <Formulario key={campanha.id} campanha={campanha} vaga={vaga} />;
 }
 
@@ -568,6 +569,115 @@ function Formulario({ campanha, vaga }: { campanha: Campanha; vaga: VagaAnuncio 
           </span>
         </fieldset>
       </div>
+    </>
+  );
+}
+
+const LIMITE_LETREIRO = 80;
+
+/**
+ * T1 — letreiro de ofertas: só uma frase curta e o destino do clique. A marca da loja e o
+ * "Patrocinado" entram sozinhos. Prévia ao vivo na própria barra marinha do site.
+ */
+function EditorLetreiro({ campanha }: { campanha: Campanha }) {
+  const router = useRouter();
+  const { loja, categorias } = useLojaPainel();
+  const somenteLeitura = !podeEnviarArte(campanha.status);
+  const [texto, setTexto] = useState(campanha.letreiro?.texto ?? '');
+  const [destino, setDestino] = useState(campanha.letreiro?.destino ?? `/loja/${loja.id}`);
+  const [tentou, setTentou] = useState(false);
+  const categoria = categorias.find((c) => c.id === loja.categoriaId);
+  const erro =
+    texto.trim().length < 10
+      ? 'Escreva a frase do letreiro (mínimo de 10 caracteres).'
+      : texto.length > LIMITE_LETREIRO
+        ? `Até ${LIMITE_LETREIRO} caracteres.`
+        : null;
+
+  const enviar = () => {
+    setTentou(true);
+    if (erro) return avisar(erro);
+    if (usePainel.getState().enviarLetreiro(campanha.id, { texto: texto.trim(), destino }) !== 'ok')
+      return avisar('Esta campanha não permite enviar agora.');
+    avisar('Frase enviada para aprovação.');
+    router.push('/painel/anuncios');
+  };
+
+  return (
+    <>
+      <TituloPainel
+        titulo={somenteLeitura ? 'Letreiro de ofertas' : 'Enviar frase do letreiro'}
+        apoio={`Vaga T1 · barra do topo, em todas as páginas · ${campanha.periodo}`}
+        acao={
+          <span className="flex items-center gap-2">
+            <span className={`status ${ROTULO_CAMPANHA[campanha.status][1]}`}>
+              {ROTULO_CAMPANHA[campanha.status][0]}
+            </span>
+            <Link href="/painel/anuncios" className="text-[13px]">
+              Voltar
+            </Link>
+          </span>
+        }
+      />
+      {campanha.status === 'reprovada' && campanha.motivoReprovacao && (
+        <div className="banner-info bg-acento-claro text-acento-escuro" role="alert">
+          <Icone nome="alert" />
+          <span className="text-[13px]">
+            <b>Frase reprovada:</b> {campanha.motivoReprovacao} Ajuste e envie de novo.
+          </span>
+        </div>
+      )}
+      <section className="card flex flex-col gap-3" aria-label="Simulação da vaga">
+        <h2>Como fica no site</h2>
+        <div className="overflow-hidden rounded-[12px] bg-marinho-2 px-4 py-2.5">
+          <span className="inline-flex items-center gap-2 whitespace-nowrap text-[13px] text-branco">
+            <span className="rounded-full bg-branco/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-sobre-marinho-forte">
+              Patrocinado · {loja.nome}
+            </span>
+            {texto.trim() || 'Sua frase aparece aqui'}
+          </span>
+        </div>
+        <span className="text-xs text-grafite-2">
+          A frase corre na barra do topo junto com outras lojas e avisos da cidade. Clique leva ao destino
+          escolhido.
+        </span>
+      </section>
+      <fieldset disabled={somenteLeitura} className="card m-0 flex flex-col gap-3 border-0">
+        <legend className="sr-only">Frase do letreiro</legend>
+        <div className="campo">
+          <label htmlFor="lt-texto">Frase</label>
+          <input
+            id="lt-texto"
+            className="input"
+            maxLength={LIMITE_LETREIRO}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            aria-invalid={tentou && erro ? true : undefined}
+          />
+          <span className="dica">
+            {texto.length}/{LIMITE_LETREIRO} · direta, sem promessa que a loja não cumpre (CDC e CONAR)
+          </span>
+          {tentou && erro && <span className="erro-campo">{erro}</span>}
+        </div>
+        <div className="campo">
+          <label htmlFor="lt-destino">Ao clicar, abre</label>
+          <select
+            id="lt-destino"
+            className="input"
+            value={destino}
+            onChange={(e) => setDestino(e.target.value)}
+          >
+            <option value={`/loja/${loja.id}`}>A página da {loja.nome}</option>
+            {categoria && <option value={`/c/${categoria.id}`}>A categoria {categoria.nome}</option>}
+            <option value="/ofertas">As ofertas do dia</option>
+          </select>
+        </div>
+        {!somenteLeitura && (
+          <button type="button" className="btn btn-primary btn-lg" onClick={enviar}>
+            Enviar para aprovação
+          </button>
+        )}
+      </fieldset>
     </>
   );
 }

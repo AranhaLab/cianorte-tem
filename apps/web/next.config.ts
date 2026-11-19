@@ -39,10 +39,16 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Imagem Docker enxuta: copia só o servidor standalone (ver apps/web/Dockerfile).
   output: 'standalone',
+  // Pasta do build configurável: permite gerar/testar o build sem disputar o .next de um `next dev` aberto.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   // O app é apps/web, não a raiz do monorepo (lá só há os comandos de atalho).
   outputFileTracingRoot: path.resolve(__dirname),
   poweredByHeader: false,
   reactStrictMode: true,
+  // O navegador sempre pede /favicon.ico: entrega o ícone da cidade (antes dava 404 no console).
+  async rewrites() {
+    return [{ source: '/favicon.ico', destination: '/icons/192.png' }];
+  },
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

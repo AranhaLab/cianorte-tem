@@ -15,6 +15,10 @@ export const TENANTS: Record<string, Tenant> = {
     acento: '#D7263D',
     associacao: 'ACIC',
     slogan: 'Tudo o que a cidade tem, num lugar só.',
+    fundoAcesso: {
+      src: '/acesso/cianorte.svg',
+      legenda: 'Ilustração: Portal da Capital do Vestuário e Catedral de Cianorte',
+    },
     cepsAtendidos: ['87200', '87201', '87202', '87203', '87204', '87205', '87206', '87207', '87208', '87209'],
     dominios: ['cianorte.localhost', 'cianortetem.com.br', 'www.cianortetem.com.br'],
     razaoSocialOperadora: '[Razão social da operadora]',

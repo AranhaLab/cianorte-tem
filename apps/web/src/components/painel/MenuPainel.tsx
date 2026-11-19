@@ -10,7 +10,7 @@ import { useComprador } from '@/stores/comprador';
 import { usePainel } from '@/stores/painel';
 import { useSessaoLojista } from '@/stores/sessaoLojista';
 import type { StatusCadastroLoja } from '@/types/domain';
-import { useLojaPainel } from './PainelContexto';
+import { useLojaExibida, useLojaPainel } from './PainelContexto';
 
 const ITENS: Array<[string, NomeIcone, string]> = [
   ['', 'chart', 'Visão geral'],
@@ -41,6 +41,7 @@ export function MenuPainel() {
   const { loja } = useLojaPainel();
   const status = usePainel((s) => s.status);
   const visivel = usePainel((s) => s.visivel);
+  const lojaExibida = useLojaExibida();
   const ativo = path.replace(/^\/painel\/?/, '').split('/')[0] ?? '';
   const [rotulo, cor] = STATUS_LOJA[status];
 
@@ -72,9 +73,9 @@ export function MenuPainel() {
       </nav>
       <div className="flex flex-col gap-2.5 border-t border-solid border-borda-fria px-1.5 pt-3.5">
         <div className="flex items-center gap-2.5">
-          <AvatarLoja loja={loja} className="h-10 w-10 rounded-[12px] text-sm" />
+          <AvatarLoja loja={lojaExibida} className="h-10 w-10 rounded-[12px] text-sm" />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <b className="text-[13px]">{loja.nome}</b>
+            <b className="text-[13px]">{lojaExibida.nome}</b>
             <span className={`status ${cor} self-start px-2 py-0.5 text-[11px]`}>{rotulo}</span>
           </span>
         </div>

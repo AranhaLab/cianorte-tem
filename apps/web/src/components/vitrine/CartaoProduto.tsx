@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Icone } from '@/components/ui/Icone';
 import { desconto, reais } from '@/lib/regras/dinheiro';
 import { textoChegada, type ItemVitrine } from '@/lib/vitrine';
-import { ArteProduto } from './ArteProduto';
+import { ArteProduto, capaDe } from './ArteProduto';
 import { AcoesCartao } from './AcoesCartao';
 
 /**
@@ -20,7 +20,13 @@ export function CartaoProduto({ item, patrocinado = false }: { item: ItemVitrine
       className={`group relative flex h-full flex-col gap-2 rounded-[18px] border border-solid border-borda bg-branco p-2 text-grafite transition-[box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-2`}
     >
       <Link href={`/p/${p.id}`} className="flex flex-1 flex-col gap-2 text-inherit hover:text-inherit">
-        <ArteProduto categoria={categoria} className="rounded-[12px]" esmaecido={esgotado}>
+        <ArteProduto
+          categoria={categoria}
+          className="rounded-[12px]"
+          esmaecido={esgotado}
+          src={capaDe(p.midias)}
+          sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 260px"
+        >
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             {off > 0 && <span className="pill pill-sale">−{off}%</span>}
             {p.kit && (

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCaminho } from '@/hooks/useCaminho';
+import { linkEntrar } from '@/lib/regras/redirecionamento';
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
 import { totalItens, useComprador } from '@/stores/comprador';
 
@@ -32,7 +33,7 @@ export function BarraInferior() {
       badge: qtd,
     },
     {
-      href: usuario ? '/conta' : '/entrar',
+      href: usuario ? '/conta' : linkEntrar(path),
       icone: 'user',
       rotulo: usuario ? 'Conta' : 'Entrar',
       ativo: ['/conta', '/entrar', '/cadastro', '/pedido'].some((p) => path.startsWith(p)),

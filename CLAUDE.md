@@ -132,6 +132,8 @@ Legenda: **[DECIDIDO]** regra confirmada · **[PROPOSTA]** usada no protótipo, 
 5. Documentos: cartão CNPJ (obrigatório); contrato social e registro de marca (para o selo Loja oficial).
 6. Aceite do Contrato do Lojista.
 
+- **Logo da loja:** no cadastro, o lojista pode selecionar uma imagem JPG, PNG ou WebP de até 2 MB, visualizar e salvar. Na demonstração, a imagem é reduzida e guardada no navegador por cidade e loja, aparecendo na vitrine, no painel e nos anúncios. No back-end, a logo deve ser armazenada por estabelecimento e disponibilizada pela API.
+
 - Status: `rascunho` → `em_analise` → `aprovada` | `reprovada` | `suspensa`. **[PROPOSTA]** Prazo de análise de até 2 dias úteis.
 
 ### 7.2 Loja visível
@@ -175,6 +177,14 @@ Legenda: **[DECIDIDO]** regra confirmada · **[PROPOSTA]** usada no protótipo, 
 
 ## 9. Publicidade (anúncios)
 
+- **[DECIDIDO]** A demonstração mostra criativos com imagem no topo e na lateral de todas as categorias de Cianorte. O anúncio de móveis “Sala nova até o Natal” continua visível como destaque adicional, inclusive nas demais categorias. As demais peças de categoria usam lojas com produtos naquela categoria.
+- **[DECIDIDO]** Cada anunciante da demonstração tem identidade fictícia nos anúncios. As fotos ficam visíveis com um véu neutro uniforme por padrão; o degradê continua disponível para peças que o solicitarem.
+
+- **[DECIDIDO]** A central apresenta mapas separados para a página inicial e para as páginas de categoria. As vagas K1 e L1 são vinculadas à categoria de atuação da loja, cada uma com sua contratação e período.
+- **[DECIDIDO]** H1 é um carrossel automático com até quatro anunciantes, controles manuais e pausa.
+- **[PROPOSTA]** Na demonstração, H1 usa R$ 2.000 por dia e os banners M1 e M2 usam R$ 500 por dia. Os valores e a unidade de cobrança precisam de confirmação comercial.
+- Esses exemplos de H1, M1 e M2 substituem os valores anteriores da tabela abaixo.
+
 ### 9.1 Mapa de vagas
 O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em lance, Ocupada), o formato e o preço.
 
@@ -203,6 +213,8 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - **Estados da campanha:** `lance_ativo`, `lance_superado`, `vencedor_aguardando_arte`, `arte_em_analise`, `no_ar`, `encerrada`, `reprovada`.
 
 ## 10. Modelo de dados (entidades mínimas)
+
+- **[DECIDIDO]** O comprador pode avaliar cada loja após o pagamento do seu subpedido. A loja e seus produtos apresentam a média, a quantidade de avaliações e a quantidade de itens vendidos como métricas distintas. Na demonstração, avaliações novas ficam no navegador e vendas usam os dados fictícios do catálogo. No back-end, registrar e agregar as avaliações por tenant e estabelecimento, com uma avaliação por comprador e subpedido.
 
 `Tenant`, `Usuario`, `Consentimento`, `Endereco`, `Empresa`, `Estabelecimento` (unidade), `MembroEquipe`, `DocumentoEmpresa`, `Categoria`, `Produto`, `Variacao`, `ComponenteKit`, `Midia`, `ModeracaoConteudo`, `Estoque` (por SKU/unidade), `MovimentoEstoque`, `ReservaEstoque`, `ChaveApi`, `WebhookEndpoint`, `EntregaWebhook`, `Sacola`, `ItemSacola`, `Pedido`, `Subpedido`, `ItemPedido`, `EventoPedido`, `Pagamento`, `EventoPagamento`, `Repasse`, `Favorito`, `VagaAnuncio`, `TabelaPrecoVaga`, `Lance`, `Campanha`, `CriativoAnuncio`, `Selo`, `Auditoria`.
 
@@ -259,6 +271,8 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ```
 /                         raiz do repositório (monorepo)
 ├── CLAUDE.md             regras de negócio (este arquivo)
+├── package.json          comandos da raiz (dev, build, test, test:e2e, verificar) que repassam para cada app
+│                         [DECIDIDO 19/11/2026] estrutura apps/ mantida; sem workspaces (cada app com seu lock e Dockerfile)
 ├── docker-compose.yml    web + proxy hoje; api + db no profile "backend"
 ├── .env.example          variáveis de todos os serviços (o .env real nunca vai para o Git)
 ├── infra/caddy/          proxy reverso com HTTPS automático
@@ -321,7 +335,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 
 ### 13.6.1 Comprador: conta, checkout e pedido (etapa 4)
 - **Proteção de telas:** conta, checkout e pedido exigem login (`ExigeLogin`). Quem chega sem login vai para "Entrar" (com `?next=checkout` vindo do checkout); quem sai da conta vai para o início. Na versão real a proteção é a sessão validada no servidor; isto só evita a tela vazia.
-- **Redirecionamento seguro:** `?next=` só aceita `checkout`. Qualquer outro valor leva à conta (evita redirecionamento aberto).
+- **[DECIDIDO 19/11/2026] Volta para a tela de origem:** depois de entrar ou criar conta, a pessoa volta para a tela de onde saiu (`?next=`); sem origem, vai para o início. `destinoSeguro` (`lib/regras/redirecionamento.ts`) só aceita caminhos deste site: recusa `//`, `https://`, ``, caracteres de controle e o próprio login (evita redirecionamento aberto). `?next=checkout` continua aceito.
 - **Formulários de login e cadastro usam `method="post"`**: se o JavaScript não carregar, senha e CPF nunca vão para a URL. A busca do cabeçalho funciona sem JavaScript (`action="/busca"`).
 - **[PROPOSTA] Validações do cadastro no front** (o back-end repete): nome e sobrenome, CPF com dígito verificador, celular com DDD, e-mail, senha com 8+ caracteres e letras e números (o protótipo só checava o tamanho, mas o texto de ajuda já pedia letras e números). Termos e idade obrigatórios; marketing opcional; nenhum pré-marcado. Versão dos termos enviada no cadastro: `VERSAO_TERMOS` em `lib/regras/cadastro.ts`.
 - **[PROPOSTA] Checkout:** para avançar da etapa Entrega é obrigatório CEP, rua, número e bairro quando alguma loja for por entrega (o protótipo não validava). Se o CEP sair da área atendida, entrega e retirada ficam indisponíveis e o avanço é bloqueado (revalidação do CDC/PRD-03).
@@ -364,7 +378,19 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ### 13.8 Catálogo ampliado (etapa 7)
 - **Subcategorias:** cada categoria tem subcategorias (`Categoria.subcategorias`, `Produto.subcategoriaId`). No desktop, o botão "Categorias" abre um **mega menu**: categorias à esquerda, subcategorias da categoria em foco à direita, mais atalhos para Ofertas e Lojas. Na página da categoria, chips "Todas · Camisaria · …" filtram por `?sub=`.
 - **Filtros laterais** (categoria, busca e ofertas): botão "Filtros" abre um painel (direita no desktop, de baixo no celular) com faixa de preço, marca, loja e característica, com a contagem de cada opção. Tudo vai para a URL (`marca=`, `loja=`, `car=`, `min=`, `max=` em reais) e o servidor filtra; os filtros aplicados aparecem como chips removíveis. Trocar a ordenação mantém os filtros. **[PROPOSTA]** O filtro "cidade" do protótipo anterior não entrou: cada cidade é um domínio e nenhuma consulta cruza cidades (§2).
-- **Galeria do produto:** até 20 mídias (`MAX_MIDIAS`) na ordem do lojista; fotos 4:5 (moda) ou 1:1 e vídeo em quadro 9:16; desliza no celular, setas e teclado no desktop, miniaturas e contador "3/6". Na demonstração não há arquivos: fotos e vídeo são desenhos de exemplo (`Midia.variante`); com o back-end, `Midia.url`.
+- **Galeria do produto:** até 20 mídias (`MAX_MIDIAS`) na ordem do lojista; fotos 4:5 (moda) ou 1:1 e vídeo em quadro 9:16; desliza no celular, setas e teclado no desktop, miniaturas e contador "3/6".
+- **[DECIDIDO 19/11/2026] Fotos da demonstração:** cada produto fictício tem de 1 a 3 fotos ilustrativas reais.
+    - Origem: fotografias do Unsplash e imagens geradas para produtos e embalagens fictícias. As imagens geradas ficam no projeto e não são baixadas pelo script do Unsplash.
+    - Ficam no próprio projeto, em `public/produtos/<produto>-<n>.webp` (WebP, 800 px, 4:5 na moda e 1:1 nas demais), e são servidas pelo `next/image`; nada é carregado de site externo (CSP inalterada).
+    - A lista de fotos por produto está em `src/mocks/fotos-mock.json`. O script `node scripts/baixar-fotos-mock.mjs` baixa as que faltarem.
+    - `ArteProduto` mostra a foto quando há `Midia.url`; sem foto (produto novo no painel, fila de moderação da demo), continua o desenho da categoria.
+    - O cartão usa a 1ª foto como capa, mesmo quando a 1ª mídia é vídeo. O vídeo da demo continua simulado, sobre a 1ª foto.
+    - Para trocar uma foto: editar o JSON, apagar o arquivo e rodar o script.
+- **[DECIDIDO 19/11/2026] Fotos nos anúncios da demo (H1, M1, M2, L1):** cada criativo tem `imagem` (`CriativoAnuncio.imagem`), a foto da arte do anunciante, também do Unsplash. Ficam em `public/anuncios/<vaga>-<tema>.webp`, no tamanho da vaga, e o mesmo JSON e script cuidam delas.
+    - `FotoCriativo` põe a foto atrás do texto com um véu na cor de fundo do anunciante. No desktop o texto fica à esquerda e a foto aparece à direita (no L1, a foto em cima e o texto embaixo); no celular o véu cobre tudo para manter a leitura.
+    - A foto é decorativa (`alt` vazio): o nome lido do link continua sendo o texto do anúncio, sempre com "Patrocinado" + anunciante.
+    - Criativo sem `imagem` continua só com cor e texto, como antes. K1 segue mostrando o convite "Anuncie no topo de…" quando não há anunciante.
+    - **[PENDENTE]** Na versão real, o anunciante envia a arte pela central de anúncios, ela passa pela moderação, e o contraste do texto sobre a foto precisa de checagem na moderação.
 - **Vídeo como capa do cartão:** quando a 1ª mídia é vídeo, o cartão mostra o selo "Vídeo". Na versão real, vídeo mudo em loop, sem som automático, respeitando "reduzir movimento".
 - **Kits (PRD-05):** pelo menos 2 produtos distintos da mesma loja; o kit não tem estoque próprio.
     - **Fechado:** composição fixa e preço próprio; a página mostra "O que vem no kit"; disponibilidade = a pior entre os componentes.
@@ -437,6 +463,37 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - **Demonstração:** o admin e o painel conversam pelo aparelho, no mesmo navegador. O que o lojista da demo envia (cadastro, produto, filial) aparece para o admin, e as decisões voltam para o painel.
     - Decisões sobre as outras lojas e a troca de selo valem só nas telas do admin; a vitrine do comprador continua com os dados fixos até existir o back-end.
 - **Testes:** Vitest (`admin.test.ts`) e Playwright (`e2e/admin.spec.ts`). A checagem de acessibilidade (axe) passou a incluir as 7 telas do admin.
+
+### 13.12 Acesso, anúncios comprados e ajustes após a revisão do Codex (19/11/2026)
+- **[DECIDIDO] Login em página própria**, como nos grandes marketplaces.
+    - Rotas `/entrar`, `/cadastro` e `/lojista/entrar`, no grupo `(acesso)`: sem cabeçalho, categorias, rodapé nem barra inferior. O banner de cookies e os avisos continuam.
+    - Fundo: foto da cidade em tela cheia com véu marinho, e o formulário num cartão translúcido com pesponto. No desktop, ao lado, fica uma frase da marca com três destaques.
+    - A foto atual é Cianorte vista do alto, de domínio público (CC0, Wikimedia Commons), otimizada em `public/acesso/cianorte.webp`. **[PENDENTE]** Foto do Portal de Cianorte com licença ou autorização de uso. Para trocar, basta substituir o arquivo; com várias cidades, a foto passa a vir do tenant.
+- **[DECIDIDO] Painel exige login do lojista.**
+    - Sem sessão, vai para `/lojista/entrar?next=<tela>` e volta para a tela pedida. "Sair do painel" fica no menu.
+    - Na demonstração a sessão fica no aparelho (`stores/sessaoLojista.ts`) e qualquer e-mail válido entra na loja de exemplo. Na versão real, o middleware exige cookie httpOnly.
+    - Testes do painel usam `entrarComoLojista` (`e2e/ajuda.ts`).
+- **[DECIDIDO] Arte do anúncio só depois da compra**, vinculada à loja.
+    - Fluxo da campanha (§9.3):
+        - lance vencendo → aguardando arte (lance vencido) ou lance superado;
+        - compra direta → aguardando arte;
+        - aguardando arte → arte em análise → no ar ou arte reprovada;
+        - com a arte reprovada, o lojista pode reenviar; sem reenvio antes do início do período, o valor é reembolsado.
+    - "Enviar arte" aparece em Minhas campanhas e abre `/painel/anuncios/arte/[id]`. Antes da compra, a tela explica que não há espaço garantido.
+    - **[PROPOSTA]** H1 só por lance; as demais vagas por compra direta pelo valor de tabela (`VagaAnuncio.modoCompra`). Vaga ocupada permite reservar o próximo período. Aguarda confirmação comercial.
+    - **Editor da arte:**
+        - dois tipos: "Foto + texto", em que o site monta título, apoio e botão, ou "Arte pronta", em que a imagem já traz o texto e o título vira texto alternativo;
+        - imagem JPG, PNG ou WebP até 500 KB;
+        - nitidez calculada pela ampliação necessária; **[PROPOSTA]** acima de 1,3× o envio é bloqueado;
+        - zoom de 100% a 300%, posição horizontal e vertical por controles ou arrastando a foto na simulação;
+        - efeito: véu neutro (padrão), degradê na cor da marca (com seletor de cor) ou sem efeito (só arte pronta);
+        - destino do clique: a loja ou a categoria dela;
+        - área segura de 40 px opcional;
+        - prévia no computador com o MESMO componente da vitrine e recorte no formato do celular. Regras em `lib/regras/arteAnuncio.ts`.
+    - **Moderação:** em Admin › Moderação, a seção "Artes de anúncio" mostra a prévia fiel; aprovar põe no ar e reprovar exige motivo (o lojista vê o motivo). Tudo vai para a auditoria e conta nas pendências.
+- **Selo do anúncio unificado:** "Patrocinado" + logo (ou sigla na cor da loja) + nome da loja num só selo, em todas as vagas. Antes apareciam o selo e a marca com o nome repetido. Não é editável pelo lojista.
+- **Desempenho:** as logos das lojas saíram do estado do painel para `stores/logos.ts` (`ct-logos-v1`). A vitrine não lê mais pedidos, campanhas e artes do painel a cada página. As logos salvas antes são trazidas uma vez. As logos do projeto passam pelo `next/image`; só as enviadas na demo (data URL) dispensam a otimização.
+- **Testes:** Vitest (`arteAnuncio.test.ts`, `redirecionamento.test.ts`) e Playwright (`e2e/acesso.spec.ts`, `e2e/arte-anuncio.spec.ts`).
 
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 

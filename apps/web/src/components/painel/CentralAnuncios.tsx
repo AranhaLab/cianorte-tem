@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Icone } from '@/components/ui/Icone';
 import {
@@ -10,10 +11,13 @@ import {
   valorTabela,
   type UnidadeTempo,
 } from '@/lib/regras/anuncios';
+import { podeEnviarArte, ROTULO_CAMPANHA } from '@/lib/regras/arteAnuncio';
+import { MODO_DEMO } from '@/lib/demo';
 import { paraCentavos, reais } from '@/lib/regras/dinheiro';
 import { usePainel } from '@/stores/painel';
 import type { StatusVaga, VagaId } from '@/types/domain';
 import { AguardaPainel, TituloPainel, avisar } from './Comum';
+import { useLojaPainel } from './PainelContexto';
 
 const ROTULO_VAGA: Record<StatusVaga, string> = {
   disponivel: 'Livre',
@@ -45,10 +49,18 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
   const unidade = usePainel((s) => s.unidade);
   const quantidade = usePainel((s) => s.quantidade);
   const campanhas = usePainel((s) => s.campanhas);
+  const { loja, categorias } = useLojaPainel();
+  const categoria = categorias.find((c) => c.id === loja.categoriaId);
+  const [paginaMapa, setPaginaMapa] = useState<'home' | 'categoria'>(
+    vagaInicial === 'K1' || vagaInicial === 'L1' ? 'categoria' : 'home',
+  );
   const { selecionarVaga, definirUnidade, definirQuantidade, contratar, darLance } = usePainel.getState();
 
   useEffect(() => {
-    if (vagaInicial) selecionarVaga(vagaInicial);
+    if (vagaInicial) {
+      selecionarVaga(vagaInicial);
+      setPaginaMapa(vagaInicial === 'K1' || vagaInicial === 'L1' ? 'categoria' : 'home');
+    }
   }, [vagaInicial, selecionarVaga]);
 
   const vaga = vagas.find((v) => v.id === sel)!;
@@ -63,8 +75,11 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
   const enviarLance = (e: FormEvent) => {
     e.preventDefault();
     const valor = paraCentavos(lance);
-    if (darLance(valor) === 'abaixo_do_minimo') return avisar(`O lance mínimo é ${reais(minimo)} por dia.`);
+    const resultado = darLance(valor);
+    if (resultado === 'abaixo_do_minimo') return avisar(`O lance mínimo é ${reais(minimo)} por dia.`);
+    if (resultado === 'so_direta') return avisar('Esta vaga é contratada pelo valor de tabela.');
     avisar(`Lance de ${reais(valor)}/dia registrado.`);
+    // Se vencer, a campanha libera o envio da arte em "Minhas campanhas".
   };
 
   const Vaga = ({ id, altura, className = '' }: { id: VagaId; altura: number; className?: string }) => {
@@ -105,57 +120,89 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
           aria-label="Mapa do site com as vagas de anúncio"
           className="flex flex-col gap-2 self-start rounded-xl border border-solid border-borda-fria bg-branco p-3.5"
         >
-          <Rotulo>Home</Rotulo>
-          <div className="h-[26px] rounded-[8px] bg-marinho" />
-          <Vaga id="H1" altura={86} />
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Celula key={i} h={28} className="rounded-full" />
-            ))}
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Página do mapa de anúncios">
+            <button
+              type="button"
+              className={`chip ${paginaMapa === 'home' ? 'chip-on' : ''}`}
+              aria-pressed={paginaMapa === 'home'}
+              onClick={() => {
+                setPaginaMapa('home');
+                selecionarVaga('H1');
+              }}
+            >
+              Página inicial
+            </button>
+            <button
+              type="button"
+              className={`chip ${paginaMapa === 'categoria' ? 'chip-on' : ''}`}
+              aria-pressed={paginaMapa === 'categoria'}
+              onClick={() => {
+                setPaginaMapa('categoria');
+                selecionarVaga('K1');
+              }}
+            >
+              Categoria
+            </button>
           </div>
-          <Rotulo>Mais vendidos</Rotulo>
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4].map((i) => (
-              <Celula key={i} />
-            ))}
-          </div>
-          <Vaga id="M1" altura={40} />
-          <Rotulo>Melhores preços</Rotulo>
-          <div className="flex gap-1.5">
-            <div className="flex-1">
-              <Vaga id="C1" altura={54} />
-            </div>
-            {[1, 2, 3].map((i) => (
-              <Celula key={i} />
-            ))}
-          </div>
-          <Rotulo>Em alta</Rotulo>
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4].map((i) => (
-              <Celula key={i} />
-            ))}
-          </div>
-          <Vaga id="M2" altura={50} />
-          <Rotulo>Lojas</Rotulo>
-          <div className="flex gap-1.5">
-            <Celula h={34} />
-            <Celula h={34} />
-          </div>
-          <span className="mt-2.5">
-            <Rotulo>Página de categoria</Rotulo>
-          </span>
-          <div className="h-[26px] rounded-[8px] bg-marinho" />
-          <Vaga id="K1" altura={44} />
-          <div className="flex gap-1.5">
-            <div className="grid flex-[3] grid-cols-3 gap-1.5">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-[54px] rounded-[8px] bg-neutro-200" />
-              ))}
-            </div>
-            <div className="flex-1">
-              <Vaga id="L1" altura={114} />
-            </div>
-          </div>
+          {paginaMapa === 'home' && (
+            <>
+              <Rotulo>Home</Rotulo>
+              <div className="h-[26px] rounded-[8px] bg-marinho" />
+              <Vaga id="H1" altura={86} />
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Celula key={i} h={28} className="rounded-full" />
+                ))}
+              </div>
+              <Rotulo>Mais vendidos</Rotulo>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4].map((i) => (
+                  <Celula key={i} />
+                ))}
+              </div>
+              <Vaga id="M1" altura={40} />
+              <Rotulo>Melhores preços</Rotulo>
+              <div className="flex gap-1.5">
+                <div className="flex-1">
+                  <Vaga id="C1" altura={54} />
+                </div>
+                {[1, 2, 3].map((i) => (
+                  <Celula key={i} />
+                ))}
+              </div>
+              <Rotulo>Em alta</Rotulo>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4].map((i) => (
+                  <Celula key={i} />
+                ))}
+              </div>
+              <Vaga id="M2" altura={50} />
+              <Rotulo>Lojas</Rotulo>
+              <div className="flex gap-1.5">
+                <Celula h={34} />
+                <Celula h={34} />
+              </div>
+            </>
+          )}
+          {paginaMapa === 'categoria' && (
+            <>
+              <span className="mt-2.5">
+                <Rotulo>Página de categoria</Rotulo>
+              </span>
+              <div className="h-[26px] rounded-[8px] bg-marinho" />
+              <Vaga id="K1" altura={44} />
+              <div className="flex gap-1.5">
+                <div className="grid flex-[3] grid-cols-3 gap-1.5">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-[54px] rounded-[8px] bg-neutro-200" />
+                  ))}
+                </div>
+                <div className="flex-1">
+                  <Vaga id="L1" altura={114} />
+                </div>
+              </div>
+            </>
+          )}
           <div className="mt-2 flex flex-wrap gap-3.5 text-xs text-grafite-2">
             {(['disponivel', 'leilao', 'ocupado'] as StatusVaga[]).map((s) => (
               <span key={s} className="inline-flex items-center gap-1.5">
@@ -185,6 +232,12 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
             </span>
           </div>
 
+          {vaga.pagina === 'categoria' && (
+            <div className="banner-info bg-azul-nevoa text-azul-escuro">
+              Esta vaga aparece na categoria da sua loja: <b>{categoria?.nome ?? 'categoria não definida'}</b>
+              .
+            </div>
+          )}
           {vaga.status === 'leilao' ? (
             <div className="banner-info bg-aviso-claro text-aviso-texto">
               <Icone nome="gavel" />
@@ -273,56 +326,58 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
                 ≈ {dias.toFixed(dias < 1 ? 2 : 0).replace('.', ',')} dia(s) · valores de exemplo
               </span>
             </span>
-            {vaga.status === 'disponivel' && (
+            {vaga.modoCompra === 'direta' && (
               <button
                 type="button"
                 className="btn btn-primary btn-lg"
                 onClick={() => {
-                  contratar();
-                  avisar(`Vaga ${vaga.id} reservada. Envie a arte para aprovação.`);
+                  if (contratar() === 'ok')
+                    avisar(`Vaga ${vaga.id} garantida. Envie a arte em "Minhas campanhas".`);
                 }}
               >
                 <Icone nome="check" />
-                Contratar por {reais(tabela)}
+                {vaga.status === 'ocupado' ? 'Reservar o próximo período por ' : 'Contratar por '}
+                {reais(tabela)}
               </button>
             )}
           </div>
 
-          <form method="post" className="flex flex-col gap-2.5" onSubmit={enviarLance}>
-            <b>{vaga.status === 'disponivel' ? 'Ou dê um lance por dia' : 'Seu lance por dia'}</b>
-            <div className="flex flex-wrap items-end gap-2.5">
-              <div className="campo max-w-[240px] flex-1">
-                <label htmlFor="lance">Valor por dia (R$)</label>
-                <input
-                  id="lance"
-                  className="input"
-                  inputMode="decimal"
-                  value={lance}
-                  onChange={(e) => setLance(e.target.value)}
-                  aria-describedby="h-lance"
-                />
-                <span id="h-lance" className="dica">
-                  Mínimo {reais(minimo)} · incremento de R$ 2,00
-                </span>
+          {vaga.modoCompra === 'lance' && (
+            <form method="post" className="flex flex-col gap-2.5" onSubmit={enviarLance}>
+              <b>{vaga.status === 'disponivel' ? 'Ou dê um lance por dia' : 'Seu lance por dia'}</b>
+              <div className="flex flex-wrap items-end gap-2.5">
+                <div className="campo max-w-[240px] flex-1">
+                  <label htmlFor="lance">Valor por dia (R$)</label>
+                  <input
+                    id="lance"
+                    className="input"
+                    inputMode="decimal"
+                    value={lance}
+                    onChange={(e) => setLance(e.target.value)}
+                    aria-describedby="h-lance"
+                  />
+                  <span id="h-lance" className="dica">
+                    Mínimo {reais(minimo)} · incremento de R$ 2,00
+                  </span>
+                </div>
+                <button type="submit" className="btn btn-dark btn-lg">
+                  <Icone nome="gavel" />
+                  Dar lance
+                </button>
               </div>
-              <button type="submit" className="btn btn-dark btn-lg">
-                <Icone nome="gavel" />
-                Dar lance
-              </button>
-            </div>
-          </form>
+            </form>
+          )}
 
-          <div className="flex flex-col gap-2">
-            <b>Peça do anúncio</b>
-            <div className="area-envio p-[22px]">
-              <span className="text-azul">
-                <Icone nome="upload" tamanho="lg" />
-              </span>
-              <b>Envie a arte no formato {vaga.formato.desktop}</b>
-              <span className="text-[13px] text-grafite-2">
-                Não tem arte? Use o modelo pronto com foto do produto, título e botão.
-              </span>
-            </div>
+          <div className="banner-info bg-neutro-100 text-grafite">
+            <Icone nome="upload" />
+            <span className="text-[13px]">
+              <b>A arte é enviada depois da compra.</b>{' '}
+              {vaga.modoCompra === 'lance'
+                ? 'Quando o seu lance vencer, '
+                : 'Assim que a contratação for confirmada, '}
+              o espaço fica vinculado à sua loja e a campanha aparece em &quot;Minhas campanhas&quot; com o
+              botão &quot;Enviar arte&quot;. Lá você ajusta a imagem na simulação da vaga e escolhe o efeito.
+            </span>
           </div>
         </div>
       </div>
@@ -341,19 +396,70 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
               <th>Período</th>
               <th>Valor/dia</th>
               <th>Situação</th>
+              <th>
+                <span className="sr-only">Ações</span>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {campanhas.map((c, i) => (
-              <tr key={`${c.vaga}-${i}`}>
+            {campanhas.map((c) => (
+              <tr key={c.id}>
                 <td>
                   <b>{c.vaga}</b> · {vagas.find((v) => v.id === c.vaga)?.nome}
                 </td>
                 <td>{c.periodo}</td>
                 <td>{reais(c.valorDiaCentavos)}</td>
                 <td>
-                  <span className={`status ${/vencendo|análise/i.test(c.status) ? 'st-amber' : 'st-green'}`}>
-                    {c.status}
+                  <span className={`status ${ROTULO_CAMPANHA[c.status][1]}`}>
+                    {ROTULO_CAMPANHA[c.status][0]}
+                  </span>
+                  {c.status === 'reprovada' && c.motivoReprovacao && (
+                    <span className="mt-1 block max-w-[260px] whitespace-normal text-xs text-acento-escuro">
+                      {c.motivoReprovacao}
+                    </span>
+                  )}
+                </td>
+                <td>
+                  <span className="flex flex-wrap gap-1.5">
+                    {podeEnviarArte(c.status) && (
+                      <Link
+                        href={`/painel/anuncios/arte/${c.id}`}
+                        className="btn btn-sm btn-primary min-h-toque"
+                      >
+                        <Icone nome="upload" tamanho="sm" />
+                        {c.status === 'reprovada' ? 'Reenviar arte' : 'Enviar arte'}
+                      </Link>
+                    )}
+                    {(c.status === 'arte_em_analise' || c.status === 'no_ar') && (
+                      <Link
+                        href={`/painel/anuncios/arte/${c.id}`}
+                        className="btn btn-sm btn-ghost min-h-toque"
+                      >
+                        <Icone nome="eye" tamanho="sm" />
+                        Ver arte
+                      </Link>
+                    )}
+                    {c.status === 'lance_ativo' && MODO_DEMO && (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-ghost min-h-toque"
+                          onClick={() => {
+                            usePainel.getState().resultadoLance(c.id, true);
+                            avisar(`Lance vencedor na ${c.vaga}. Envie a arte.`);
+                          }}
+                        >
+                          Simular: venceu
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-ghost min-h-toque"
+                          onClick={() => usePainel.getState().resultadoLance(c.id, false)}
+                        >
+                          Simular: superado
+                        </button>
+                      </>
+                    )}
                   </span>
                 </td>
               </tr>

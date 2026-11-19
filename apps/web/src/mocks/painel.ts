@@ -66,7 +66,26 @@ export const PAINEL_DEMO: PainelLojista = {
     { produtoId: 'p4', sku: 'VA-JJI-004', saldo: 6, minimo: 8 },
     { produtoId: 'p23', sku: 'VA-DRY-023', saldo: 0, minimo: 5 },
   ],
-  campanhas: [{ vaga: 'H1', status: 'Lance vencendo', valorDiaCentavos: 9200, periodo: '20/11 a 26/11' }],
+  campanhas: [
+    // H1 só por lance: lance da loja está vencendo a disputa.
+    {
+      id: 'cp1',
+      vaga: 'H1',
+      status: 'lance_ativo',
+      origem: 'lance',
+      valorDiaCentavos: 200000,
+      periodo: '20/11 a 26/11',
+    },
+    // M1 comprada direto pelo valor de tabela: espaço garantido, falta enviar a arte.
+    {
+      id: 'cp2',
+      vaga: 'M1',
+      status: 'aguardando_arte',
+      origem: 'direta',
+      valorDiaCentavos: 50000,
+      periodo: '22/11 a 28/11',
+    },
+  ],
   vitrine: [
     { tipo: 'Banner horizontal', detalhe: '1 imagem · 1200 × 300 px' },
     { tipo: 'Produtos em carrossel', detalhe: '8 produtos · mais vendidos da loja' },

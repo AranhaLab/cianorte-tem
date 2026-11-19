@@ -48,6 +48,15 @@ interface Persistido {
   checkout: RascunhoCheckout;
   /** Downloads já feitos por 'pedidoId:produtoId' (no back-end: contados no servidor). */
   downloads: Record<string, number>;
+  avaliacoes: AvaliacaoLoja[];
+}
+
+export interface AvaliacaoLoja {
+  subpedidoId: string;
+  lojaId: string;
+  usuarioId: string;
+  nota: number;
+  comentario: string;
 }
 
 interface Efemero {
@@ -80,6 +89,7 @@ interface Acoes {
   registrarPedido: (p: Pedido) => void;
   confirmarPagamento: (pedidoId: string) => void;
   registrarDownload: (pedidoId: string, produtoId: string) => void;
+  avaliarLoja: (subpedidoId: string, nota: number, comentario: string) => boolean;
   abrir: (s: Sheet) => void;
   fechar: () => void;
   avisar: (texto: string) => void;
@@ -101,6 +111,7 @@ export const useComprador = create<EstadoComprador>()(
       pedidos: [],
       checkout: CHECKOUT_INICIAL,
       downloads: {},
+      avaliacoes: [],
 
       hidratado: false,
       sheet: null,
@@ -172,6 +183,35 @@ export const useComprador = create<EstadoComprador>()(
           const k = `${pedidoId}:${produtoId}`;
           return { downloads: { ...s.downloads, [k]: (s.downloads[k] ?? 0) + 1 } };
         }),
+      avaliarLoja: (subpedidoId, nota, comentario) => {
+        const s = get();
+        const pedido = s.pedidos.find(
+          (p) => p.pago && p.subpedidos.some((sp) => sp.id === subpedidoId && sp.status !== 'cancelado'),
+        );
+        const subpedido = pedido?.subpedidos.find((sp) => sp.id === subpedidoId);
+        if (
+          !s.usuario ||
+          !subpedido ||
+          !Number.isInteger(nota) ||
+          nota < 1 ||
+          nota > 5 ||
+          (s.avaliacoes ?? []).some((a) => a.subpedidoId === subpedidoId && a.usuarioId === s.usuario?.id)
+        )
+          return false;
+        set({
+          avaliacoes: [
+            ...(s.avaliacoes ?? []),
+            {
+              subpedidoId,
+              lojaId: subpedido.lojaId,
+              usuarioId: s.usuario.id,
+              nota,
+              comentario: comentario.trim().slice(0, 500),
+            },
+          ],
+        });
+        return true;
+      },
       confirmarPagamento: (id) =>
         set((s) => ({
           pedidos: s.pedidos.map((p) =>
@@ -209,6 +249,7 @@ export const useComprador = create<EstadoComprador>()(
         pedidos: s.pedidos,
         checkout: s.checkout,
         downloads: s.downloads,
+        avaliacoes: s.avaliacoes,
       }),
       onRehydrateStorage: () => () => useComprador.setState({ hidratado: true }),
     },

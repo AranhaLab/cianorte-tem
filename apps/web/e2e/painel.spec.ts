@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { aviso } from './ajuda';
+import { aviso, entrarComoLojista } from './ajuda';
+
+test.beforeEach(({ page }) => entrarComoLojista(page));
 
 test.describe('Painel do lojista (CLAUDE.md §7, §8 e §9)', () => {
   test('pedido só avança pelo fluxo e a loja pode ficar oculta', async ({ page }) => {
@@ -32,12 +34,12 @@ test.describe('Painel do lojista (CLAUDE.md §7, §8 e §9)', () => {
     const valor = page.getByLabel('Valor por dia (R$)');
     await valor.fill('90,00');
     await page.getByRole('button', { name: 'Dar lance' }).click();
-    await aviso(page, 'O lance mínimo é R$ 94,00 por dia.');
+    await aviso(page, 'O lance mínimo é R$ 2.002,00 por dia.');
 
-    await valor.fill('100,00');
+    await valor.fill('2100,00');
     await page.getByRole('button', { name: 'Dar lance' }).click();
-    await aviso(page, 'Lance de R$ 100,00/dia registrado.');
-    await expect(page.getByRole('row', { name: /H1.*R\$ 100,00.*Lance vencendo/ })).toBeVisible();
+    await aviso(page, 'Lance de R$ 2.100,00/dia registrado.');
+    await expect(page.getByRole('row', { name: /H1.*R\$ 2.100,00.*Lance vencendo/ })).toBeVisible();
   });
 
   test('vaga livre: valor de tabela respeita o teto de 4 semanas', async ({ page }) => {

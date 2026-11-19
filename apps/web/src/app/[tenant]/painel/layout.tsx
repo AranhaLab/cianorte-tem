@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/layout/comprador/Aviso';
 import { MenuPainel } from '@/components/painel/MenuPainel';
+import { ExigeLojista } from '@/components/painel/ExigeLojista';
 import { PainelProvider } from '@/components/painel/PainelContexto';
 import { TenantProvider } from '@/components/providers/TenantProvider';
 import { CaixaVazia } from '@/components/ui/Basicos';
@@ -36,27 +37,29 @@ export default async function PainelLayout({
 
   return (
     <TenantProvider tenant={tenant}>
-      <div className="min-h-screen bg-neutro-150">
-        {dados ? (
-          <PainelProvider dados={{ loja: dados.loja, produtos: dados.produtos, categorias }}>
-            <div className="mx-auto flex max-w-[1440px] flex-wrap items-start gap-5 p-4">
-              <MenuPainel />
-              <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px]">{children}</main>
-            </div>
-          </PainelProvider>
-        ) : (
-          <CaixaVazia
-            icone="store"
-            titulo="Nenhuma loja vinculada"
-            texto={`Ainda não há loja de demonstração em ${tenant.nome}.`}
-            acao={
-              <Link href="/vender" className="btn btn-primary">
-                Cadastrar minha loja
-              </Link>
-            }
-          />
-        )}
-      </div>
+      <ExigeLojista>
+        <div className="min-h-screen bg-neutro-150">
+          {dados ? (
+            <PainelProvider dados={{ loja: dados.loja, produtos: dados.produtos, categorias }}>
+              <div className="mx-auto flex max-w-[1440px] flex-wrap items-start gap-5 p-4">
+                <MenuPainel />
+                <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px]">{children}</main>
+              </div>
+            </PainelProvider>
+          ) : (
+            <CaixaVazia
+              icone="store"
+              titulo="Nenhuma loja vinculada"
+              texto={`Ainda não há loja de demonstração em ${tenant.nome}.`}
+              acao={
+                <Link href="/vender" className="btn btn-primary">
+                  Cadastrar minha loja
+                </Link>
+              }
+            />
+          )}
+        </div>
+      </ExigeLojista>
       <Aviso />
     </TenantProvider>
   );

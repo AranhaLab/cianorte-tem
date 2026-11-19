@@ -14,3 +14,13 @@ export async function primeiraVisita(page: Page, cep = '87200000') {
 /** Aviso flutuante (toast) com o texto esperado. */
 export const aviso = (page: Page, texto: string | RegExp) =>
   expect(page.getByRole('status').filter({ hasText: texto }).first()).toBeVisible();
+
+/** Sessão de lojista da demonstração (o painel exige login). */
+export const entrarComoLojista = (page: Page) =>
+  page.addInitScript(() => {
+    if (!localStorage.getItem('ct-sessao-lojista-v1'))
+      localStorage.setItem(
+        'ct-sessao-lojista-v1',
+        JSON.stringify({ state: { lojista: { email: 'loja@exemplo.com' } }, version: 0 }),
+      );
+  });

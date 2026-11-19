@@ -9,6 +9,7 @@ import { Icone } from '@/components/ui/Icone';
 import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { SecaoCarrossel } from '@/components/vitrine/SecaoCarrossel';
 import { SeloLoja } from '@/components/vitrine/SeloLoja';
+import { ResumoAvaliacoes } from '@/components/vitrine/AvaliacoesLoja';
 import { api } from '@/lib/api';
 import { ROTULO_DISPONIBILIDADE } from '@/lib/regras/disponibilidade';
 import { desconto, reais } from '@/lib/regras/dinheiro';
@@ -114,9 +115,9 @@ export default async function PaginaProduto({ params }: Props) {
             </div>
             <h1 className="leading-[1.2]">{p.nome}</h1>
             <Link href={`/loja/${loja.id}`} className="inline-flex items-center gap-1 text-[13px]">
-              Vendido por <b>{loja.nome}</b> · <Icone nome="star" tamanho="sm" />
-              {loja.nota.toFixed(1)}
+              Vendido por <b>{loja.nome}</b>
             </Link>
+            <ResumoAvaliacoes loja={lojas.find((l) => l.id === loja.id) ?? loja} />
           </div>
 
           <div className="flex flex-col gap-0.5">

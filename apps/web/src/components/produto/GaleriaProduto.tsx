@@ -2,7 +2,7 @@
 
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Icone } from '@/components/ui/Icone';
-import { ArteProduto } from '@/components/vitrine/ArteProduto';
+import { ArteProduto, capaDe } from '@/components/vitrine/ArteProduto';
 import { MAX_MIDIAS } from '@/lib/regras/kits';
 import type { Categoria, Midia } from '@/types/domain';
 
@@ -10,7 +10,7 @@ import type { Categoria, Midia } from '@/types/domain';
  * Galeria do produto (CLAUDE.md §3 e §16): fotos e vídeo na ordem definida pelo
  * lojista, até 20 mídias. Fotos em 4:5 (moda) ou 1:1; vídeo sempre em quadro 9:16.
  * Desliza no celular, tem setas e teclado (← →) no desktop e miniaturas clicáveis.
- * Na demonstração não há arquivos: fotos e vídeo são desenhos de exemplo.
+ * Na demonstração as fotos são ilustrativas (Unsplash) e o vídeo é simulado sobre a 1ª foto.
  */
 export function GaleriaProduto({
   midias: todas,
@@ -59,13 +59,17 @@ export function GaleriaProduto({
               aria-label={`${i + 1} de ${midias.length}: ${m.legenda}`}
             >
               {m.tipo === 'video' ? (
-                <VideoDemo categoria={categoria} legenda={m.legenda} />
+                <VideoDemo categoria={categoria} legenda={m.legenda} quadro={capaDe(midias)} />
               ) : (
                 <ArteProduto
                   categoria={categoria}
                   variante={m.variante}
                   className="!aspect-auto h-full w-full"
                   tamanhoIcone="h-[40%] w-[40%]"
+                  src={m.url}
+                  alt={m.legenda}
+                  sizes="(max-width: 900px) 100vw, 640px"
+                  prioridade={i === 0}
                 />
               )}
             </div>
@@ -126,6 +130,8 @@ export function GaleriaProduto({
                   variante={m.variante}
                   className="!aspect-auto h-full w-full"
                   tamanhoIcone="h-1/2 w-1/2"
+                  src={m.url}
+                  sizes="80px"
                 />
               )}
             </button>
@@ -141,7 +147,16 @@ export function GaleriaProduto({
 }
 
 /** Vídeo de demonstração: quadro 9:16 centralizado, sem arquivo real (sem autoplay com som). */
-function VideoDemo({ categoria, legenda }: { categoria: Categoria; legenda: string }) {
+function VideoDemo({
+  categoria,
+  legenda,
+  quadro,
+}: {
+  categoria: Categoria;
+  legenda: string;
+  /** Quadro de capa do vídeo (na demo, a 1ª foto do produto). */
+  quadro?: string;
+}) {
   const [tocando, setTocando] = useState(false);
   return (
     <div className="flex h-full w-full items-center justify-center bg-marinho">
@@ -151,6 +166,8 @@ function VideoDemo({ categoria, legenda }: { categoria: Categoria; legenda: stri
           variante={1}
           className={`absolute inset-0 !aspect-auto h-full w-full ${tocando ? 'motion-safe:animate-pulse' : ''}`}
           tamanhoIcone="h-[45%] w-[45%]"
+          src={quadro}
+          sizes="(max-width: 900px) 60vw, 360px"
         />
         <span className="pill pill-ad absolute left-2.5 top-2.5">Vídeo 9:16</span>
         <button

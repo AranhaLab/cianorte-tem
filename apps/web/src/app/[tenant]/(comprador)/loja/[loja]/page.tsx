@@ -8,6 +8,7 @@ import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { CartaoProduto } from '@/components/vitrine/CartaoProduto';
 import { GradeProdutos } from '@/components/vitrine/GradeProdutos';
 import { SeloLoja } from '@/components/vitrine/SeloLoja';
+import { ResumoAvaliacoes } from '@/components/vitrine/AvaliacoesLoja';
 import { api } from '@/lib/api';
 import { getTenant } from '@/lib/tenant';
 import { montarItens } from '@/lib/vitrine';
@@ -67,8 +68,7 @@ export default async function PaginaLoja({ params }: Props) {
             <SeloLoja selo={l.selo} />
           </div>
           <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-grafite-2">
-            <Icone nome="star" tamanho="sm" />
-            {l.nota.toFixed(1)} ({l.avaliacoes} avaliações) · {l.bairro}, {t.nome}
+            {l.bairro}, {t.nome}
             {cat ? ` · ${cat.nome}` : ''}
           </span>
           <div className="flex flex-wrap gap-2.5">
@@ -92,6 +92,11 @@ export default async function PaginaLoja({ params }: Props) {
         </div>
         <BotaoSeguirLoja />
       </div>
+
+      <section className="card mt-5 flex flex-col gap-2" aria-label="Avaliações da loja">
+        <h2>Avaliações da loja</h2>
+        <ResumoAvaliacoes loja={l} mostrarComentarios />
+      </section>
 
       <section className="my-[26px]">
         <div className="mb-3.5 flex items-end justify-between gap-3">

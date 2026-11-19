@@ -6,8 +6,9 @@ import { VAGAS } from '@/mocks/anuncios';
 import { useAdmin } from './admin';
 import { CATALOGO } from '@/mocks/catalogo';
 import { PAINEL_DEMO } from '@/mocks/painel';
-import { limitarQuantidade, lanceMinimo, type UnidadeTempo } from '@/lib/regras/anuncios';
+import { limitarQuantidade, lanceMinimo, UNIDADES, type UnidadeTempo } from '@/lib/regras/anuncios';
 import type { LogisticaLoja } from '@/lib/regras/logistica';
+import { podeEnviarArte } from '@/lib/regras/arteAnuncio';
 import { proximoStatus } from '@/lib/regras/pedidos';
 import {
   aplicarAprovacao,
@@ -17,6 +18,7 @@ import {
   type RascunhoProduto,
 } from '@/lib/regras/produto';
 import type {
+  ArteAnuncio,
   Campanha,
   ModoSincronizacao,
   PainelLojista,
@@ -67,8 +69,15 @@ interface Acoes {
   selecionarVaga: (v: VagaId) => void;
   definirUnidade: (u: UnidadeTempo) => void;
   definirQuantidade: (q: number) => void;
-  contratar: () => void;
-  darLance: (valorDiaCentavos: number) => 'ok' | 'abaixo_do_minimo';
+  /** Compra direta pelo valor de tabela: o espaço fica garantido e libera o envio da arte. */
+  contratar: () => 'ok' | 'so_lance';
+  darLance: (valorDiaCentavos: number) => 'ok' | 'abaixo_do_minimo' | 'so_direta';
+  /** Demonstração: fim da disputa. Venceu → libera a arte; senão, lance superado. */
+  resultadoLance: (campanhaId: string, venceu: boolean) => void;
+  /** Envia a arte (só com o espaço garantido) → arte em análise. */
+  enviarArte: (campanhaId: string, arte: ArteAnuncio) => 'ok' | 'sem_espaco';
+  /** Moderação da plataforma: aprova (no ar) ou reprova com motivo (lojista pode reenviar). */
+  decidirArte: (campanhaId: string, aprovar: boolean, motivo?: string) => void;
   salvarProduto: (
     publicado: RascunhoProduto | null,
     rascunho: RascunhoProduto,
@@ -149,20 +158,33 @@ export const usePainel = create<Persistido & Acoes>()(
         set((s) => ({ unidade, quantidade: limitarQuantidade(unidade, s.quantidade) })),
       definirQuantidade: (q) => set((s) => ({ quantidade: limitarQuantidade(s.unidade, q) })),
 
-      contratar: () =>
-        set((s) => {
-          const vaga = s.vagas.find((v) => v.id === s.vagaSelecionada)!;
-          const c: Campanha = {
-            vaga: vaga.id,
-            status: 'Arte em análise',
-            valorDiaCentavos: vaga.precoDiaCentavos,
-            periodo: 'A partir da aprovação',
-          };
-          return { campanhas: [c, ...s.campanhas] };
-        }),
+      contratar: () => {
+        const s = get();
+        const vaga = s.vagas.find((v) => v.id === s.vagaSelecionada)!;
+        if (vaga.modoCompra === 'lance') return 'so_lance';
+        // Demonstração: pagamento confirmado na hora. Na versão real, a arte libera após o webhook.
+        const c: Campanha = {
+          id: crypto.randomUUID(),
+          vaga: vaga.id,
+          ...(vaga.pagina === 'categoria'
+            ? {
+                categoriaId: Object.values(CATALOGO)
+                  .flatMap((cat) => cat.lojas)
+                  .find((l) => l.id === s.lojaId)?.categoriaId,
+              }
+            : {}),
+          status: 'aguardando_arte',
+          origem: 'direta',
+          valorDiaCentavos: vaga.precoDiaCentavos,
+          periodo: `${s.unidade === 'mes' ? '1 mês' : `${s.quantidade} ${UNIDADES[s.unidade].rotulo.toLowerCase()}`} · ${vaga.status === 'ocupado' ? `a partir de ${vaga.ocupadoAte}` : 'a partir da aprovação da arte'}`,
+        };
+        set({ campanhas: [c, ...s.campanhas] });
+        return 'ok';
+      },
       darLance: (valor) => {
         const s = get();
         const vaga = s.vagas.find((v) => v.id === s.vagaSelecionada)!;
+        if (vaga.modoCompra === 'direta') return 'so_direta';
         if (!(valor >= lanceMinimo(vaga))) return 'abaixo_do_minimo';
         set({
           vagas: s.vagas.map((v) =>
@@ -172,16 +194,48 @@ export const usePainel = create<Persistido & Acoes>()(
           ),
           campanhas: [
             {
+              id: crypto.randomUUID(),
               vaga: vaga.id,
-              status: 'Lance vencendo',
+              status: 'lance_ativo',
+              origem: 'lance',
               valorDiaCentavos: valor,
-              periodo: vaga.status === 'ocupado' ? `A partir de ${vaga.ocupadoAte}` : 'Próximo período',
+              periodo: `${s.unidade === 'mes' ? '1 mês' : `${s.quantidade} ${UNIDADES[s.unidade].rotulo.toLowerCase()}`} · ${vaga.status === 'ocupado' ? `a partir de ${vaga.ocupadoAte}` : 'próximo período'}`,
             },
             ...s.campanhas,
           ],
         });
         return 'ok';
       },
+      resultadoLance: (id, venceu) =>
+        set((s) => ({
+          campanhas: s.campanhas.map((c) =>
+            c.id === id && c.status === 'lance_ativo'
+              ? { ...c, status: venceu ? 'aguardando_arte' : 'lance_superado' }
+              : c,
+          ),
+        })),
+      enviarArte: (id, arte) => {
+        const c = get().campanhas.find((x) => x.id === id);
+        if (!c || !podeEnviarArte(c.status)) return 'sem_espaco';
+        set((s) => ({
+          campanhas: s.campanhas.map((x) =>
+            x.id === id ? { ...x, arte, status: 'arte_em_analise', motivoReprovacao: undefined } : x,
+          ),
+        }));
+        return 'ok';
+      },
+      decidirArte: (id, aprovar, motivo) =>
+        set((s) => ({
+          campanhas: s.campanhas.map((x) =>
+            x.id === id && x.status === 'arte_em_analise'
+              ? {
+                  ...x,
+                  status: aprovar ? 'no_ar' : 'reprovada',
+                  motivoReprovacao: aprovar ? undefined : motivo,
+                }
+              : x,
+          ),
+        })),
 
       salvarProduto: (publicado, rascunho) => {
         if (!publicado) {
@@ -259,6 +313,29 @@ export const usePainel = create<Persistido & Acoes>()(
     }),
     {
       name: 'ct-painel-v1',
+      // Atualiza a tabela demonstrativa sem descartar campanhas já criadas.
+      version: 3,
+      migrate: (antigo, versao) => {
+        const dados = antigo as Persistido;
+        if (versao < 2) return { ...dados, campanhas: inicial().campanhas, vagas: inicial().vagas };
+        return {
+          ...dados,
+          vagas: (dados.vagas ?? inicial().vagas).map((vaga) => {
+            const tabela = VAGAS.find((v) => v.id === vaga.id);
+            return tabela
+              ? {
+                  ...vaga,
+                  precoDiaCentavos: tabela.precoDiaCentavos,
+                  ...(vaga.id === 'L1' ? { status: tabela.status, ocupadoAte: tabela.ocupadoAte } : {}),
+                  lanceAtualCentavos:
+                    vaga.id === 'H1' && (vaga.lanceAtualCentavos ?? 0) < tabela.precoDiaCentavos
+                      ? tabela.precoDiaCentavos
+                      : vaga.lanceAtualCentavos,
+                }
+              : vaga;
+          }),
+        };
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       // Só os dados; ações e o sinal de hidratação não vão para o aparelho.

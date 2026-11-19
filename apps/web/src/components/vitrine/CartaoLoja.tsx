@@ -3,6 +3,7 @@ import { Icone } from '@/components/ui/Icone';
 import { iniciais } from '@/lib/vitrine';
 import type { Categoria, Loja } from '@/types/domain';
 import { SeloLoja } from './SeloLoja';
+import { LogoLoja } from './LogoLoja';
 
 export function AvatarLoja({
   loja,
@@ -17,7 +18,7 @@ export function AvatarLoja({
       style={{ backgroundColor: loja.cor }}
       aria-hidden
     >
-      {iniciais(loja.nome)}
+      <LogoLoja lojaId={loja.id} iniciais={iniciais(loja.nome)} logoPadrao={loja.logo} />
     </span>
   );
 }

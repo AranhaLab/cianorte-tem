@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { aviso } from './ajuda';
+import { aviso, entrarComoLojista } from './ajuda';
 
 const foto = { name: 'camiseta-frente.png', mimeType: 'image/png', buffer: Buffer.alloc(2048) };
+
+test.beforeEach(({ page }) => entrarComoLojista(page));
 
 test.describe('Editor de produto e logística (etapa 9)', () => {
   test('preço vale na hora; nome vai para a moderação; aprovar mantém o preço', async ({ page }) => {

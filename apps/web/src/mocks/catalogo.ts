@@ -4,6 +4,7 @@
  * Tudo fictício. Valores em centavos. Separados por tenant: nenhuma consulta cruza cidades.
  */
 import type { ArquivoDigital, Categoria, Kit, Loja, Midia, Produto } from '@/types/domain';
+import FOTOS_MOCK from './fotos-mock.json';
 
 const sub = (...pares: Array<[string, string]>) => pares.map(([id, nome]) => ({ id, nome }));
 
@@ -255,13 +256,48 @@ const LOJAS_CIANORTE: Loja[] = [
   },
 ];
 
-/** Galeria de exemplo: `fotos` imagens e, se informado, um vídeo 9:16 na posição `videoEm`. */
-function galeria(nome: string, fotos: number, videoEm?: number): Midia[] {
-  const m: Midia[] = Array.from({ length: fotos }, (_, i) => ({
+/**
+ * Galeria de exemplo. Com fotos ilustrativas (Unsplash, licença livre; lista em
+ * fotos-mock.json, arquivos em public/produtos), usa as fotos; senão, `fotos` desenhos.
+ * Se informado, um vídeo 9:16 na posição `videoEm`.
+ */
+function galeria(id: string, nome: string, fotos: number, videoEm?: number): Midia[] {
+  const lista = (FOTOS_MOCK as Record<string, unknown>)[id];
+  const capasCatalogo: Record<string, string> = {
+    p6: '/produtos/p6-catalogo.webp',
+    p7: '/produtos/p7-catalogo.webp',
+    p8: '/produtos/p8-catalogo.webp',
+    p9: '/produtos/p9-catalogo.webp',
+    p10: '/produtos/p10-catalogo.webp',
+    p11: '/produtos/p11-catalogo.webp',
+    p12: '/produtos/p12-catalogo.webp',
+    p13: '/produtos/p13-catalogo.webp',
+    p14: '/produtos/p14-catalogo.webp',
+    p15: '/produtos/p15-catalogo.webp',
+    p16: '/produtos/p16-catalogo.webp',
+    p17: '/produtos/p17-catalogo.webp',
+    p18: '/produtos/p18-catalogo.webp',
+    p19: '/produtos/p19-catalogo.webp',
+    p20: '/produtos/p20-catalogo.webp',
+    p21: '/produtos/p21-catalogo.webp',
+    p22: '/produtos/p22-catalogo.webp',
+    p23: '/produtos/extra-20.webp',
+    p24: '/produtos/p24-catalogo.webp',
+    p25: '/produtos/p25-catalogo.webp',
+    p26: '/produtos/p26-catalogo.webp',
+    p33: '/produtos/p33-catalogo.webp',
+    p35: '/produtos/p35-catalogo.webp',
+    p36: '/produtos/p36-catalogo.webp',
+  };
+  const reais = Array.isArray(lista) ? lista.length : 0;
+  const m: Midia[] = Array.from({ length: reais || fotos }, (_, i) => ({
     id: `f${i + 1}`,
     tipo: 'imagem' as const,
     legenda: `${nome} — foto ${i + 1}`,
     variante: i,
+    ...(reais
+      ? { url: i === 0 && capasCatalogo[id] ? capasCatalogo[id] : `/produtos/${id}-${i + 1}.webp` }
+      : {}),
   }));
   if (videoEm !== undefined)
     m.splice(videoEm, 0, { id: 'v1', tipo: 'video', legenda: `${nome} — vídeo`, variante: 0 });
@@ -283,7 +319,7 @@ const p = ({ fotos = 4, videoEm, ...x }: Base & Extra): Produto => ({
   marca: null,
   caracteristicas: [],
   ...x,
-  midias: galeria(x.nome, fotos, videoEm),
+  midias: galeria(x.id, x.nome, fotos, videoEm),
 });
 const tam = (...opcoes: string[]) => ({ nome: 'Tamanho', opcoes });
 const kitFechado = (...componentes: Array<[string, number]>): Kit => ({
@@ -515,7 +551,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'casa-obra',
     categoriaId: 'construcao',
     subcategoriaId: 'argamassas',
-    marca: 'Fortemix',
+    marca: 'Constrular',
     caracteristicas: ['Uso externo'],
     precoCentavos: 3850,
     disponibilidade: 'disponivel',
@@ -545,7 +581,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'casa-obra',
     categoriaId: 'construcao',
     subcategoriaId: 'tintas',
-    marca: 'Cor Viva',
+    marca: 'ColorMax',
     caracteristicas: ['Uso externo', 'Lavável'],
     precoCentavos: 28900,
     precoDeCentavos: 32900,
@@ -635,7 +671,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'bom-preco',
     categoriaId: 'mercado',
     subcategoriaId: 'mercearia',
-    marca: 'Grão Dourado',
+    marca: 'Bom Vale',
     caracteristicas: ['Produto local'],
     precoCentavos: 1890,
     precoDeCentavos: 2290,
@@ -665,7 +701,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'bom-preco',
     categoriaId: 'mercado',
     subcategoriaId: 'azeites',
-    marca: 'Oliva Real',
+    marca: 'Valverde',
     caracteristicas: ['Importado'],
     precoCentavos: 3490,
     disponibilidade: 'disponivel',
@@ -679,7 +715,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'bom-preco',
     categoriaId: 'mercado',
     subcategoriaId: 'mercearia',
-    marca: 'Grão Dourado',
+    marca: 'Bom Vale',
     caracteristicas: ['Produto local'],
     precoCentavos: 2790,
     disponibilidade: 'disponivel',
@@ -735,11 +771,11 @@ const PRODUTOS_CIANORTE: Produto[] = [
   // Pet
   p({
     id: 'p21',
-    nome: 'Ração premium cães adultos 15 kg',
+    nome: 'Ração premium cães adultos 10 kg',
     lojaId: 'pet-amigo',
     categoriaId: 'pet',
     subcategoriaId: 'racao',
-    marca: 'Pet Forte',
+    marca: 'Happy Paws',
     caracteristicas: ['Sem corantes'],
     precoCentavos: 18990,
     precoDeCentavos: 21490,
@@ -812,11 +848,11 @@ const PRODUTOS_CIANORTE: Produto[] = [
   // Beleza
   p({
     id: 'p24',
-    nome: 'Kit skincare facial 3 passos',
+    nome: 'Kit skincare facial 2 produtos',
     lojaId: 'bom-preco',
     categoriaId: 'beleza',
     subcategoriaId: 'skincare',
-    marca: 'Pele Viva',
+    marca: 'PureSkin',
     caracteristicas: ['Vegano'],
     precoCentavos: 11990,
     precoDeCentavos: 14990,
@@ -831,7 +867,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'bom-preco',
     categoriaId: 'beleza',
     subcategoriaId: 'skincare',
-    marca: 'Pele Viva',
+    marca: 'PureVera',
     caracteristicas: ['Vegano'],
     precoCentavos: 4990,
     disponibilidade: 'disponivel',
@@ -845,7 +881,7 @@ const PRODUTOS_CIANORTE: Produto[] = [
     lojaId: 'bom-preco',
     categoriaId: 'beleza',
     subcategoriaId: 'skincare',
-    marca: 'Pele Viva',
+    marca: 'BellaDerm',
     caracteristicas: ['Vegano'],
     precoCentavos: 7990,
     disponibilidade: 'ultimas_unidades',
@@ -855,6 +891,340 @@ const PRODUTOS_CIANORTE: Produto[] = [
   }),
 ];
 
+// Produtos adicionais para as vitrines de demonstração. Cada fotografia corresponde ao item anunciado.
+const produtosAdicionais: Array<{
+  nome: string;
+  categoriaId: string;
+  lojaId: string;
+  subcategoriaId: string;
+  foto: string;
+  precoCentavos: number;
+  digital?: boolean;
+}> = [
+  {
+    nome: 'Chave inglesa ajustável',
+    categoriaId: 'construcao',
+    lojaId: 'casa-obra',
+    subcategoriaId: 'ferramentas',
+    foto: 'extra-36.webp',
+    precoCentavos: 4990,
+  },
+  {
+    nome: 'Cimento em embalagem',
+    categoriaId: 'construcao',
+    lojaId: 'casa-obra',
+    subcategoriaId: 'argamassas',
+    foto: 'extra-37.webp',
+    precoCentavos: 3990,
+  },
+  {
+    nome: 'Ducha cromada de parede',
+    categoriaId: 'construcao',
+    lojaId: 'casa-obra',
+    subcategoriaId: 'hidraulica',
+    foto: 'extra-00.webp',
+    precoCentavos: 8990,
+  },
+  {
+    nome: 'Tinta branca para parede',
+    categoriaId: 'construcao',
+    lojaId: 'casa-obra',
+    subcategoriaId: 'tintas',
+    foto: 'extra-01.webp',
+    precoCentavos: 12990,
+  },
+  {
+    nome: 'Manta de algodão bege',
+    categoriaId: 'cama-mesa-banho',
+    lojaId: 'lar-bordado',
+    subcategoriaId: 'cama',
+    foto: 'extra-02.webp',
+    precoCentavos: 8990,
+  },
+  {
+    nome: 'Travesseiro em embalagem',
+    categoriaId: 'cama-mesa-banho',
+    lojaId: 'lar-bordado',
+    subcategoriaId: 'cama',
+    foto: 'extra-03.webp',
+    precoCentavos: 4990,
+  },
+  {
+    nome: 'Jogo de toalhas brancas',
+    categoriaId: 'cama-mesa-banho',
+    lojaId: 'lar-bordado',
+    subcategoriaId: 'banho',
+    foto: 'extra-34.webp',
+    precoCentavos: 11990,
+  },
+  {
+    nome: 'Mesa lateral de madeira',
+    categoriaId: 'moveis',
+    lojaId: 'moveis-vale',
+    subcategoriaId: 'sala',
+    foto: 'extra-04.webp',
+    precoCentavos: 22990,
+  },
+  {
+    nome: 'Espelho decorativo retangular',
+    categoriaId: 'moveis',
+    lojaId: 'moveis-vale',
+    subcategoriaId: 'decoracao',
+    foto: 'extra-05.webp',
+    precoCentavos: 19990,
+  },
+  {
+    nome: 'Abajur cerâmico',
+    categoriaId: 'moveis',
+    lojaId: 'moveis-vale',
+    subcategoriaId: 'decoracao',
+    foto: 'extra-06.webp',
+    precoCentavos: 14990,
+  },
+  {
+    nome: 'Rack compacto de madeira',
+    categoriaId: 'moveis',
+    lojaId: 'moveis-vale',
+    subcategoriaId: 'sala',
+    foto: 'extra-35.webp',
+    precoCentavos: 59900,
+  },
+  {
+    nome: 'Macarrão espaguete em pacote',
+    categoriaId: 'mercado',
+    lojaId: 'bom-preco',
+    subcategoriaId: 'mercearia',
+    foto: 'extra-07.webp',
+    precoCentavos: 790,
+  },
+  {
+    nome: 'Óleo de girassol',
+    categoriaId: 'mercado',
+    lojaId: 'bom-preco',
+    subcategoriaId: 'mercearia',
+    foto: 'extra-08.webp',
+    precoCentavos: 1390,
+  },
+  {
+    nome: 'Capa protetora para celular',
+    categoriaId: 'eletronicos',
+    lojaId: 'ponto-cel',
+    subcategoriaId: 'acessorios',
+    foto: 'extra-09.webp',
+    precoCentavos: 3990,
+  },
+  {
+    nome: 'Cabo USB-C',
+    categoriaId: 'eletronicos',
+    lojaId: 'ponto-cel',
+    subcategoriaId: 'acessorios',
+    foto: 'extra-10.webp',
+    precoCentavos: 2990,
+  },
+  {
+    nome: 'Caixa de som bluetooth',
+    categoriaId: 'eletronicos',
+    lojaId: 'ponto-cel',
+    subcategoriaId: 'audio',
+    foto: 'extra-11.webp',
+    precoCentavos: 15990,
+  },
+  {
+    nome: 'Ração para gatos',
+    categoriaId: 'pet',
+    lojaId: 'pet-amigo',
+    subcategoriaId: 'racao',
+    foto: 'extra-12.webp',
+    precoCentavos: 8990,
+  },
+  {
+    nome: 'Comedouro de aço para cães',
+    categoriaId: 'pet',
+    lojaId: 'pet-amigo',
+    subcategoriaId: 'camas',
+    foto: 'extra-13.webp',
+    precoCentavos: 3990,
+  },
+  {
+    nome: 'Guia trançada para cães',
+    categoriaId: 'pet',
+    lojaId: 'pet-amigo',
+    subcategoriaId: 'camas',
+    foto: 'extra-14.webp',
+    precoCentavos: 4590,
+  },
+  {
+    nome: 'Bolinha para pets',
+    categoriaId: 'pet',
+    lojaId: 'pet-amigo',
+    subcategoriaId: 'camas',
+    foto: 'extra-15.webp',
+    precoCentavos: 1990,
+  },
+  {
+    nome: 'Protetor solar facial',
+    categoriaId: 'beleza',
+    lojaId: 'bom-preco',
+    subcategoriaId: 'skincare',
+    foto: 'extra-16.webp',
+    precoCentavos: 5990,
+  },
+  {
+    nome: 'Shampoo de cuidado diário',
+    categoriaId: 'beleza',
+    lojaId: 'bom-preco',
+    subcategoriaId: 'higiene',
+    foto: 'extra-17.webp',
+    precoCentavos: 2990,
+  },
+  {
+    nome: 'Sabonete em barra',
+    categoriaId: 'beleza',
+    lojaId: 'bom-preco',
+    subcategoriaId: 'higiene',
+    foto: 'extra-18.webp',
+    precoCentavos: 990,
+  },
+  {
+    nome: 'Sabonete líquido',
+    categoriaId: 'beleza',
+    lojaId: 'bom-preco',
+    subcategoriaId: 'higiene',
+    foto: 'extra-19.webp',
+    precoCentavos: 2490,
+  },
+  {
+    nome: 'Camiseta esportiva azul',
+    categoriaId: 'esporte',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-20.webp',
+    precoCentavos: 4990,
+  },
+  {
+    nome: 'Short esportivo preto',
+    categoriaId: 'esporte',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-21.webp',
+    precoCentavos: 5990,
+  },
+  {
+    nome: 'Meias esportivas brancas',
+    categoriaId: 'esporte',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-22.webp',
+    precoCentavos: 2490,
+  },
+  {
+    nome: 'Tapete para exercícios',
+    categoriaId: 'esporte',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'equipamentos',
+    foto: 'extra-23.webp',
+    precoCentavos: 7990,
+  },
+  {
+    nome: 'Garrafa esportiva de aço',
+    categoriaId: 'esporte',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'equipamentos',
+    foto: 'extra-24.webp',
+    precoCentavos: 5990,
+  },
+  {
+    nome: 'Body infantil de algodão',
+    categoriaId: 'infantil',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-25.webp',
+    precoCentavos: 3990,
+  },
+  {
+    nome: 'Manta macia para bebê',
+    categoriaId: 'infantil',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-26.webp',
+    precoCentavos: 5990,
+  },
+  {
+    nome: 'Urso de pelúcia',
+    categoriaId: 'infantil',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'brinquedos',
+    foto: 'extra-27.webp',
+    precoCentavos: 6990,
+  },
+  {
+    nome: 'Babador infantil',
+    categoriaId: 'infantil',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-28.webp',
+    precoCentavos: 1990,
+  },
+  {
+    nome: 'Meias macias para bebê',
+    categoriaId: 'infantil',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'roupas',
+    foto: 'extra-29.webp',
+    precoCentavos: 1990,
+  },
+  {
+    nome: 'Molde digital de vestido',
+    categoriaId: 'digitais',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'moldes',
+    foto: 'extra-30.webp',
+    precoCentavos: 2990,
+    digital: true,
+  },
+  {
+    nome: 'E-book de organização da casa',
+    categoriaId: 'digitais',
+    lojaId: 'lar-bordado',
+    subcategoriaId: 'ebooks',
+    foto: 'extra-31.webp',
+    precoCentavos: 2990,
+    digital: true,
+  },
+  {
+    nome: 'E-book de costura para iniciantes',
+    categoriaId: 'digitais',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'ebooks',
+    foto: 'extra-32.webp',
+    precoCentavos: 3490,
+    digital: true,
+  },
+  {
+    nome: 'Molde digital de calça',
+    categoriaId: 'digitais',
+    lojaId: 'vale-azul',
+    subcategoriaId: 'moldes',
+    foto: 'extra-33.webp',
+    precoCentavos: 2990,
+    digital: true,
+  },
+];
+
+for (const [indice, item] of produtosAdicionais.entries()) {
+  const { foto, digital, ...dados } = item;
+  const produto = p({
+    ...dados,
+    id: foto.replace('.webp', ''),
+    disponibilidade: 'disponivel',
+    vendidos: 100 + indice,
+    emAlta: 4,
+  });
+  produto.midias = [{ id: 'f1', tipo: 'imagem', legenda: item.nome, variante: 0, url: `/produtos/${foto}` }];
+  if (digital) produto.digital = arquivo('PDF', 8_000_000);
+  PRODUTOS_CIANORTE.push(produto);
+}
+
 export interface CatalogoTenant {
   categorias: Categoria[];
   lojas: Loja[];
@@ -863,6 +1233,10 @@ export interface CatalogoTenant {
 
 /** Categorias são da plataforma; lojas e produtos pertencem a um tenant. */
 export const CATALOGO: Record<string, CatalogoTenant> = {
-  cianorte: { categorias: CATEGORIAS, lojas: LOJAS_CIANORTE, produtos: PRODUTOS_CIANORTE },
+  cianorte: {
+    categorias: CATEGORIAS,
+    lojas: LOJAS_CIANORTE.map((loja) => ({ ...loja, logo: `/marcas/${loja.id}.webp` })),
+    produtos: PRODUTOS_CIANORTE,
+  },
   maringa: { categorias: CATEGORIAS, lojas: [], produtos: [] }, // sem lojas: mostra os estados vazios
 };

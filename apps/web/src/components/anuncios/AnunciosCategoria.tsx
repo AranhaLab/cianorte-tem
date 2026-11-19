@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { CriativoAnuncio } from '@/types/domain';
 import { FaixaAnuncio } from './FaixaAnuncio';
+import { FotoCriativo } from './FotoCriativo';
+import { MarcaAnunciante } from './MarcaAnunciante';
 
 /**
  * Vaga K1 (topo da categoria). Sem anunciante no período, o espaço vira um
@@ -36,36 +38,60 @@ export function AnuncioTopoCategoria({
 
 /** Vaga L1 na coluna lateral (desktop). */
 export function AnuncioLateral({ anuncio }: { anuncio: CriativoAnuncio }) {
+  const pronta = anuncio.modo === 'pronta';
   return (
     <Link
       href={anuncio.href}
       data-anuncio={anuncio.vaga}
-      className="stitch relative flex min-h-[420px] flex-col justify-end gap-2 overflow-hidden rounded-xl px-[22px] pb-[22px] pt-[42px] [--r:24px] hover:text-inherit"
+      className="stitch relative flex min-h-[420px] flex-col justify-end gap-2 overflow-hidden rounded-xl px-[22px] pb-[22px] pt-16 [--r:24px] hover:text-inherit"
       style={{ backgroundColor: anuncio.fundo, color: anuncio.texto }}
     >
-      <span className="pill pill-ad absolute right-3 top-2.5">Patrocinado</span>
-      <span className="text-[13px] opacity-80">{anuncio.anunciante}</span>
-      <h3 className="text-2xl text-inherit">{anuncio.titulo}</h3>
-      <span className="opacity-85">{anuncio.sub}</span>
-      <span className="btn self-start bg-branco" style={{ color: anuncio.fundo }}>
-        {anuncio.cta}
-      </span>
+      {anuncio.imagem && (
+        <FotoCriativo
+          src={anuncio.imagem}
+          fundo={anuncio.fundo}
+          efeito={anuncio.efeito}
+          enquadramento={anuncio.enquadramento}
+          vertical
+          sizes="300px"
+        />
+      )}
+      <MarcaAnunciante anuncio={anuncio} className="absolute left-3 top-3" />
+      <h3 className={pronta ? 'sr-only' : 'relative text-2xl text-inherit'}>{anuncio.titulo}</h3>
+      {!pronta && (
+        <>
+          <span className="relative opacity-85">{anuncio.sub}</span>
+          <span className="btn relative self-start bg-branco" style={{ color: anuncio.fundo }}>
+            {anuncio.cta}
+          </span>
+        </>
+      )}
     </Link>
   );
 }
 
 /** Vaga L1 no celular: entra na grade depois do 6º produto, ocupando a linha toda. */
 export function AnuncioNaGrade({ anuncio }: { anuncio: CriativoAnuncio }) {
+  const pronta = anuncio.modo === 'pronta';
   return (
     <Link
       href={anuncio.href}
       data-anuncio={anuncio.vaga}
-      className="stitch relative col-span-full flex flex-col gap-1 overflow-hidden rounded-xl px-5 pb-5 pt-[42px] [--r:24px] hover:text-inherit xl:hidden"
+      className="stitch relative col-span-full flex min-h-[140px] flex-col justify-end gap-1 overflow-hidden rounded-xl px-5 pb-5 pt-16 [--r:24px] hover:text-inherit xl:hidden"
       style={{ backgroundColor: anuncio.fundo, color: anuncio.texto }}
     >
-      <span className="pill pill-ad absolute right-3 top-2.5">Patrocinado · {anuncio.anunciante}</span>
-      <h3 className="text-inherit">{anuncio.titulo}</h3>
-      <span className="opacity-85">{anuncio.sub}</span>
+      {anuncio.imagem && (
+        <FotoCriativo
+          src={anuncio.imagem}
+          fundo={anuncio.fundo}
+          efeito={anuncio.efeito}
+          enquadramento={anuncio.enquadramento}
+          sizes="100vw"
+        />
+      )}
+      <MarcaAnunciante anuncio={anuncio} className="absolute left-3 top-3" />
+      <h3 className={pronta ? 'sr-only' : 'relative text-inherit'}>{anuncio.titulo}</h3>
+      {!pronta && <span className="relative opacity-85">{anuncio.sub}</span>}
     </Link>
   );
 }

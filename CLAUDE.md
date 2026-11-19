@@ -247,22 +247,152 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - texto jurídico dos termos e da privacidade;
 - nome do encarregado (DPO).
 
-## 13. Front-end atual (protótipo)
+## 13. Front-end (Next.js)
 
-- **Estrutura:** HTML/CSS/JS **sem build**, SPA com rotas por hash (`#/`, `#/c/:cat`, `#/p/:id`, `#/sacola`, `#/checkout`, `#/painel/...`), estado em `localStorage` só para a demonstração.
-- **Arquivos:**
-    - `js/data.js`: dados de demonstração e configuração da cidade;
-    - `js/app.js`: rotas, telas e eventos;
-    - `css/styles.css`: tokens e componentes;
-    - `manifest.webmanifest` + `sw.js`: PWA.
-- **Migração para a stack definitiva [PENDENTE: stack]:**
-    - cada função `vXxx()` de `app.js` vira uma página ou rota;
-    - `pcard`, `rail`, `adStrip`, `storeCard`, `shopLayout` e `panelLayout` viram componentes;
-    - `data.js` vira chamadas aos endpoints da seção 11;
-    - os tokens de `:root` viram o tema.
-- **Simulações da demo:** "Simular pagamento" e "Simular aprovação" existem só para demonstração e devem sair na versão real.
+### 13.1 Stack **[DECIDIDO 18/11/2026]**
+- **Next.js 15 (App Router) + TypeScript**, Tailwind CSS 3 (tokens no `tailwind.config.ts`), fontes Outfit e Inter via `next/font`, ícones `lucide-react`, estado da sacola e da sessão em Zustand.
+- **Qualidade:** ESLint + Prettier; Vitest (regras) e Playwright (jornadas em 390 px e 1440 px) na etapa 6.
+- **Back-end (fase 2):** Node com NestJS + PostgreSQL, seguindo as seções 10 e 11. O front não muda quando ele entrar, só `src/lib/api`.
+- A migração terminou em 19/11/2026 e a pasta `prototipo/` foi removida. Para consultar a versão HTML/CSS/JS original: o protótipo original está no histórico do Git (commit cf1d609, branch feat/prototipo-front-end). Comentários "protótipo: vXxx" no código apontam para as funções de lá.
 
-## 14. Incorporado da revisão do protótipo "Tem Logo Ali" (18/11/2026)
+### 13.2 Estrutura de pastas
+```
+/                         raiz do repositório (monorepo)
+├── CLAUDE.md             regras de negócio (este arquivo)
+├── docker-compose.yml    web + proxy hoje; api + db no profile "backend"
+├── .env.example          variáveis de todos os serviços (o .env real nunca vai para o Git)
+├── infra/caddy/          proxy reverso com HTTPS automático
+└── apps/
+    ├── web/              front-end Next.js
+    │   ├── Dockerfile    imagem standalone, usuário sem privilégio
+    │   ├── tailwind.config.ts   tokens (única fonte de cores)
+    │   ├── e2e/         testes Playwright (jornadas + acessibilidade)
+    │   ├── public/sw.js service worker do PWA
+    │   └── src/
+    │       ├── middleware.ts    host → cidade (reescreve para /[tenant]/...)
+    │       ├── app/[tenant]/    layout raiz por cidade (marca e acento no SSR)
+    │       │   ├── (comprador)/ rotas do comprador
+    │       │   ├── painel/      painel do lojista (layout próprio, noindex)
+    │       │   └── dev/tokens/  vitrine de tokens (só dev/demo)
+    │       ├── components/      marca, ui (ícones), layout/comprador, vitrine, anuncios, providers
+│       ├── stores/          estado do cliente (Zustand): sacola, sessão, CEP, cookies
+│       ├── hooks/           hooks de cliente (ex.: sacola agrupada por loja)
+    │       ├── lib/api/         ÚNICA porta de dados: mocks hoje, NestJS amanhã
+    │       ├── lib/regras/      regras puras (frete, disponibilidade, anúncios, dinheiro)
+    │       ├── lib/tenant/      resolução da cidade + getTenant()
+    │       ├── mocks/           dados fictícios por cidade (convertidos do protótipo original)
+│       ├── app/manifest.webmanifest, app/icons/  PWA por cidade (fora de [tenant])
+    │       └── types/domain.ts  tipos espelhando as entidades da seção 10
+    └── api/              (fase 2) back-end NestJS
+```
+
+### 13.3 Rotas
+- **Comprador:** `/`, `/categorias`, `/c/[categoria]`, `/p/[produto]`, `/loja/[loja]`, `/lojas`, `/busca`, `/ofertas`, `/sacola`, `/checkout`, `/pedido/[id]`, `/entrar`, `/cadastro`, `/conta/[aba]` (`/conta` → `/conta/dados`), `/termos`, `/privacidade`, `/vender`.
+- **Painel:** `/painel`, `/painel/pedidos`, `/painel/produtos`, `/painel/produtos/novo`, `/painel/estoque`, `/painel/anuncios`, `/painel/financeiro`, `/painel/vitrine`, `/painel/loja`, `/painel/equipe`, `/painel/cadastro`.
+- **Renderização por rota:** home, categorias e lojas em ISR (5 min); produto em ISR (60 s, pré-gerado por cidade); loja em ISR (5 min); categoria, busca e ofertas renderizadas no servidor a cada requisição, porque ordenação e filtros vêm da URL (`?ord=vendidos|menor|desconto&f=hoje|retirada|oficial`). Os filtros são links: funcionam sem JavaScript e podem ser compartilhados.
+- **SEO:** título, descrição e canonical por página; dados estruturados `WebSite` (home), `Product` com `Offer` e disponibilidade (produto) e `Store` (loja). O JSON-LD escapa `<` porque os textos vêm do lojista (proteção contra XSS). A busca não é indexada (`noindex`).
+- **Isolamento por cidade:** produto ou loja de outra cidade responde 404 (ex.: `/p/p1` em maringa.).
+
+### 13.4 White label no front **[DECIDIDO]**
+- O `middleware.ts` lê o host (`cianorte.` → Cianorte Tem, `maringa.` → Maringá Tem, ou domínio próprio cadastrado) e reescreve a URL para `/[tenant]/...`. O usuário não vê o segmento.
+- `getTenant(slug)` é a única fonte de marca, acento, associação e CEPs. **Nenhum nome de cidade fixo no código** (só nos mocks, que são dados).
+- O acento da cidade vira variável CSS (`--acento-rgb`) no `<html>`, e o token `acento` do Tailwind lê essa variável.
+- Em desenvolvimento: `http://cianorte.localhost:3000` e `http://maringa.localhost:3000`. `localhost` puro usa `DEFAULT_TENANT`.
+
+### 13.5 Tokens e regras de código
+- **Nenhuma cor fora dos tokens.** A paleta padrão do Tailwind está desligada, e o ESLint acusa erro em qualquer hex fora de `src/mocks` e `tailwind.config.ts`. Cores que são **dado** (tom da categoria, cor da loja, fundo do criativo) chegam pela API e entram via `style`.
+- Dinheiro em centavos (`Centavos`) do mock à tela; formatação só em `lib/regras/dinheiro.ts`.
+- Alvos de toque de no mínimo 44 px (`min-h-toque`), contraste 4,5:1 e navegação por teclado.
+- **Modo demo:** `NEXT_PUBLIC_DEMO_MODE=true` liga "Simular pagamento", "Simular aprovação" e `/dev/tokens`. Em produção fica `false`.
+- **Primitivos do design system** (`.btn`, `.pill`, `.status`, `.card`, `.chip`, `.stitch`, `.input`, `.banner-info`, `.legal-box`) ficam em `globals.css` (`@layer components`, só com tokens), porque se repetem em dezenas de telas. O resto é utilitário do Tailwind direto no componente.
+- **Pontos de quebra** iguais aos do protótipo: `sm` 640, `md` 760, `lg` 900 (vira desktop: cabeçalho completo, sem barra inferior), `xl` 1000, `2xl` 1100, `3xl` 1240.
+- **Estado do comprador** (`src/stores/comprador.ts`, Zustand): sacola, favoritos, CEP, escolha de cookies e sessão de demonstração, salvos no aparelho. Cada cidade tem seu domínio, então o armazenamento não se mistura entre cidades. A sessão real será cookie `httpOnly` da API (seção 15).
+- **Renderização:** layout e vitrines no servidor; só CEP, busca, sacola, favoritos, cookies, modais e carrosséis são componentes de cliente. A home é ISR (revalida a cada 5 min) por cidade e publica dados estruturados `WebSite` + `SearchAction`.
+
+### 13.6 Ajustes de visual decididos na migração
+- **[DECIDIDO 18/11/2026] A marca não muda de cor no hover.** No protótipo, o `a:hover` global deixava o nome da cidade marinho sobre fundo marinho e ele sumia. O componente `Marca` fixa as cores nos próprios elementos.
+- **[DECIDIDO 18/11/2026] Barra de categorias sem corte:** o que não cabe na largura vai para o menu "Mais" no fim da barra (calculado pela largura real de cada item). Antes a última categoria aparecia cortada.
+- **[DECIDIDO 18/11/2026] Cabeçalho:** saiu o link "Venda no <Cidade> Tem" (repetia o "Quero vender"). "Quero vender", na faixa de cima, virou uma etiqueta no formato do "Tem" da marca: fundo do acento da cidade, texto branco, bolinha e pesponto. "Entrar" virou botão branco com texto azul e ícone de pessoa, para ser achado de primeira.
+- **Acessibilidade (etapa 6):** tabelas com rolagem lateral são regiões focáveis pelo teclado; o nome lido pelos leitores de tela nos links de marca, anúncios, cartões de produto e vagas do mapa coincide com o texto visível; cinza-claro sobre fundo bege foi trocado pelo cinza de texto secundário; links no meio de texto são sublinhados; `.btn-sm` tem 44 px no celular (36 px no desktop).
+- **[PROPOSTA]** Botões de favoritar e "+" do cartão mantêm o círculo de 36 px do protótipo, mas a área clicável passou a ter 44 px (acessibilidade). As setas do carrossel passaram de 40 para 44 px.
+- **[PROPOSTA]** Vaga K1 sem anunciante no período mostra o convite "Anuncie no topo de <categoria>" (como no protótipo). Com anunciante, vira faixa patrocinada.
+- **[PROPOSTA]** Vaga L1 no celular aparece depois do 6º produto e some no desktop (≥ 1000 px), onde já está na coluna lateral. No protótipo ela aparecia nos dois lugares no desktop; segui a regra da seção 9.1.
+
+### 13.6.1 Comprador: conta, checkout e pedido (etapa 4)
+- **Proteção de telas:** conta, checkout e pedido exigem login (`ExigeLogin`). Quem chega sem login vai para "Entrar" (com `?next=checkout` vindo do checkout); quem sai da conta vai para o início. Na versão real a proteção é a sessão validada no servidor; isto só evita a tela vazia.
+- **Redirecionamento seguro:** `?next=` só aceita `checkout`. Qualquer outro valor leva à conta (evita redirecionamento aberto).
+- **Formulários de login e cadastro usam `method="post"`**: se o JavaScript não carregar, senha e CPF nunca vão para a URL. A busca do cabeçalho funciona sem JavaScript (`action="/busca"`).
+- **[PROPOSTA] Validações do cadastro no front** (o back-end repete): nome e sobrenome, CPF com dígito verificador, celular com DDD, e-mail, senha com 8+ caracteres e letras e números (o protótipo só checava o tamanho, mas o texto de ajuda já pedia letras e números). Termos e idade obrigatórios; marketing opcional; nenhum pré-marcado. Versão dos termos enviada no cadastro: `VERSAO_TERMOS` em `lib/regras/cadastro.ts`.
+- **[PROPOSTA] Checkout:** para avançar da etapa Entrega é obrigatório CEP, rua, número e bairro quando alguma loja for por entrega (o protótipo não validava). Se o CEP sair da área atendida, entrega e retirada ficam indisponíveis e o avanço é bloqueado (revalidação do CDC/PRD-03).
+- **Pedido:** número e subpedidos (`10501-A`, `10501-B`) como no protótipo; `POST /v1/pedidos` recebe uma `Idempotency-Key` por tentativa (clique duplo não cria dois pedidos). Datas exibidas em `America/Sao_Paulo`.
+- **Cartão:** os campos na tela são só ilustrativos e não são guardados; na versão real virão do SDK do provedor (tokenização).
+- **Modo demo:** "Simular pagamento" (Pix) e "Simular aprovação" (cartão) só aparecem com `NEXT_PUBLIC_DEMO_MODE=true`. Sem a variável, a tela diz que a confirmação chega sozinha (webhook).
+
+### 13.6.2 Painel do lojista e anúncios (etapa 5)
+- **Layout próprio** em `/painel` (menu lateral, loja ativa com status, interruptor "Loja visível", `noindex`). O interruptor só liga com cadastro `aprovada` (§7.2).
+- **Estado da demo** em `src/stores/painel.ts` (Zustand, salvo no aparelho). Cada ação corresponde a um endpoint da seção 11; com o back-end, o store vira chamadas à API e a permissão de cada ação é conferida no servidor.
+- **Pedidos:** botão de avanço usa `proximoStatus` (`lib/regras/pedidos.ts`): pedido sem pagamento confirmado não avança; cada loja avança só a sua parte. **[PROPOSTA]** Os filtros Todos / A separar / Concluídos passaram a funcionar (no protótipo eram só visuais).
+- **Estoque:** "Comprador vê" usa `disponibilidadePublica` (saldo − reserva de segurança; ≤ mínimo = Últimas unidades). Mudar a reserva recalcula na hora.
+- **Financeiro:** comissão 10% e taxa 2% **ilustrativas** (PO-03), calculadas em centavos por pedido. Por isso "Disponível para saque" pode diferir em 1 centavo do protótipo, que arredondava só no total.
+- **Anúncios:** valor de tabela, lance mínimo (lance atual + R$ 2) e limites de tempo vêm de `lib/regras/anuncios.ts`. O convite da vaga K1 na categoria abre `/painel/anuncios?vaga=K1` (antes `?slot=`).
+- **Simular aprovação** do cadastro só no modo demo.
+- Cidade sem loja de demonstração (ex.: Maringá) mostra "Nenhuma loja vinculada".
+- Tabelas não quebram linha nas células; no celular rolam na horizontal dentro do cartão.
+
+### 13.6.3 PWA e testes (etapa 6)
+- **Manifest por cidade:** `/manifest.webmanifest` é gerado pelo host (nome, descrição, atalhos Ofertas/Sacola/Meus pedidos). Instalar em cianorte.* cria "Cianorte Tem"; em maringa.*, "Maringá Tem".
+- **Ícones por cidade:** `/icons/icon.svg`, `192.png`, `512.png`, `maskable-512.png` e `apple-180.png` são gerados com o monograma da marca (CT, MT…) e a etiqueta "Tem" na cor do acento da cidade (mesmo desenho do protótipo).
+- **Service worker** (`public/sw.js`, só em produção e HTTPS/localhost): estáticos do Next e ícones em cache; páginas públicas em **rede primeiro** com cópia para abrir offline (preço e estoque nunca saem do cache se houver rede); **conta, checkout, pedido, painel, sacola, entrar e cadastro nunca vão para o cache**; sem rede e sem cópia, mostra `/offline`.
+- **Barra inferior flutuante** no celular (etapa 2) e barra de compra fixa na página de produto (etapa 3).
+- **Vitest** (`npm test`): regras de frete, frete grátis, cobertura e retirada; disponibilidade pública; valor de anúncio, limites de tempo e lance mínimo; dinheiro; validações do cadastro; estados do subpedido; resolução da cidade pelo domínio.
+- **Playwright** (`npm run test:e2e`), em 390 px e 1440 px, contra o build de produção em modo demo: compra completa em duas lojas com cadastro (LGPD) e Pix; bloqueio fora da área; comprador nunca vê saldo; todo anúncio com "Patrocinado"; isolamento entre cidades; painel (avanço de pedido, loja visível, reserva de estoque, lances e teto de 4 semanas).
+- **Acessibilidade automática** (axe, WCAG 2.1 AA) nas principais páginas: falha em violação grave ou crítica (contraste, rótulos, nomes de botões). No celular, checa alvos de toque de 44 px na página de produto. Não substitui o teste manual com leitor de tela.
+
+### 13.7 Plano de migração (etapas, com aprovação ao fim de cada uma)
+1. Estrutura do projeto Next, tokens, white label, infra Docker. **[FEITO]**
+2. Layout do comprador (cabeçalho, categorias, rodapé, barra inferior, cookies, sacola lateral, modal de localização) e home. **[FEITO]**
+3. Categoria, produto, loja, lojas, busca e ofertas. **[FEITO]**
+4. Sacola, checkout, pedido, entrar, cadastro, conta, termos, privacidade e vender. **[FEITO]**
+5. Painel do lojista e central de anúncios. **[FEITO]**
+6. PWA (manifest por cidade, ícones, service worker) e testes (Vitest + Playwright). **[FEITO]**
+
+## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
+
+- **Servidor:** uma VPS. **Tudo roda em Docker** (front, back, banco e serviços futuros). Qualquer máquina sobe o ambiente inteiro com `docker compose`, o que facilita trocar de máquina ou receber um novo desenvolvedor.
+- **Serviços** (`docker-compose.yml`):
+
+| Serviço | Imagem | Exposto à internet | Observação |
+| --- | --- | --- | --- |
+| `proxy` | Caddy 2 | Sim (80/443) | HTTPS automático (Let's Encrypt) para os domínios de cada cidade. Repassa o host intacto. |
+| `web` | `apps/web/Dockerfile` | Não | Next standalone, usuário sem root, sistema de arquivos só leitura. |
+| `api` | `apps/api/Dockerfile` (fase 2) | Não | NestJS. Entra no mesmo domínio em `/api` (sem CORS, cookie first-party). |
+| `db` | Postgres 17 | **Nunca** | Volume persistente `pg_data`. Acesso administrativo só por túnel SSH. |
+
+- Comandos: só o front com `docker compose up -d --build web proxy`; com back-end com `docker compose --profile backend up -d --build`.
+- **Pendências:** provedor da VPS, backup automático do Postgres (dump diário fora da VPS + teste de restauração), monitoramento/alertas, CI/CD (build da imagem e deploy) **[PENDENTE]**.
+- Certificado coringa (`*.cianortetem.com.br`) exige desafio DNS no Caddy. Enquanto isso, cada domínio entra em `DOMINIOS_WEB` **[PROPOSTA]**.
+
+## 15. Segurança
+
+**Já aplicado no front:**
+- Cabeçalhos em todas as rotas: CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP. `X-Powered-By` removido.
+- A CSP é estática para manter o cache por cidade (ISR). Por isso `script-src` aceita `'unsafe-inline'`, que o Next exige sem nonce. **[PROPOSTA]** Reavaliar nonce quando o checkout for implementado.
+- Dependências sem vulnerabilidades conhecidas (`npm audit` = 0). O `postcss` interno do Next foi forçado para a versão corrigida via `overrides`.
+- Container: imagem mínima (alpine), usuário sem root, `read_only`, `cap_drop: ALL`, `no-new-privileges`, healthcheck.
+- Segredos: só em `.env` (fora do Git). Variáveis `NEXT_PUBLIC_*` vão para o navegador, então **nunca** contêm segredo.
+- Painel com `noindex`.
+
+**Regras para o back-end e para as próximas etapas:**
+- **Sessão:** cookie `httpOnly`, `Secure`, `SameSite=Lax`, emitido pela API. **Nunca** token em `localStorage`. Proteção CSRF nas rotas que alteram dados.
+- **Autorização por recurso no servidor** (PRD-01): todo acesso confere tenant + dono. O front esconder um botão não é segurança.
+- **Senhas:** Argon2id (ou bcrypt com custo ≥ 12), limite de tentativas e bloqueio progressivo no login, recuperação por link de uso único.
+- **Pagamento:** cartão tokenizado no SDK do provedor (PCI). Número e CVV nunca passam pelo nosso servidor. Webhook com assinatura verificada e idempotente.
+- **API de estoque:** chave por loja guardada só como hash, `Idempotency-Key`, rate limit (60 req/min), HMAC nos webhooks de saída.
+- **Entrada:** validação de esquema em toda rota (DTO), consultas parametrizadas (ORM), upload com checagem de tipo real e tamanho e armazenamento fora da pasta pública.
+- **LGPD:** criptografia em repouso para CPF e dados sensíveis, logs sem dados pessoais, registro de consentimento, trilha de auditoria de ações sensíveis.
+- **Operação:** firewall da VPS liberando só 22 (com chave SSH, sem senha), 80 e 443; atualizações automáticas de segurança do SO; `npm audit` e atualização de imagens no CI.
+
+## 16. Incorporado da revisão do protótipo "Tem Logo Ali" (18/11/2026)
 
 O protótipo anterior (pasta `Marketplace-Local`, v0.16, com 26 documentos) foi revisado. Estes pontos dele entraram no Cianorte Tem:
 

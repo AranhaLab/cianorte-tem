@@ -1,0 +1,26 @@
+# Proxy reverso com HTTPS automático (Let's Encrypt).
+# Cada cidade aponta seu domínio para a VPS e entra em DOMINIOS_WEB.
+# O host é repassado intacto: é ele que o Next usa para escolher a cidade.
+
+{
+	email {$EMAIL_ACME}
+}
+
+(seguranca) {
+	encode zstd gzip
+	header -Server
+	request_body {
+		max_size 10MB
+	}
+}
+
+{$DOMINIOS_WEB} {
+	import seguranca
+
+	# Fase 2: API no mesmo domínio, evita CORS e mantém cookie de sessão first-party.
+	# handle_path /api/* {
+	# 	reverse_proxy api:4000
+	# }
+
+	reverse_proxy web:3000
+}

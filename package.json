@@ -1,0 +1,23 @@
+{
+  "name": "cianorte-tem",
+  "private": true,
+  "description": "Monorepo do Cianorte Tem: comandos da raiz que repassam para cada app (apps/web hoje; apps/api na fase 2).",
+  "engines": {
+    "node": ">=20.18"
+  },
+  "scripts": {
+    "postinstall": "npm --prefix apps/web install",
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm --prefix apps/web run build",
+    "start": "npm --prefix apps/web run start",
+    "lint": "npm --prefix apps/web run lint",
+    "typecheck": "npm --prefix apps/web run typecheck",
+    "format": "npm --prefix apps/web run format",
+    "format:check": "npm --prefix apps/web run format:check",
+    "test": "npm --prefix apps/web run test",
+    "test:e2e": "npm --prefix apps/web run test:e2e",
+    "test:e2e:instalar": "npm --prefix apps/web exec playwright install chromium",
+    "test:todos": "npm --prefix apps/web run test:todos",
+    "verificar": "npm run lint && npm run typecheck && npm test"
+  }
+}

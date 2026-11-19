@@ -259,6 +259,8 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ```
 /                         raiz do repositório (monorepo)
 ├── CLAUDE.md             regras de negócio (este arquivo)
+├── package.json          comandos da raiz (dev, build, test, test:e2e, verificar) que repassam para cada app
+│                         [DECIDIDO 19/11/2026] estrutura apps/ mantida; sem workspaces (cada app com seu lock e Dockerfile)
 ├── docker-compose.yml    web + proxy hoje; api + db no profile "backend"
 ├── .env.example          variáveis de todos os serviços (o .env real nunca vai para o Git)
 ├── infra/caddy/          proxy reverso com HTTPS automático

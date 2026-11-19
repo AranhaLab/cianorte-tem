@@ -8,11 +8,14 @@ Regras de negócio, estrutura e decisões: **`CLAUDE.md`**.
 
 Requer Node 20.18 ou mais novo.
 
+Na raiz do repositório:
+
 ```
-cd apps/web
 npm install
 npm run dev
 ```
+
+O `npm install` da raiz instala também as dependências de `apps/web`.
 
 Abra uma cidade pelo subdomínio:
 
@@ -31,7 +34,9 @@ docker compose up -d --build web proxy
 
 Com o back-end (fase 2): `docker compose --profile backend up -d --build`.
 
-## Scripts do front (`apps/web`)
+## Scripts (rodar na raiz)
+
+Cada app tem o seu código e os seus testes na própria pasta (`apps/web` hoje; `apps/api` na fase 2). Os comandos da raiz repassam para o app; dentro de `apps/web` os mesmos comandos também funcionam.
 
 | Script | O que faz |
 | --- | --- |
@@ -41,7 +46,8 @@ Com o back-end (fase 2): `docker compose --profile backend up -d --build`.
 | `npm run typecheck` | checagem de tipos |
 | `npm run format` | Prettier |
 | `npm test` | testes das regras de negócio (Vitest) |
-| `npm run test:e2e` | jornadas de compra e painel em 390 e 1440 px + acessibilidade (Playwright). Na primeira vez: `npx playwright install chromium` |
+| `npm run test:e2e` | jornadas de compra, painel e admin em 390 e 1440 px + acessibilidade (Playwright). Na primeira vez: `npm run test:e2e:instalar` |
+| `npm run verificar` | lint + tipos + testes de regras (antes de subir) |
 
 No Windows, o `npm run dev` pode corromper o cache `.next` quando várias páginas compilam ao mesmo tempo. Se aparecer "Unexpected non-whitespace character after JSON", apague `.next` e reinicie, ou revise com `npm run build && npm start`.
 

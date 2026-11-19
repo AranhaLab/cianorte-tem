@@ -132,6 +132,7 @@ export interface VitrineCategoria {
   melhoresPrecos: Produto[];
   lojas: Loja[];
   anuncios: CriativoAnuncio[];
+  anuncioComplementar?: CriativoAnuncio;
 }
 
 export const vitrine = {
@@ -174,7 +175,13 @@ export const vitrine = {
       maisVendidos: ordenar(todos),
       melhoresPrecos: ordenar(todos, 'menor'),
       lojas: cat(t).lojas.filter((l) => todos.some((p) => p.lojaId === l.id)),
-      anuncios: (CRIATIVOS[t] ?? []).filter((a) => a.vaga === 'K1' || a.vaga === 'L1'),
+      anuncios: (CRIATIVOS[t] ?? []).filter(
+        (a) => (a.vaga === 'K1' || a.vaga === 'L1') && a.categoriaId === id,
+      ),
+      anuncioComplementar:
+        id === 'moveis'
+          ? undefined
+          : (CRIATIVOS[t] ?? []).find((a) => a.vaga === 'L1' && a.categoriaId === 'moveis'),
     });
   },
 };
@@ -257,11 +264,31 @@ export const produtos = {
 
 export const lojas = {
   /** GET /v1/lojas */
-  listar: (t: string): Promise<Loja[]> => mock(cat(t).lojas),
+  listar: (t: string): Promise<Loja[]> =>
+    mock(
+      cat(t).lojas.map((loja) => ({
+        ...loja,
+        itensVendidos: cat(t)
+          .produtos.filter((p) => p.lojaId === loja.id)
+          .reduce((total, p) => total + p.vendidos, 0),
+      })),
+    ),
   /** GET /v1/lojas/{id} */
   obter: (t: string, id: string): Promise<{ loja: Loja; produtos: Produto[] } | null> => {
     const loja = cat(t).lojas.find((l) => l.id === id);
-    return mock(loja ? { loja, produtos: visiveis(t).filter((p) => p.lojaId === id) } : null);
+    return mock(
+      loja
+        ? {
+            loja: {
+              ...loja,
+              itensVendidos: cat(t)
+                .produtos.filter((p) => p.lojaId === id)
+                .reduce((total, p) => total + p.vendidos, 0),
+            },
+            produtos: visiveis(t).filter((p) => p.lojaId === id),
+          }
+        : null,
+    );
   },
 };
 

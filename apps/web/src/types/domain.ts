@@ -53,6 +53,7 @@ export interface Loja {
   id: string;
   nome: string;
   categoriaId: string;
+  logo?: string;
   selo: Selo;
   bairro: string;
   entrega: boolean;
@@ -62,6 +63,7 @@ export interface Loja {
   prazo: string; // texto de previsão exibido ao comprador
   nota: number;
   avaliacoes: number;
+  itensVendidos?: number;
   cnpj: string;
   cor: string; // cor do avatar (dado, não token)
 }
@@ -135,8 +137,12 @@ export interface ComponenteKit {
 export type VagaId = 'H1' | 'M1' | 'M2' | 'C1' | 'K1' | 'L1';
 export type StatusVaga = 'disponivel' | 'leilao' | 'ocupado';
 
+/** [PROPOSTA] Como a vaga é comprada: só por lance (H1) ou compra direta pelo valor de tabela. */
+export type ModoCompraVaga = 'lance' | 'direta';
+
 export interface VagaAnuncio {
   id: VagaId;
+  modoCompra: ModoCompraVaga;
   nome: string;
   pagina: 'home' | 'categoria';
   posicao: string;
@@ -152,6 +158,7 @@ export interface VagaAnuncio {
 
 export interface CriativoAnuncio {
   vaga: VagaId;
+  categoriaId?: string;
   titulo: string;
   sub: string;
   cta: string;
@@ -160,6 +167,16 @@ export interface CriativoAnuncio {
   destaque?: string;
   href: string;
   anunciante: string; // sempre exibido junto de "Patrocinado" (CLAUDE.md §6)
+  /** Foto da arte enviada pelo anunciante (moderada). Sem ela, o criativo é só cor e texto. */
+  imagem?: string;
+  /** Marca do anunciante, sempre visível no anúncio: nome, cor e logo (se houver). */
+  marca?: { nome: string; cor: string; logo?: string; lojaId?: string };
+  /** "montar": nosso modelo com título/botão sobre a foto. "pronta": a arte já traz o texto. */
+  modo?: 'montar' | 'pronta';
+  /** Véu para leitura do texto: neutro (padrão), degradê na cor da marca, ou nenhum (só arte pronta). */
+  efeito?: EfeitoArte;
+  /** Enquadramento da foto: zoom (1 a 3) e foco em % (0 a 100). */
+  enquadramento?: { zoom: number; x: number; y: number };
 }
 
 /* ---------- Pedidos ---------- */
@@ -282,11 +299,42 @@ export interface MembroEquipe {
   permissoes: Array<'Pedidos' | 'Produtos' | 'Estoque' | 'Financeiro' | 'Anúncios' | 'Equipe'>;
 }
 
+/** Véu neutro (padrão), degradê na cor da marca, ou nenhum (só para arte pronta). */
+export type EfeitoArte = 'veu' | 'degrade' | 'nenhum';
+
+/** Estados da campanha (CLAUDE.md §9.3). A arte só pode ser enviada depois da compra. */
+export type StatusCampanha =
+  | 'lance_ativo'
+  | 'lance_superado'
+  | 'aguardando_arte'
+  | 'arte_em_analise'
+  | 'no_ar'
+  | 'encerrada'
+  | 'reprovada';
+
+/** Arte montada pelo lojista no editor (depois da compra). */
+export interface ArteAnuncio {
+  modo: 'montar' | 'pronta';
+  imagem: { nome: string; tamanhoBytes: number; largura: number; altura: number; dados: string };
+  enquadramento: { zoom: number; x: number; y: number };
+  efeito: EfeitoArte;
+  cor: string; // cor da marca (dado do anunciante)
+  titulo: string; // na arte pronta: texto alternativo (o que a arte diz)
+  sub: string;
+  cta: string;
+  destino: string;
+}
+
 export interface Campanha {
+  id: string;
   vaga: VagaId;
-  status: string;
+  categoriaId?: string;
+  status: StatusCampanha;
+  origem: 'lance' | 'direta';
   valorDiaCentavos: Centavos;
   periodo: string;
+  arte?: ArteAnuncio;
+  motivoReprovacao?: string;
 }
 
 export interface ModuloVitrine {

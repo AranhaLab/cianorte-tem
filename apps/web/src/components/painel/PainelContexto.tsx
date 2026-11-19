@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useAdmin } from '@/stores/admin';
+import { useLogos } from '@/stores/logos';
 import { usePainel } from '@/stores/painel';
 import type { Categoria, Loja, Produto } from '@/types/domain';
 
@@ -18,6 +19,7 @@ export function PainelProvider({ dados, children }: { dados: DadosLoja; children
   useEffect(() => {
     void usePainel.persist.rehydrate();
     void useAdmin.persist.rehydrate(); // análises e comissão decididas pela plataforma
+    void useLogos.persist.rehydrate();
   }, []);
   return <Ctx.Provider value={dados}>{children}</Ctx.Provider>;
 }

@@ -88,7 +88,7 @@ export default async function PaginaCategoria({ params, searchParams }: Props) {
 
       <AnuncioTopoCategoria anuncio={k1} categoria={c.nome} />
 
-      {v.total > 3 && (
+      {v.total > 0 && (
         <>
           <SecaoCarrossel
             id={`cv-${id}`}
@@ -138,13 +138,14 @@ export default async function PaginaCategoria({ params, searchParams }: Props) {
               texto="Tente remover algum filtro."
             />
           )}
+          {lista.length <= 5 && l1 && <AnuncioNaGrade anuncio={l1} />}
+          {v.anuncioComplementar && <AnuncioNaGrade anuncio={v.anuncioComplementar} />}
         </div>
 
         <aside
           aria-label="Publicidade e lojas"
           className="hidden flex-col gap-4 self-start xl:sticky xl:top-[130px] xl:flex"
         >
-          {l1 && <AnuncioLateral anuncio={l1} />}
           {v.lojas.length > 0 && (
             <div className="card flex flex-col gap-2">
               <b>Lojas desta categoria</b>
@@ -160,6 +161,8 @@ export default async function PaginaCategoria({ params, searchParams }: Props) {
               ))}
             </div>
           )}
+          {l1 && <AnuncioLateral anuncio={l1} />}
+          {v.anuncioComplementar && <AnuncioLateral anuncio={v.anuncioComplementar} />}
         </aside>
       </div>
     </>

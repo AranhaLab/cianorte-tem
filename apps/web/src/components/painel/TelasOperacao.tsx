@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
-import { ArteProduto } from '@/components/vitrine/ArteProduto';
+import { ArteProduto, capaDe } from '@/components/vitrine/ArteProduto';
+import { ResumoAvaliacoes } from '@/components/vitrine/AvaliacoesLoja';
 import { MODO_DEMO } from '@/lib/demo';
 import { reais } from '@/lib/regras/dinheiro';
 import { disponibilidadePublica } from '@/lib/regras/disponibilidade';
@@ -33,6 +34,7 @@ export function VisaoGeral() {
 
 function VisaoGeralConteudo() {
   const tenant = useTenant();
+  const { loja, produtos } = useLojaPainel();
   const s = usePainel();
   const aSeparar = s.pedidos.filter(
     (o) => o.status === 'pagamento_confirmado' || o.status === 'em_separacao',
@@ -120,6 +122,14 @@ function VisaoGeralConteudo() {
           <span className="kpi-valor">{baixo}</span>
           <span className="text-xs text-grafite-2">itens no mínimo</span>
         </div>
+      </div>
+
+      <div className="card flex flex-col gap-2">
+        <h2>Avaliações e itens vendidos</h2>
+        <ResumoAvaliacoes
+          loja={{ ...loja, itensVendidos: produtos.reduce((total, produto) => total + produto.vendidos, 0) }}
+          mostrarComentarios
+        />
       </div>
 
       <div className="card flex flex-col">
@@ -232,6 +242,7 @@ function ProdutosConteudo() {
         preco: e?.atual.precoCentavos ?? p.precoCentavos,
         opcoes: e ? (e.atual.variacao?.opcoes.length ?? 0) : (p.variacao?.opcoes.length ?? 0),
         capa: (e?.atual.midias[0] ?? p.midias[0])?.variante ?? 0,
+        foto: capaDe(e?.atual.midias ?? p.midias),
         disp: p.disponibilidade,
         pendentes: e?.pendentes.length ?? 0,
         novo: false,
@@ -247,6 +258,7 @@ function ProdutosConteudo() {
         preco: e.atual.precoCentavos,
         opcoes: e.atual.variacao?.opcoes.length ?? 0,
         capa: e.atual.midias[0]?.variante ?? 0,
+        foto: capaDe(e.atual.midias),
         disp: 'disponivel' as Disponibilidade,
         pendentes: e.pendentes.length,
         novo: true,
@@ -299,6 +311,8 @@ function ProdutosConteudo() {
                     <ArteProduto
                       categoria={cat(p.categoriaId)}
                       variante={p.capa}
+                      src={p.foto}
+                      sizes="44px"
                       className="!aspect-square h-11 w-11 flex-none rounded-[12px]"
                       tamanhoIcone="h-1/2 w-1/2"
                     />

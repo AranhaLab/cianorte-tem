@@ -1,5 +1,7 @@
 'use client';
 
+import { useCaminho } from '@/hooks/useCaminho';
+import { linkEntrar } from '@/lib/regras/redirecionamento';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
@@ -60,13 +62,14 @@ export function Busca({ cidade }: { cidade: string }) {
 }
 
 export function AcoesTopo() {
+  const caminho = useCaminho();
   const usuario = useComprador((s) => (s.hidratado ? s.usuario : null));
   const qtd = useComprador((s) => (s.hidratado ? totalItens(s.itens) : 0));
   return (
     <div className="ml-auto flex items-center gap-1.5">
       {/* Entrar em destaque: botão branco com texto azul (DECIDIDO 18/11/2026) */}
       <Link
-        href={usuario ? '/conta' : '/entrar'}
+        href={usuario ? '/conta' : linkEntrar(caminho)}
         className="mr-1 hidden min-h-10 items-center gap-1.5 rounded-[10px] bg-branco px-4 text-sm font-semibold text-azul shadow-1 transition-colors hover:bg-azul-nevoa hover:text-azul-escuro lg:inline-flex"
       >
         <Icone nome="user" tamanho="sm" />

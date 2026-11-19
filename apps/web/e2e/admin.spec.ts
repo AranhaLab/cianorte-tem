@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { aviso } from './ajuda';
+import { aviso, entrarComoLojista } from './ajuda';
 
 /** Abre "Reprovar"/"Suspender"… dentro de `onde`, preenche o motivo e confirma. */
 async function comMotivo(
@@ -13,6 +13,8 @@ async function comMotivo(
   await onde.getByLabel(/Motivo/).fill(motivo);
   await onde.getByRole('button', { name: confirmar }).click();
 }
+
+test.beforeEach(({ page }) => entrarComoLojista(page));
 
 test.describe('Administração da plataforma (etapa 10)', () => {
   test('moderação: reprovar exige motivo, o lojista vê e a auditoria registra', async ({ page }) => {

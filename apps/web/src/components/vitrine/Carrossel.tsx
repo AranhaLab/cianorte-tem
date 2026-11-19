@@ -25,7 +25,7 @@ export function Carrossel({
       type="button"
       onClick={() => rolar(dir)}
       aria-label={dir < 0 ? `Anteriores de ${rotulo}` : `Próximos de ${rotulo}`}
-      className={`absolute top-[38%] z-[2] hidden h-11 w-11 items-center justify-center rounded-full border border-solid border-borda bg-branco text-marinho shadow-1 xl:inline-flex ${
+      className={`absolute top-[38%] z-[2] inline-flex h-11 w-11 items-center justify-center rounded-full border border-solid border-borda bg-branco text-marinho shadow-1 ${
         dir < 0 ? '-left-4' : '-right-4'
       }`}
     >

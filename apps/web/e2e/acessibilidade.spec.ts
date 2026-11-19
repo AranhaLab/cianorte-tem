@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { entrarComoLojista } from './ajuda';
 
 /**
  * Acessibilidade automática (WCAG 2.1 AA via axe): contraste, rótulos, nomes de
@@ -55,6 +56,8 @@ for (const caminho of PAGINAS) {
     ).toEqual([]);
   });
 }
+
+test.beforeEach(({ page }) => entrarComoLojista(page));
 
 test('alvos de toque têm pelo menos 44 px no celular', async ({ page, context, isMobile }) => {
   test.skip(!isMobile, 'regra de toque vale para o celular');

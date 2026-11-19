@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { aviso, primeiraVisita } from './ajuda';
+import { aviso, primeiraVisita, entrarComoLojista } from './ajuda';
 
 /** Compra o e-book (p35) com cadastro e Pix, até a página do pedido. */
 async function comprarEbook(page: Page, cep = '87200000') {
@@ -28,7 +28,22 @@ async function comprarEbook(page: Page, cep = '87200000') {
   await expect(page).toHaveURL(/\/pedido\/\d+$/);
 }
 
+test.beforeEach(({ page }) => entrarComoLojista(page));
+
 test.describe('Pós-compra (etapa 8)', () => {
+  test('avaliação da loja fica disponível após o pagamento e aparece na loja', async ({ page }) => {
+    await comprarEbook(page);
+    await expect(page.getByRole('button', { name: 'Enviar avaliação' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Simular pagamento' }).click();
+    await page.getByLabel('Nota da loja').selectOption('4');
+    await page.getByLabel('Comentário (opcional)').fill('Atendimento atencioso');
+    await page.getByRole('button', { name: 'Enviar avaliação' }).click();
+    await expect(page.getByText('Sua avaliação desta loja foi registrada.')).toBeVisible();
+    await page.goto('/loja/lar-bordado');
+    await expect(page.getByText('Atendimento atencioso')).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('Atendimento atencioso')).toBeVisible();
+  });
   test('produto digital: sem frete, download só depois do pagamento', async ({ page }) => {
     await comprarEbook(page);
     await expect(page.getByText('Conversa com a loja abre após o pagamento')).toBeVisible();

@@ -114,25 +114,28 @@ export function BarraCategorias({ itens, categorias }: { itens: Item[]; categori
     <nav aria-label="Categorias" className="hidden bg-marinho-2 lg:block">
       <div className="relative mx-auto max-w-container px-4">
         {/* Régua invisível: mede a largura real de cada item com a fonte carregada */}
+        {/* Régua invisível: mede a largura real de cada item. O contêiner recorta, para a régua
+            não alargar a página quando as categorias passam da largura da tela. */}
         <div
-          ref={regua}
           aria-hidden
-          className="pointer-events-none invisible absolute left-0 top-0 flex gap-1 whitespace-nowrap"
+          className="pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden"
         >
-          <span className="inline-flex items-center gap-1.5 px-3 text-sm font-semibold">
-            <Icone nome="menu" tamanho="sm" />
-            Categorias
-            <Icone nome="chevD" tamanho="sm" />
-          </span>
-          {itens.map((i) => (
-            <span key={i.href} className="px-3 py-2.5 text-sm">
-              {i.rotulo}
+          <div ref={regua} className="flex w-max gap-1 whitespace-nowrap">
+            <span className="inline-flex items-center gap-1.5 px-3 text-sm font-semibold">
+              <Icone nome="menu" tamanho="sm" />
+              Categorias
+              <Icone nome="chevD" tamanho="sm" />
             </span>
-          ))}
-          <span className="inline-flex items-center gap-1 px-3 text-sm font-semibold">
-            Mais
-            <Icone nome="chevD" tamanho="sm" />
-          </span>
+            {itens.map((i) => (
+              <span key={i.href} className="px-3 py-2.5 text-sm">
+                {i.rotulo}
+              </span>
+            ))}
+            <span className="inline-flex items-center gap-1 px-3 text-sm font-semibold">
+              Mais
+              <Icone nome="chevD" tamanho="sm" />
+            </span>
+          </div>
         </div>
 
         <div ref={barra} className="flex items-center gap-1 overflow-hidden">

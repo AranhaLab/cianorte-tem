@@ -11,6 +11,8 @@ import { reais } from '@/lib/regras/dinheiro';
 import { rotuloCampo } from '@/lib/regras/produto';
 import { LOJAS_INFO, PEDIDOS_GLOBAIS, type DocumentosLoja } from '@/mocks/admin';
 import { useAdmin } from '@/stores/admin';
+import { PreviaAnuncio } from '@/components/anuncios/PreviaAnuncio';
+import { criativoDaArte } from '@/lib/regras/arteAnuncio';
 import { usePainel } from '@/stores/painel';
 import type { StatusCadastroLoja } from '@/types/domain';
 import {
@@ -472,7 +474,7 @@ interface ItemFila {
   nomeNovo?: string;
   descricao: string;
   precoCentavos: number;
-  midias: Array<{ tipo: 'imagem' | 'video'; variante: number; legenda?: string }>;
+  midias: Array<{ tipo: 'imagem' | 'video'; variante: number; legenda?: string; url?: string }>;
   aprovar: () => void;
   reprovar: (motivo: string) => void;
 }
@@ -526,9 +528,11 @@ function ModeracaoConteudo() {
   return (
     <>
       <TituloAdmin
-        titulo="Moderação de produtos"
-        apoio="Produto novo e mudança de nome, fotos, descrição ou categoria. Preço e estoque não passam por aqui."
+        titulo="Moderação"
+        apoio="Artes de anúncio, produtos novos e mudanças de nome, fotos, descrição ou categoria. Preço e estoque não passam por aqui."
       />
+      <ArtesEmAnalise />
+      <h2>Produtos</h2>
       {!itens.length ? (
         <CaixaVazia icone="check" titulo="Fila vazia" texto="Nenhum produto aguardando moderação." />
       ) : (
@@ -573,6 +577,8 @@ function ModeracaoConteudo() {
                     <ArteProduto
                       categoria={cat}
                       variante={m.variante}
+                      src={m.tipo === 'imagem' ? m.url : undefined}
+                      sizes="80px"
                       className="!aspect-square h-20 w-20 rounded-[10px]"
                       tamanhoIcone="h-1/2 w-1/2"
                     />
@@ -620,5 +626,98 @@ function ModeracaoConteudo() {
         })
       )}
     </>
+  );
+}
+
+/**
+ * Artes de anúncio aguardando moderação (CLAUDE.md §6 e §9): a prévia usa o mesmo
+ * componente da vitrine. Aprovar põe no ar; reprovar exige motivo e o lojista pode reenviar
+ * (sem reenvio antes do início do período, o valor é reembolsado).
+ */
+function ArtesEmAnalise() {
+  const campanhas = usePainel((s) => s.campanhas);
+  const vagas = usePainel((s) => s.vagas);
+  const lojaId = usePainel((s) => s.lojaId);
+  const { lojas } = useDadosAdmin();
+  const loja = lojas.find((l) => l.id === lojaId);
+  const emAnalise = campanhas.filter((c) => c.status === 'arte_em_analise' && c.arte);
+
+  return (
+    <section className="flex flex-col gap-3" aria-label="Artes de anúncio">
+      <h2>Artes de anúncio</h2>
+      {!emAnalise.length || !loja ? (
+        <span className="text-sm text-grafite-2">Nenhuma arte aguardando moderação.</span>
+      ) : (
+        emAnalise.map((c) => {
+          const vaga = vagas.find((v) => v.id === c.vaga);
+          const criativo = criativoDaArte(c.arte!, c.vaga, {
+            nome: loja.nome,
+            cor: loja.cor,
+            id: loja.id,
+            logo: loja.logo,
+          });
+          const alvo = `${c.vaga} · ${loja.nome}`;
+          return (
+            <article
+              key={c.id}
+              className="card flex flex-col gap-3"
+              aria-label={`Arte ${c.vaga} de ${loja.nome}`}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <b>
+                    {c.vaga} · {vaga?.nome}
+                  </b>
+                  <span className="text-xs text-grafite-2">
+                    {loja.nome} · {c.periodo} · {c.origem === 'lance' ? 'lance vencido' : 'compra direta'}
+                  </span>
+                </span>
+                <span className="status st-amber">Arte em análise</span>
+              </div>
+              <PreviaAnuncio criativo={criativo} />
+              <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[13px] text-grafite-2">
+                <li>✓ Selo &quot;Patrocinado&quot; com logo e nome da loja (automático)</li>
+                <li>
+                  {c.arte!.modo === 'pronta' ? 'Arte pronta' : 'Foto + texto'} · efeito{' '}
+                  {
+                    { veu: 'véu neutro', degrade: 'degradê na cor da marca', nenhum: 'sem efeito' }[
+                      c.arte!.efeito
+                    ]
+                  }{' '}
+                  · imagem {c.arte!.imagem.largura} × {c.arte!.imagem.altura} px
+                </li>
+                <li>
+                  Confira: texto legível sobre a foto, sem promessa enganosa (CDC e CONAR) e destino correto.
+                </li>
+              </ul>
+              <div className="flex flex-wrap items-start gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => {
+                    usePainel.getState().decidirArte(c.id, true);
+                    registrar('Aprovou arte de anúncio', alvo);
+                    avisar('Arte aprovada. O anúncio entra no ar no período contratado.');
+                  }}
+                >
+                  Aprovar arte
+                </button>
+                <AcaoComMotivo
+                  rotulo="Reprovar arte"
+                  confirmar="Confirmar reprovação"
+                  perigo
+                  ajuda="o lojista vê este texto e pode reenviar"
+                  onConfirmar={(m) => {
+                    usePainel.getState().decidirArte(c.id, false, m);
+                    registrar('Reprovou arte de anúncio', alvo, m);
+                    avisar('Arte reprovada. O lojista pode reenviar.');
+                  }}
+                />
+              </div>
+            </article>
+          );
+        })
+      )}
+    </section>
   );
 }

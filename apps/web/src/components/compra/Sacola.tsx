@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { CabecalhoPagina, CaixaVazia, StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
-import { ArteProduto } from '@/components/vitrine/ArteProduto';
+import { ArteProduto, capaDe } from '@/components/vitrine/ArteProduto';
 import { BarraFreteGratis } from '@/components/vitrine/BarraFreteGratis';
 import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { useSacolaDetalhada } from '@/hooks/useSacolaDetalhada';
@@ -87,6 +87,8 @@ export function Sacola() {
                     <ArteProduto
                       categoria={l.categoria}
                       className="!aspect-square h-[72px] w-[72px] rounded-[12px]"
+                      src={capaDe(l.produto.midias)}
+                      sizes="72px"
                       tamanhoIcone="h-1/2 w-1/2"
                     />
                   </Link>

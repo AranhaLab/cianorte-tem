@@ -8,6 +8,7 @@ import { Icone, type NomeIcone } from '@/components/ui/Icone';
 import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { useComprador } from '@/stores/comprador';
 import { usePainel } from '@/stores/painel';
+import { useSessaoLojista } from '@/stores/sessaoLojista';
 import type { StatusCadastroLoja } from '@/types/domain';
 import { useLojaPainel } from './PainelContexto';
 
@@ -91,9 +92,17 @@ export function MenuPainel() {
           Ver minha vitrine
         </Link>
         <Link href="/" className="btn btn-sm min-h-toque bg-transparent text-grafite-2">
-          <Icone nome="logout" tamanho="sm" />
+          <Icone nome="home" tamanho="sm" />
           Voltar ao marketplace
         </Link>
+        <button
+          type="button"
+          className="btn btn-sm min-h-toque bg-transparent text-grafite-2"
+          onClick={() => useSessaoLojista.getState().sair()}
+        >
+          <Icone nome="logout" tamanho="sm" />
+          Sair do painel
+        </button>
       </div>
     </aside>
   );

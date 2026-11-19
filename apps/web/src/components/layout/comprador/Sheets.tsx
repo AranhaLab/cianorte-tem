@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, type FormEvent, type ReactNode } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { Icone } from '@/components/ui/Icone';
-import { ArteProduto } from '@/components/vitrine/ArteProduto';
+import { ArteProduto, capaDe } from '@/components/vitrine/ArteProduto';
 import { BarraFreteGratis } from '@/components/vitrine/BarraFreteGratis';
 import { GradeCategorias } from '@/components/vitrine/GradeCategorias';
 import { useSacolaDetalhada } from '@/hooks/useSacolaDetalhada';
@@ -240,6 +240,8 @@ function SacolaLateral() {
                   <ArteProduto
                     categoria={l.categoria}
                     className="!aspect-square h-[52px] w-[52px] flex-none rounded-[12px]"
+                    src={capaDe(l.produto.midias)}
+                    sizes="72px"
                     tamanhoIcone="h-1/2 w-1/2"
                   />
                   <span className="flex min-w-0 flex-1 flex-col">

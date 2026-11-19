@@ -5,6 +5,7 @@ import { Icone } from '@/components/ui/Icone';
 import { MOTIVO_MINIMO, motivoValido } from '@/lib/regras/admin';
 import { LOJAS_INFO, PEDIDOS_GLOBAIS } from '@/mocks/admin';
 import { useAdmin } from '@/stores/admin';
+import { useLogos } from '@/stores/logos';
 import { useComprador } from '@/stores/comprador';
 import { usePainel } from '@/stores/painel';
 import type { Categoria, Loja, Selo, StatusCadastroLoja } from '@/types/domain';
@@ -32,6 +33,7 @@ export function AdminProvider({ dados, children }: { dados: DadosAdmin; children
     // O admin decide sobre o que o painel da demo enviou (mesmo navegador).
     void useAdmin.persist.rehydrate();
     void usePainel.persist.rehydrate();
+    void useLogos.persist.rehydrate();
   }, []);
   return <Ctx.Provider value={dados}>{children}</Ctx.Provider>;
 }
@@ -107,8 +109,11 @@ export function usePendencias() {
   const edicoes = usePainel((s) => s.edicoes);
   const filiais = usePainel((s) => s.filiais);
   const cadastros = candidatas.filter((c) => !c.decisao).length + (status === 'em_analise' ? 1 : 0);
+  const campanhas = usePainel((s) => s.campanhas);
   const produtos =
-    fila.filter((c) => !c.decisao).length + Object.values(edicoes).filter((e) => e.emAnalise).length;
+    fila.filter((c) => !c.decisao).length +
+    Object.values(edicoes).filter((e) => e.emAnalise).length +
+    campanhas.filter((c) => c.status === 'arte_em_analise').length; // artes de anúncio
   return {
     cadastros,
     filiais: filiais.filter((f) => f.status === 'em_analise').length,

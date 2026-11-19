@@ -40,7 +40,7 @@ export function FiltrosVitrine({
   const alterna = (filtro: Filtro) => url(ord, f === filtro ? undefined : filtro);
 
   return (
-    <div role="toolbar" aria-label="Ordenar e filtrar" className="sem-barra flex gap-2 overflow-x-auto pb-1">
+    <div role="toolbar" aria-label="Ordenar e filtrar" className="flex flex-wrap gap-2 pb-1">
       {children}
       {chip('Mais vendidos', url('vendidos', f), ord === 'vendidos')}
       {chip('Menor preço', url('menor', f), ord === 'menor')}

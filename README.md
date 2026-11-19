@@ -59,4 +59,4 @@ O app é instalável ("Adicionar à tela inicial"). Nome, ícone e cor saem da c
 
 A versão HTML/CSS/JS original foi a especificação visual da migração e saiu do repositório em 19/11/2026. Para consultar: o protótipo original está no histórico do Git (commit cf1d609, branch feat/prototipo-front-end).
 
-Todos os dados são fictícios.
+Todos os dados são fictícios. As imagens ilustrativas incluem fotografias do Unsplash (https://unsplash.com/license) e imagens geradas para o catálogo e as marcas fictícias. Elas ficam em `apps/web/public/produtos`, `apps/web/public/anuncios` e `apps/web/public/marcas`. Para baixar novamente as fotos do Unsplash que faltarem: `node apps/web/scripts/baixar-fotos-mock.mjs`.

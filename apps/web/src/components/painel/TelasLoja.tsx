@@ -16,6 +16,7 @@ import { AguardaPainel, StatusPedido, TituloPainel, avisar } from './Comum';
 import { InterruptorVisivel } from './MenuPainel';
 import { useLojaPainel } from './PainelContexto';
 import { LogisticaLoja, UnidadesLoja } from './LogisticaLoja';
+import { LogoCadastro } from './LogoCadastro';
 
 /* ---------------- Estoque e API aberta (protótipo: vEstoque; CLAUDE.md §8) ---------------- */
 const EXEMPLO_API = `# Atualizar o saldo de um SKU
@@ -593,6 +594,7 @@ export function CadastroLojista() {
         }
       />
       <form method="post" className="flex flex-col gap-4" onSubmit={enviar}>
+        <LogoCadastro loja={loja} />
         <div className="card flex flex-col gap-3">
           <h2>1. Empresa</h2>
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">

@@ -49,10 +49,12 @@ test('subcategoria e filtros laterais filtram e podem ser removidos', async ({ p
 test('galeria tem fotos e vídeo 9:16 e responde às miniaturas', async ({ page }) => {
   await page.goto('/p/p1');
   const miniaturas = page.getByRole('group', { name: 'Miniaturas' }).getByRole('button');
-  await expect(miniaturas).toHaveCount(6);
+  await expect(miniaturas).toHaveCount(4); // vídeo + 3 fotos ilustrativas
   await expect(miniaturas.first()).toHaveAccessibleName(/Vídeo/);
   await miniaturas.nth(2).click();
-  await expect(page.getByText('3/6')).toBeVisible();
+  await expect(page.getByText('3/4')).toBeVisible();
+  // Foto real (otimizada pelo next/image), com texto alternativo
+  await expect(page.getByRole('img', { name: /Camisa social slim fit algodão — foto 2/ })).toBeVisible();
   await miniaturas.first().click();
   await page.getByRole('button', { name: /Reproduzir/ }).click();
   await expect(page.getByRole('button', { name: /Pausar/ })).toBeVisible();
@@ -62,6 +64,8 @@ test('vídeo aparece como capa no cartão', async ({ page }) => {
   await page.goto('/c/moveis');
   const card = page.locator('a[href="/p/p14"]').first();
   await expect(card.getByText('Vídeo')).toBeVisible();
+  // A miniatura do cartão usa a 1ª foto, não o vídeo
+  await expect(card.locator('img')).toHaveAttribute('src', /produtos%2Fp14-catalogo.webp/);
 });
 
 test('kit fechado mostra o conteúdo e usa o estoque dos componentes', async ({ page }) => {
@@ -86,4 +90,24 @@ test('kit aberto: escolhe itens, vê o preço com desconto e leva para a sacola'
     page.getByText(/Inclui: 1× Cinto de couro masculino, 1× Carteira de couro slim/),
   ).toBeVisible();
   await expect(page.getByText('R$ 125,82').first()).toBeVisible();
+});
+
+test('a página não rola para os lados (barra de categorias com régua recortada)', async ({ page }) => {
+  await page.goto('/');
+  const { sw, cw } = await page.evaluate(() => ({
+    sw: document.documentElement.scrollWidth,
+    cw: document.documentElement.clientWidth,
+  }));
+  expect(sw).toBeLessThanOrEqual(cw);
+});
+
+test('anúncios da home têm foto e continuam com "Patrocinado"', async ({ page }) => {
+  await page.goto('/');
+  for (const vaga of ['H1', 'M1', 'M2']) {
+    const anuncio = page.locator(`a[data-anuncio="${vaga}"]`).first();
+    await expect(anuncio).toContainText('Patrocinado');
+    await expect(anuncio.locator('img').first()).toHaveAttribute('src', /anuncios%2F/);
+    // Foto decorativa: o nome do link continua sendo o texto do anúncio
+    await expect(anuncio.locator('img').first()).toHaveAttribute('alt', '');
+  }
 });

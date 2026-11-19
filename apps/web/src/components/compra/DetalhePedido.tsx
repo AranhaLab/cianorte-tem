@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { CaixaVazia } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
+import { AvaliarLoja } from '@/components/vitrine/AvaliacoesLoja';
 import { api } from '@/lib/api';
 import { MODO_DEMO } from '@/lib/demo';
 import { reais } from '@/lib/regras/dinheiro';
@@ -175,6 +176,9 @@ export function DetalhePedido({ id }: { id: string }) {
                   </Link>
                 )}
               </div>
+              {pedido.pago && sp.status !== 'cancelado' && (
+                <AvaliarLoja subpedidoId={sp.id} lojaNome={loja?.nome ?? 'loja'} />
+              )}
             </div>
           );
         })}

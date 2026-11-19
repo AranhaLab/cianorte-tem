@@ -2,24 +2,24 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import { Icone } from '@/components/ui/Icone';
 import { api } from '@/lib/api';
 import { VERSAO_TERMOS, celularValido, cpfValido, emailValido, senhaValida } from '@/lib/regras/cadastro';
+import { destinoSeguro } from '@/lib/regras/redirecionamento';
 import { useComprador } from '@/stores/comprador';
+import { useSessaoLojista } from '@/stores/sessaoLojista';
 
-/** Só aceita voltar para o checkout (evita redirecionamento aberto via ?next=). */
-const destino = (next: string | null) => (next === 'checkout' ? '/checkout' : '/conta');
+/** Volta para a tela de origem (só caminhos deste site); sem origem, vai para o início. */
+const destino = (next: string | null) => destinoSeguro(next, '/');
+/** Repassa a origem para o outro formulário (entrar ↔ criar conta). */
+const comNext = (base: string, next: string | null) =>
+  next ? `${base}?next=${encodeURIComponent(next)}` : base;
 
+/** O cartão translúcido vem do FundoAcesso; aqui só o conteúdo. */
 function CaixaAuth({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto my-6 max-w-[520px]">
-      <div className="flex flex-col gap-4 rounded-xl border border-solid border-borda bg-branco p-6">
-        {children}
-      </div>
-    </div>
-  );
+  return <div className="flex flex-col gap-4">{children}</div>;
 }
 
 /** Protótipo: vEntrar. */
@@ -43,9 +43,9 @@ export function Entrar({ next }: { next: string | null }) {
       <div className="flex flex-col gap-1">
         <h1>Entrar</h1>
         <span className="text-[13px] text-grafite-2">
-          {next === 'checkout'
+          {destino(next) === '/checkout'
             ? 'Falta pouco: entre para fechar a compra. Sua sacola continua aqui.'
-            : 'Acompanhe pedidos, endereços e favoritos.'}
+            : 'Acompanhe pedidos, endereços e favoritos. Depois você volta para onde estava.'}
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar}>
@@ -80,7 +80,7 @@ export function Entrar({ next }: { next: string | null }) {
         <span className="text-xs text-grafite-2">ou</span>
         <span className="h-px flex-1 bg-borda" />
       </div>
-      <Link href={`/cadastro${next ? `?next=${next}` : ''}`} className="btn btn-ghost btn-lg">
+      <Link href={comNext('/cadastro', next)} className="btn btn-ghost btn-lg">
         Criar conta grátis
       </Link>
     </CaixaAuth>
@@ -237,12 +237,12 @@ export function Cadastro({ next }: { next: string | null }) {
         )}
 
         <button type="submit" className="btn btn-primary btn-lg" disabled={enviando}>
-          Criar conta{next === 'checkout' ? ' e continuar' : ''}
+          Criar conta{destino(next) === '/checkout' ? ' e continuar' : ''}
         </button>
       </form>
       <span className="text-center text-[13px] text-grafite-2">
         Já tem conta?{' '}
-        <Link href={`/entrar${next ? `?next=${next}` : ''}`} className="underline">
+        <Link href={comNext('/entrar', next)} className="underline">
           Entrar
         </Link>
       </span>
@@ -262,5 +262,80 @@ function Consentimento({ nome, children }: { nome: string; children: ReactNode }
       />
       <span>{children}</span>
     </label>
+  );
+}
+
+/**
+ * Entrada do lojista (demonstração: qualquer e-mail e senha entram na loja de exemplo).
+ * Real: POST /v1/auth/lojista/entrar, cookie httpOnly, bloqueio progressivo de tentativas (§15).
+ */
+export function EntrarLojista({ next }: { next: string | null }) {
+  const router = useRouter();
+  const avisar = useComprador.getState().avisar;
+  useEffect(() => {
+    void useSessaoLojista.persist.rehydrate();
+  }, []);
+
+  const enviar = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const email = String(new FormData(e.currentTarget).get('email') ?? '').trim();
+    if (!emailValido(email)) return avisar('Informe um e-mail válido.');
+    useSessaoLojista.getState().entrar(email);
+    avisar('Bem-vindo ao painel!');
+    const alvo = destinoSeguro(next, '/painel');
+    router.push(alvo.startsWith('/painel') ? alvo : '/painel');
+  };
+
+  return (
+    <CaixaAuth>
+      <div className="flex flex-col gap-1">
+        <span className="pill pill-indicada self-start">Painel do lojista</span>
+        <h1>Entrar na sua loja</h1>
+        <span className="text-[13px] text-grafite-2">
+          Use o e-mail do responsável ou da sua equipe. Cada pessoa tem login próprio.
+        </span>
+      </div>
+      <form method="post" className="flex flex-col gap-3" onSubmit={enviar}>
+        <div className="campo">
+          <label htmlFor="lj-email">E-mail</label>
+          <input id="lj-email" name="email" type="email" autoComplete="username" required className="input" />
+        </div>
+        <div className="campo">
+          <label htmlFor="lj-senha">Senha</label>
+          <input
+            id="lj-senha"
+            name="senha"
+            type="password"
+            autoComplete="current-password"
+            required
+            className="input"
+          />
+        </div>
+        <button
+          type="button"
+          className="self-end border-0 bg-transparent text-[13px] text-azul"
+          onClick={() => avisar('Enviamos um link de recuperação para o seu e-mail.')}
+        >
+          Esqueci minha senha
+        </button>
+        <button type="submit" className="btn btn-primary btn-lg">
+          Entrar no painel
+        </button>
+      </form>
+      <div className="flex items-center gap-2.5">
+        <span className="h-px flex-1 bg-borda" />
+        <span className="text-xs text-grafite-2">ainda não vende aqui?</span>
+        <span className="h-px flex-1 bg-borda" />
+      </div>
+      <Link href="/vender" className="btn btn-ghost btn-lg">
+        Quero vender
+      </Link>
+      <span className="text-center text-[13px] text-grafite-2">
+        Vai comprar?{' '}
+        <Link href="/entrar" className="underline">
+          Entre como cliente
+        </Link>
+      </span>
+    </CaixaAuth>
   );
 }

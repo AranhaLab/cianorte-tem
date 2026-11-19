@@ -543,6 +543,8 @@ function Formulario({
                     <ArteProduto
                       categoria={categoria}
                       variante={m.variante}
+                      src={m.url}
+                      sizes="200px"
                       className={`w-full rounded-[10px] ${m.tipo === 'video' ? '!aspect-[9/16] max-h-56' : ''}`}
                     />
                     <span className="absolute left-1.5 top-1.5 rounded-full bg-marinho px-2 py-0.5 text-[11px] font-bold text-branco">

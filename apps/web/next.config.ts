@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 
 const dev = process.env.NODE_ENV !== 'production';
@@ -38,6 +39,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Imagem Docker enxuta: copia só o servidor standalone (ver apps/web/Dockerfile).
   output: 'standalone',
+  // O app é apps/web, não a raiz do monorepo (lá só há os comandos de atalho).
+  outputFileTracingRoot: path.resolve(__dirname),
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

@@ -371,6 +371,19 @@ export const usePainel = create<Persistido & Acoes>()(
           }),
         };
       },
+      // A cada carga: vaga criada depois do que está salvo no aparelho (ex.: T1, o letreiro)
+      // entra na lista. Sem isto, o mapa de anúncios procurava a vaga nova e quebrava.
+      merge: (salvo, atual) => {
+        const dados = { ...atual, ...(salvo as Partial<Persistido>) };
+        const vagas = dados.vagas ?? VAGAS;
+        const faltam = VAGAS.filter((v) => !vagas.some((x) => x.id === v.id));
+        const todas = faltam.length ? [...vagas, ...structuredClone(faltam)] : vagas;
+        return {
+          ...dados,
+          vagas: todas,
+          vagaSelecionada: todas.some((v) => v.id === dados.vagaSelecionada) ? dados.vagaSelecionada : 'H1',
+        };
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       // Só os dados; ações e o sinal de hidratação não vão para o aparelho.

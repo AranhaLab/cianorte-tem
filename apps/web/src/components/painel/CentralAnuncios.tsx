@@ -63,7 +63,8 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
     }
   }, [vagaInicial, selecionarVaga]);
 
-  const vaga = vagas.find((v) => v.id === sel)!;
+  // Defesa: se a vaga escolhida não existir (dado antigo no aparelho), mostra a primeira.
+  const vaga = vagas.find((v) => v.id === sel) ?? vagas[0]!;
   const u = UNIDADES[unidade];
   const qtd = limitarQuantidade(unidade, quantidade);
   const tabela = valorTabela(vaga, unidade, qtd);
@@ -83,7 +84,8 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
   };
 
   const Vaga = ({ id, altura, className = '' }: { id: VagaId; altura: number; className?: string }) => {
-    const v = vagas.find((x) => x.id === id)!;
+    const v = vagas.find((x) => x.id === id);
+    if (!v) return null; // vaga que ainda não existe nos dados salvos: não quebra o mapa
     const on = sel === id;
     return (
       <button

@@ -123,3 +123,38 @@ test.describe('Letreiro de ofertas (vaga T1)', () => {
     await expect(page.getByRole('row', { name: /T1/ }).first()).toContainText('No ar');
   });
 });
+
+test('painel com dados antigos no aparelho (sem a vaga T1) não quebra os anúncios', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'ct-sessao-lojista-v1',
+      JSON.stringify({ state: { lojista: { email: 'loja@exemplo.com' } }, version: 0 }),
+    );
+    if (localStorage.getItem('ct-painel-v1')) return;
+    const vagas = ['H1', 'M1', 'M2', 'C1', 'K1', 'L1'].map((id) => ({
+      id,
+      modoCompra: id === 'H1' ? 'lance' : 'direta',
+      nome: `Vaga ${id}`,
+      pagina: id === 'K1' || id === 'L1' ? 'categoria' : 'home',
+      posicao: '',
+      formato: { desktop: '1200 × 400 px', mobile: '800 × 600 px', proporcao: '' },
+      precoDiaCentavos: 5000,
+      rotacao: 2,
+      status: 'disponivel',
+      lanceAtualCentavos: null,
+      lances: 0,
+      terminaEm: null,
+      ocupadoAte: null,
+    }));
+    localStorage.setItem(
+      'ct-painel-v1',
+      JSON.stringify({ state: { vagas, vagaSelecionada: 'T1', campanhas: [] }, version: 3 }),
+    );
+  });
+  const erros: string[] = [];
+  page.on('pageerror', (e) => erros.push(e.message));
+  await page.goto('/painel/anuncios');
+  await expect(page.getByRole('button', { name: /^T1 · / })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Anúncios' })).toBeVisible();
+  expect(erros).toEqual([]);
+});

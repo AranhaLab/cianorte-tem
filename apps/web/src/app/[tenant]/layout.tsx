@@ -51,13 +51,17 @@ export const viewport: Viewport = {
 
 export default async function TenantRootLayout({ children, params }: Params & { children: ReactNode }) {
   const t = await getTenant((await params).tenant);
+  // suppressHydrationWarning: extensões do navegador (ex.: LanguageTool, Testim) põem atributos
+  // em <html> e <body> antes do React carregar. Vale só para atributos destas duas tags,
+  // não para o conteúdo da página.
   return (
     <html
       lang="pt-BR"
       className={`${outfit.variable} ${inter.variable}`}
       style={tenantCssVars(t) as CSSProperties}
+      suppressHydrationWarning
     >
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <RegistrarSW />
       </body>

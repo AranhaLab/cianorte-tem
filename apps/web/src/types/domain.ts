@@ -78,6 +78,9 @@ export interface Variacao {
   opcoes: string[];
 }
 
+/** Atributos informados pela loja e usados como filtros do catálogo. */
+export interface AtributoProduto { nome: string; valor: string }
+
 export interface Produto {
   id: string;
   nome: string;
@@ -91,6 +94,7 @@ export interface Produto {
   subcategoriaId: string | null;
   marca: string | null;
   caracteristicas: string[]; // usadas nos filtros laterais
+  atributos?: AtributoProduto[];
   /** Galeria em ordem definida pelo lojista (até 20). A 1ª é a capa do cartão. */
   midias: Midia[];
   /** Produto digital (download): não gera frete e é liberado após o pagamento (PRD-15). */
@@ -292,6 +296,7 @@ export interface EstoqueItem {
   sku: string;
   saldo: number; // só o lojista vê
   minimo: number;
+  indisponivelManual?: boolean;
 }
 
 export interface MembroEquipe {

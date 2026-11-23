@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useCaminho } from '@/hooks/useCaminho';
 import { Marca } from '@/components/marca/Marca';
 import { useTenant } from '@/components/providers/TenantProvider';
@@ -44,66 +45,87 @@ export function MenuPainel() {
   const lojaExibida = useLojaExibida();
   const ativo = path.replace(/^\/painel\/?/, '').split('/')[0] ?? '';
   const [rotulo, cor] = STATUS_LOJA[status];
+  const atual = ITENS.find(([id]) => id === ativo)?.[2] ?? 'Menu';
+  const [aberto, setAberto] = useState(false);
+  useEffect(() => setAberto(false), [path]); // fecha ao trocar de tela
 
   return (
-    <aside className="flex flex-[1_1_250px] flex-col gap-4 rounded-xl border border-solid border-borda-fria bg-branco px-3 py-[18px] shadow-1 xl:sticky xl:top-4 xl:flex-[0_0_260px]">
-      <Link href="/" aria-label={`${tenant.marca} — marketplace`} className="px-1.5">
-        <Marca nome={tenant.nome} escura />
-      </Link>
-      <span className="-mt-2.5 px-1.5 text-xs text-grafite-2">Painel do lojista</span>
-      <nav aria-label="Painel" className="flex flex-col gap-0.5">
-        {ITENS.map(([id, icone, nome]) => {
-          const on = ativo === id;
-          return (
-            <Link
-              key={id}
-              href={`/painel${id ? `/${id}` : ''}`}
-              aria-current={on ? 'page' : undefined}
-              className={`flex min-h-toque items-center gap-3 rounded-[14px] px-3 text-sm ${
-                on
-                  ? 'bg-marinho font-semibold text-branco hover:text-branco'
-                  : 'font-medium text-grafite-2 hover:bg-linho hover:text-marinho'
-              }`}
-            >
-              <Icone nome={icone} className={on ? 'text-azul-claro' : ''} />
-              {nome}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="flex flex-col gap-2.5 border-t border-solid border-borda-fria px-1.5 pt-3.5">
-        <div className="flex items-center gap-2.5">
-          <AvatarLoja loja={lojaExibida} className="h-10 w-10 rounded-[12px] text-sm" />
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <b className="text-[13px]">{lojaExibida.nome}</b>
-            <span className={`status ${cor} self-start px-2 py-0.5 text-[11px]`}>{rotulo}</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5 rounded-[14px] bg-neutro-100 px-3 py-2.5">
-          <span className="flex flex-1 flex-col">
-            <b className="text-[13px]">Loja visível</b>
-            <span className="text-xs text-grafite-2">
-              {visivel ? 'Aparece para os compradores' : 'Oculta do marketplace'}
-            </span>
-          </span>
-          <InterruptorVisivel />
-        </div>
-        <Link href={`/loja/${loja.id}`} className="btn btn-ghost btn-sm min-h-toque">
-          <Icone nome="eye" tamanho="sm" />
-          Ver minha vitrine
-        </Link>
-        <Link href="/" className="btn btn-sm min-h-toque bg-transparent text-grafite-2">
-          <Icone nome="home" tamanho="sm" />
-          Voltar ao marketplace
-        </Link>
+    <aside className="flex min-w-0 flex-[1_1_250px] flex-col gap-3 rounded-xl border border-solid border-borda-fria bg-branco px-3 py-2.5 shadow-1 xl:sticky xl:top-4 xl:max-h-[calc(100dvh-2rem)] xl:flex-[0_0_260px] xl:gap-4 xl:overflow-y-auto xl:py-[18px] xl:[scrollbar-width:thin]">
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex shrink-0 flex-col gap-0.5 px-1.5">
+          <Link href="/" aria-label={`${tenant.marca} — marketplace`}>
+            <Marca nome={tenant.nome} escura />
+          </Link>
+          <span className="text-xs text-grafite-2">Painel do lojista</span>
+        </span>
+        {/* Celular e tablet: o menu abre por este botão, para o conteúdo vir logo no topo */}
         <button
           type="button"
-          className="btn btn-sm min-h-toque bg-transparent text-grafite-2"
-          onClick={() => useSessaoLojista.getState().sair()}
+          className="btn btn-ghost btn-sm min-h-toque min-w-0 shrink xl:hidden"
+          aria-expanded={aberto}
+          aria-controls="menu-painel"
+          onClick={() => setAberto((v) => !v)}
         >
-          <Icone nome="logout" tamanho="sm" />
-          Sair do painel
+          <Icone nome={aberto ? 'x' : 'menu'} tamanho="sm" />
+          <span className="min-w-0 truncate">{aberto ? 'Fechar' : atual}</span>
+          <span className="sr-only"> — menu do painel</span>
         </button>
+      </div>
+      <div id="menu-painel" className={`${aberto ? 'flex' : 'hidden'} flex-col gap-4 xl:flex`}>
+        <nav aria-label="Painel" className="flex flex-col gap-0.5">
+          {ITENS.map(([id, icone, nome]) => {
+            const on = ativo === id;
+            return (
+              <Link
+                key={id}
+                href={`/painel${id ? `/${id}` : ''}`}
+                aria-current={on ? 'page' : undefined}
+                className={`flex min-h-toque items-center gap-3 rounded-[14px] px-3 text-sm xl:min-h-10 ${
+                  on
+                    ? 'bg-marinho font-semibold text-branco hover:text-branco'
+                    : 'font-medium text-grafite-2 hover:bg-linho hover:text-marinho'
+                }`}
+              >
+                <Icone nome={icone} className={on ? 'text-azul-claro' : ''} />
+                {nome}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex flex-col gap-2.5 border-t border-solid border-borda-fria px-1.5 pt-3.5">
+          <div className="flex items-center gap-2.5">
+            <AvatarLoja loja={lojaExibida} className="h-10 w-10 rounded-[12px] text-sm" />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <b className="text-[13px]">{lojaExibida.nome}</b>
+              <span className={`status ${cor} self-start px-2 py-0.5 text-[11px]`}>{rotulo}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5 rounded-[14px] bg-neutro-100 px-3 py-2.5">
+            <span className="flex flex-1 flex-col">
+              <b className="text-[13px]">Loja visível</b>
+              <span className="text-xs text-grafite-2">
+                {visivel ? 'Aparece para os compradores' : 'Oculta do marketplace'}
+              </span>
+            </span>
+            <InterruptorVisivel />
+          </div>
+          <Link href={`/loja/${loja.id}`} className="btn btn-ghost btn-sm min-h-toque xl:min-h-9">
+            <Icone nome="eye" tamanho="sm" />
+            Ver minha vitrine
+          </Link>
+          <Link href="/" className="btn btn-sm min-h-toque bg-transparent text-grafite-2 xl:min-h-9">
+            <Icone nome="home" tamanho="sm" />
+            Voltar ao marketplace
+          </Link>
+          <button
+            type="button"
+            className="btn btn-sm min-h-toque bg-transparent text-grafite-2 xl:min-h-9"
+            onClick={() => useSessaoLojista.getState().sair()}
+          >
+            <Icone nome="logout" tamanho="sm" />
+            Sair do painel
+          </button>
+        </div>
       </div>
     </aside>
   );

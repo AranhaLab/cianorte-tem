@@ -1,3 +1,4 @@
+// @refresh reset
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -6,6 +7,7 @@ import { Icone } from '@/components/ui/Icone';
 import { useCaminho } from '@/hooks/useCaminho';
 import type { Categoria, CriativoAnuncio } from '@/types/domain';
 import { MegaMenu } from './MegaMenu';
+import { useCategorias } from '@/stores/categorias';
 
 /**
  * Barra abaixo do cabeçalho.
@@ -14,15 +16,20 @@ import { MegaMenu } from './MegaMenu';
  *   atalhos da home), um letreiro de ofertas: frases patrocinadas das lojas (vaga T1)
  *   intercaladas com avisos da cidade.
  */
-export function BarraCategorias({
-  categorias,
-  letreiro,
-  informativos,
-}: {
+type PropsBarraCategorias = {
   categorias: Categoria[];
   letreiro: CriativoAnuncio[];
   informativos: ItemInformativo[];
-}) {
+};
+
+// A casca não possui hooks: ao trocar o código durante o desenvolvimento, a barra interna
+// é montada com uma sequência nova de hooks, em vez de reutilizar o estado anterior.
+export function BarraCategorias(props: PropsBarraCategorias) {
+  return <ConteudoBarraCategorias {...props} />;
+}
+
+function ConteudoBarraCategorias({ categorias, letreiro, informativos }: PropsBarraCategorias) {
+  const categoriasAtuais = useCategorias(categorias);
   const path = useCaminho();
   const [mega, setMega] = useState(false);
   const botaoMega = useRef<HTMLButtonElement>(null);
@@ -60,7 +67,7 @@ export function BarraCategorias({
 
         {mega && (
           <MegaMenu
-            categorias={categorias}
+            categorias={categoriasAtuais}
             aoFechar={() => {
               setMega(false);
               botaoMega.current?.focus();

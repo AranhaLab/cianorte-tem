@@ -12,6 +12,7 @@ import { destinoSeguro } from '@/lib/regras/redirecionamento';
 import { useComprador } from '@/stores/comprador';
 import { usePainel } from '@/stores/painel';
 import { useSessaoLojista } from '@/stores/sessaoLojista';
+import { TextoFormularioAcesso } from './ContextoFormularioAcesso';
 
 /** Volta para a tela de origem (só caminhos deste site); sem origem, vai para o início. */
 const destino = (next: string | null) => destinoSeguro(next, '/');
@@ -43,11 +44,15 @@ export function Entrar({ next }: { next: string | null }) {
   return (
     <CaixaAuth>
       <div className="flex flex-col gap-1">
-        <h1>Entrar</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Entrar</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          {destino(next) === '/checkout'
-            ? 'Falta pouco: entre para fechar a compra. Sua sacola continua aqui.'
-            : 'Acompanhe pedidos, endereços e favoritos. Depois você volta para onde estava.'}
+          <TextoFormularioAcesso campo="apoio">
+            {destino(next) === '/checkout'
+              ? 'Falta pouco: entre para fechar a compra. Sua sacola continua aqui.'
+              : 'Acompanhe pedidos, endereços e favoritos. Depois você volta para onde estava.'}
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar}>
@@ -137,9 +142,13 @@ export function Cadastro({ next }: { next: string | null }) {
   return (
     <CaixaAuth>
       <div className="flex flex-col gap-1">
-        <h1>Criar conta</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Criar conta</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          Só pedimos o necessário para entregar e emitir a nota fiscal.
+          <TextoFormularioAcesso campo="apoio">
+            Só pedimos o necessário para entregar e emitir a nota fiscal.
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar} noValidate>
@@ -292,9 +301,13 @@ export function EntrarLojista({ next }: { next: string | null }) {
     <CaixaAuth>
       <div className="flex flex-col gap-1">
         <span className="pill pill-indicada self-start">Painel do lojista</span>
-        <h1>Entrar na sua loja</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Entrar na sua loja</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          Use o e-mail do responsável ou da sua equipe. Cada pessoa tem login próprio.
+          <TextoFormularioAcesso campo="apoio">
+            Use o e-mail do responsável ou da sua equipe. Cada pessoa tem login próprio.
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar}>
@@ -385,9 +398,13 @@ export function CadastroLojistaNovo() {
     <CaixaAuth>
       <div className="flex flex-col gap-1">
         <span className="pill pill-indicada self-start">Quero vender</span>
-        <h1>Cadastre sua loja</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Cadastre sua loja</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          Leva 2 minutos. Depois você completa endereço, recebimento e documentos no painel.
+          <TextoFormularioAcesso campo="apoio">
+            Leva 2 minutos. Depois você completa endereço, recebimento e documentos no painel.
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar} noValidate>

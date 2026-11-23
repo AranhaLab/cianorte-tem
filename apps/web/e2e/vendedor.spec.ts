@@ -33,7 +33,7 @@ test.describe('Lojista novo: adesão e cadastro em etapas', () => {
 
     // Painel: cadastro novo, loja oculta até a aprovação
     await expect(page).toHaveURL(/\/painel\/cadastro$/);
-    await expect(page.getByText('Cadastro incompleto').first()).toBeVisible();
+    await expect(page.getByRole('main').getByText('Cadastro incompleto').first()).toBeVisible();
     await expect(page.getByLabel('Nome fantasia (aparece na vitrine)')).toHaveValue('Moda Exemplo');
 
     // 1. Empresa

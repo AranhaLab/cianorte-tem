@@ -3,7 +3,7 @@
  * O servidor repete todas; o front só evita o envio de um cadastro inválido.
  */
 import { kitValido, MAX_MIDIAS } from './kits';
-import type { ArquivoDigital, Centavos, Kit, Midia, Produto } from '@/types/domain';
+import type { ArquivoDigital, AtributoProduto, Categoria, Centavos, Kit, Midia, Produto } from '@/types/domain';
 
 export type TipoProduto = 'simples' | 'variacoes' | 'kit' | 'digital';
 
@@ -22,6 +22,7 @@ export interface RascunhoProduto {
   subcategoriaId: string | null;
   marca: string;
   caracteristicas: string[];
+  atributos?: AtributoProduto[];
   tipo: TipoProduto;
   precoCentavos: Centavos;
   precoDeCentavos: Centavos | null;
@@ -43,6 +44,7 @@ export const CAMPOS_EDITORIAIS = [
   'subcategoriaId',
   'marca',
   'caracteristicas',
+  'atributos',
   'midias',
   'variacao',
   'kit',
@@ -58,6 +60,7 @@ const ROTULO: Record<string, string> = {
   subcategoriaId: 'subcategoria',
   marca: 'marca',
   caracteristicas: 'características',
+  atributos: 'atributos',
   midias: 'fotos e vídeo',
   variacao: 'variações',
   kit: 'composição do kit',
@@ -104,12 +107,23 @@ const SKU = /^[A-Za-z0-9._-]{1,40}$/;
  */
 export function errosProduto(
   r: RascunhoProduto,
-  ctx: { lojaId: string; produtosDaLoja: Pick<Produto, 'id' | 'lojaId'>[]; skusDaLoja: string[] },
+  ctx: {
+    lojaId: string;
+    produtosDaLoja: Pick<Produto, 'id' | 'lojaId'>[];
+    skusDaLoja: string[];
+    categorias?: Categoria[];
+  },
 ): Record<string, string> {
   const e: Record<string, string> = {};
   const nome = r.nome.trim();
   if (nome.length < 3 || nome.length > 120) e.nome = 'Use de 3 a 120 caracteres.';
   if (!r.categoriaId) e.categoriaId = 'Escolha a categoria.';
+  if (ctx.categorias) {
+    const categoria = ctx.categorias.find((c) => c.id === r.categoriaId);
+    if (!categoria) e.categoriaId = 'Escolha uma categoria disponível.';
+    else if (r.subcategoriaId && !categoria.subcategorias.some((s) => s.id === r.subcategoriaId))
+      e.subcategoriaId = 'Escolha uma subcategoria desta categoria.';
+  }
   if (!(r.precoCentavos > 0)) e.precoCentavos = 'Informe um preço maior que zero.';
   if (r.precoDeCentavos !== null && !(r.precoDeCentavos > r.precoCentavos))
     e.precoDeCentavos = 'O preço "de" precisa ser maior que o preço de venda.';
@@ -249,6 +263,7 @@ export function rascunhoDeProduto(
     subcategoriaId: p.subcategoriaId,
     marca: p.marca ?? '',
     caracteristicas: [...p.caracteristicas],
+    atributos: [...(p.atributos ?? [])],
     tipo: p.kit ? 'kit' : p.digital ? 'digital' : p.variacao ? 'variacoes' : 'simples',
     precoCentavos: p.precoCentavos,
     precoDeCentavos: p.precoDeCentavos,

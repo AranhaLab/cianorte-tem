@@ -10,12 +10,20 @@ export default async function PaginaCadastroLojista({ params }: { params: Promis
   return (
     <FundoAcesso
       tenant={tenant}
-      titulo={`Venda para toda ${tenant.nome}.`}
+      tela="lojista-cadastro"
+      titulo="Venda para toda"
+      tituloDestaque={`${tenant.nome}.`}
       apoio={`Sua loja aberta 24 horas, com o apoio da ${tenant.associacao}.`}
       destaques={[
-        ['doc', 'Cadastro com CNPJ, aprovação em até 2 dias úteis'],
-        ['box', 'Estoque ligado ao sistema da sua loja'],
-        ['truck', 'Entrega própria ou retirada no balcão'],
+        { icone: 'doc', titulo: 'Cadastro com CNPJ', texto: 'análise em até 2 dias úteis' },
+        { icone: 'box', titulo: 'Estoque ligado', texto: 'ao sistema da sua loja' },
+        { icone: 'truck', titulo: 'Entrega própria', texto: 'ou retirada no balcão' },
+        { icone: 'star', titulo: 'Selos de confiança', texto: 'Loja oficial e Indicada' },
+      ]}
+      selos={[
+        ['lock', 'Acesso seguro'],
+        ['shield', 'LGPD'],
+        ['medal', `Parceria ${tenant.associacao}`],
       ]}
     >
       <CadastroLojistaNovo />

@@ -3,6 +3,7 @@ import { Icone } from '@/components/ui/Icone';
 import type { Facetas, FiltrosLaterais } from '@/lib/api';
 import { urlFiltros } from '@/lib/filtros';
 import { reais } from '@/lib/regras/dinheiro';
+import { lerChaveAtributo } from '@/lib/regras/atributos';
 import type { Subcategoria } from '@/types/domain';
 
 /** Chips de subcategoria (Todas · Camisaria · Calças…) — links, funcionam sem JavaScript. */
@@ -63,6 +64,12 @@ export function FiltrosAtivos({
       c,
       sem({ caracteristicas: atuais.caracteristicas!.filter((x) => x !== c) }),
     ]),
+    ...(atuais.atributos ?? []).map((chave): [string, string] => {
+      const grupo = facetas.atributos?.find((g) => g.opcoes.some((o) => o.valor === chave));
+      const opcao = grupo?.opcoes.find((o) => o.valor === chave);
+      const partes = lerChaveAtributo(chave);
+      return [`${grupo?.nome ?? partes?.[0] ?? 'Atributo'}: ${opcao?.rotulo ?? partes?.[1] ?? ''}`, sem({ atributos: atuais.atributos!.filter((x) => x !== chave) })];
+    }),
     ...(atuais.precoMin !== undefined
       ? [[`a partir de ${reais(atuais.precoMin)}`, sem({ precoMin: undefined })] as [string, string]]
       : []),

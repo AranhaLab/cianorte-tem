@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icone } from '@/components/ui/Icone';
 import type { Categoria } from '@/types/domain';
+import { useCategorias } from '@/stores/categorias';
 
 /**
  * Atalhos de categoria da home em carrossel: sempre UMA fileira (antes, no desktop,
@@ -11,6 +12,7 @@ import type { Categoria } from '@/types/domain';
  * setas aparecem só quando há mais categorias do que cabem.
  */
 export function AtalhosCategorias({ categorias }: { categorias: Categoria[] }) {
+  const categoriasAtuais = useCategorias(categorias);
   const trilho = useRef<HTMLUListElement>(null);
   const [limites, setLimites] = useState({ inicio: true, fim: true });
 
@@ -26,7 +28,7 @@ export function AtalhosCategorias({ categorias }: { categorias: Categoria[] }) {
       el.removeEventListener('scroll', medir);
       window.removeEventListener('resize', medir);
     };
-  }, []);
+  }, [categoriasAtuais]);
 
   const rolar = (dir: -1 | 1) =>
     trilho.current?.scrollBy({ left: dir * trilho.current.clientWidth * 0.8, behavior: 'smooth' });
@@ -51,7 +53,7 @@ export function AtalhosCategorias({ categorias }: { categorias: Categoria[] }) {
         ref={trilho}
         className="sem-barra m-0 grid snap-x auto-cols-[92px] grid-flow-col gap-2.5 overflow-x-auto scroll-smooth p-0 pb-2 pt-1 lg:auto-cols-[104px]"
       >
-        {categorias.map((c) => (
+        {categoriasAtuais.map((c) => (
           <li key={c.id} className="snap-start list-none">
             <Link
               href={`/c/${c.id}`}

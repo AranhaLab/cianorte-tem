@@ -5,7 +5,7 @@
  *
  * Uso: npm run demo            → http://cianorte.localhost:3000
  *      npm run demo -- 3100    → outra porta
- * O build fica em .next-demo (não briga com um `npm run dev` aberto).
+ * Cada porta usa uma pasta de build própria, sem disputar arquivos com outro servidor.
  */
 import { spawn } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -15,7 +15,7 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
 const porta = process.argv[2] ?? '3000';
 const env = {
   ...process.env,
-  NEXT_DIST_DIR: '.next-demo',
+  NEXT_DIST_DIR: `.next-demo-${porta}`,
   NEXT_PUBLIC_DEMO_MODE: 'true',
   DEFAULT_TENANT: process.env.DEFAULT_TENANT ?? 'cianorte',
   NEXT_TELEMETRY_DISABLED: '1',

@@ -24,3 +24,10 @@ export const entrarComoLojista = (page: Page) =>
         JSON.stringify({ state: { lojista: { email: 'loja@exemplo.com' } }, version: 0 }),
       );
   });
+
+/** No celular e tablet o menu do painel/admin fica recolhido atrás de um botão (CLAUDE.md §13.14). */
+export async function abrirMenu(page: Page) {
+  const botao = page.locator('button[aria-controls^="menu-"]');
+  if ((await botao.isVisible()) && (await botao.getAttribute('aria-expanded')) !== 'true')
+    await botao.click();
+}

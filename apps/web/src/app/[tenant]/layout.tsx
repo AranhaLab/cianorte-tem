@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import type { CSSProperties, ReactNode } from 'react';
 import { RegistrarSW } from '@/components/providers/RegistrarSW';
+import { TenantProvider } from '@/components/providers/TenantProvider';
 import { getTenant, tenantCssVars } from '@/lib/tenant';
 import { TENANT_SLUGS } from '@/mocks/tenants';
 import '../globals.css';
@@ -23,6 +24,32 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
 });
+
+// No desenvolvimento, um service worker de uma versão anterior pode servir arquivos
+// antigos antes de o React montar. A limpeza precisa rodar mesmo se a hidratação falhar.
+const limparWorkerNoDev = `
+  (function () {
+    if (!('serviceWorker' in navigator)) return;
+    var chave = 'ct-dev-worker-removido';
+    var controlador = navigator.serviceWorker.controller;
+    var controlado = !!controlador && new URL(controlador.scriptURL).pathname === '/sw.js';
+    navigator.serviceWorker.getRegistrations().then(async function (registros) {
+      var proprios = registros.filter(function (r) {
+        var worker = r.active || r.waiting || r.installing;
+        return worker && new URL(worker.scriptURL).pathname === '/sw.js';
+      });
+      await Promise.all(proprios.map(function (r) { return r.unregister(); }));
+      if ('caches' in window) {
+        var nomes = await caches.keys();
+        await Promise.all(nomes.filter(function (n) { return /^ct-v\\d+-/.test(n); }).map(function (n) { return caches.delete(n); }));
+      }
+      if (controlado && !sessionStorage.getItem(chave)) {
+        sessionStorage.setItem(chave, '1');
+        window.location.reload();
+      } else if (!controlado) sessionStorage.removeItem(chave);
+    }).catch(function () {});
+  })();
+`;
 
 type Params = { params: Promise<{ tenant: string }> };
 
@@ -61,8 +88,13 @@ export default async function TenantRootLayout({ children, params }: Params & { 
       style={tenantCssVars(t) as CSSProperties}
       suppressHydrationWarning
     >
+      {process.env.NODE_ENV === 'development' && (
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: limparWorkerNoDev }} />
+        </head>
+      )}
       <body suppressHydrationWarning>
-        {children}
+        <TenantProvider tenant={t}>{children}</TenantProvider>
         <RegistrarSW />
       </body>
     </html>

@@ -59,6 +59,7 @@ export function PainelFiltros({
         marcas: fd.getAll('marca').map(String),
         lojas: fd.getAll('loja').map(String),
         caracteristicas: fd.getAll('car').map(String),
+        atributos: fd.getAll('atributo').map(String),
         precoMin: num('min'),
         precoMax: num('max'),
       }),
@@ -162,6 +163,7 @@ export function PainelFiltros({
                 {grupo('Marca', 'marca', facetas.marcas, atuais.marcas)}
                 {grupo('Loja', 'loja', facetas.lojas, atuais.lojas)}
                 {grupo('Característica', 'car', facetas.caracteristicas, atuais.caracteristicas)}
+                {facetas.atributos?.map((atributo) => <div key={atributo.nome}>{grupo(atributo.nome, 'atributo', atributo.opcoes, atuais.atributos)}</div>)}
               </div>
               <div className="flex items-center gap-2.5 border-t border-solid border-borda px-5 pb-[calc(16px+env(safe-area-inset-bottom))] pt-3">
                 <Link

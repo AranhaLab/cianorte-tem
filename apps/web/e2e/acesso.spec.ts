@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { primeiraVisita } from './ajuda';
+import { primeiraVisita, abrirMenu } from './ajuda';
 
 test.describe('Telas de acesso (página própria, volta para a origem)', () => {
   test('comprador entra a partir de um produto e volta para ele', async ({ page }) => {
@@ -9,7 +9,7 @@ test.describe('Telas de acesso (página própria, volta para a origem)', () => {
 
     // Página à parte: sem cabeçalho de categorias, com a foto da cidade ao fundo
     await expect(page.getByRole('navigation', { name: 'Categorias' })).toHaveCount(0);
-    await expect(page.locator('img[alt=""][src*="/acesso/cianorte.svg"]').first()).toBeAttached();
+    await expect(page.locator('img[alt=""][src*="vitrine-cianorte-tem"]').first()).toBeAttached();
     await expect(page.getByRole('heading', { name: 'Entrar', level: 1 })).toBeVisible();
 
     await page.getByRole('textbox', { name: 'E-mail' }).fill('teste@exemplo.com');
@@ -44,6 +44,7 @@ test.describe('Telas de acesso (página própria, volta para a origem)', () => {
     await page.getByRole('button', { name: 'Entrar no painel' }).click();
     await expect(page).toHaveURL(/\/painel\/pedidos$/);
 
+    await abrirMenu(page);
     await page.getByRole('button', { name: 'Sair do painel' }).click();
     await expect(page).toHaveURL(/\/lojista\/entrar/);
   });

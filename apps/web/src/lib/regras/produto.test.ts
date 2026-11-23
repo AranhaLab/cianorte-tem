@@ -55,6 +55,25 @@ describe('errosProduto', () => {
     expect(errosProduto(base(), ctx)).toEqual({});
   });
 
+  it('valida categoria ativa e vínculo da subcategoria quando a lista é fornecida', () => {
+    const categorias = [
+      {
+        id: 'moda',
+        nome: 'Moda',
+        icone: 'shirt' as const,
+        tom: 'rgb(0, 0, 0)',
+        destaque: '',
+        proporcaoMidia: '4:5' as const,
+        subcategorias: [{ id: 'camisas', nome: 'Camisas' }],
+      },
+    ];
+    expect(errosProduto(base({ categoriaId: 'removida' }), { ...ctx, categorias }).categoriaId).toBeDefined();
+    expect(
+      errosProduto(base({ subcategoriaId: 'outra' }), { ...ctx, categorias }).subcategoriaId,
+    ).toBeDefined();
+    expect(errosProduto(base({ subcategoriaId: 'camisas' }), { ...ctx, categorias })).toEqual({});
+  });
+
   it('SKU é único por loja', () => {
     expect(errosProduto(base({ sku: 'va-2' }), ctx).sku).toMatch(/já é usado/);
   });

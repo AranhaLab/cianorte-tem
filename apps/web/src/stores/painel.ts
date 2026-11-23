@@ -76,6 +76,7 @@ interface Acoes {
   avancarPedido: (id: string) => StatusSubpedido | null;
   definirModoSync: (m: ModoSincronizacao) => void;
   definirReserva: (n: number) => void;
+  atualizarEstoque: (r: RascunhoProduto, indisponivelManual?: boolean) => void;
   moverModulo: (i: number, d: -1 | 1) => void;
   removerModulo: (i: number) => void;
   adicionarModulo: (tipo: string) => void;
@@ -165,6 +166,32 @@ export const usePainel = create<Persistido & Acoes>()(
       definirModoSync: (modo) => set((s) => ({ integracao: { ...s.integracao, modo } })),
       definirReserva: (n) =>
         set((s) => ({ integracao: { ...s.integracao, reservaSeguranca: Math.max(0, Math.floor(n) || 0) } })),
+      atualizarEstoque: (r, indisponivelManual) => set((s) => {
+        if (!r.id) return {};
+        const id = r.id;
+        const anterior = s.edicoes[id];
+        const atualizar = (destino: RascunhoProduto): RascunhoProduto => ({
+          ...destino,
+          saldo: r.saldo,
+          minimo: r.minimo,
+          variacao: destino.variacao && r.variacao ? {
+            ...destino.variacao,
+            opcoes: destino.variacao.opcoes.map((o) => ({
+              ...o, saldo: r.variacao?.opcoes.find((item) => item.sku === o.sku)?.saldo ?? o.saldo,
+            })),
+          } : destino.variacao,
+        });
+        const item = { produtoId: id, sku: r.sku, saldo: saldoTotal(r), minimo: r.minimo,
+          indisponivelManual: indisponivelManual ?? s.estoque.find((e) => e.produtoId === id)?.indisponivelManual ?? false };
+        return {
+          estoque: s.estoque.some((e) => e.produtoId === id)
+            ? s.estoque.map((e) => e.produtoId === id ? item : e)
+            : [...s.estoque, item],
+          edicoes: { ...s.edicoes, [id]: anterior
+            ? { ...anterior, atual: atualizar(anterior.atual), emAnalise: anterior.emAnalise ? atualizar(anterior.emAnalise) : null }
+            : { atual: r, emAnalise: null, pendentes: [], novo: false } },
+        };
+      }),
 
       moverModulo: (i, d) =>
         set((s) => {
@@ -282,6 +309,9 @@ export const usePainel = create<Persistido & Acoes>()(
               ...s.edicoes,
               [id]: { atual: r, emAnalise: r, pendentes: ['produto novo'], novo: true },
             },
+            estoque: r.tipo === 'kit' || r.tipo === 'digital' ? s.estoque : [
+              ...s.estoque, { produtoId: id, sku: r.sku, saldo: saldoTotal(r), minimo: r.minimo },
+            ],
           }));
           return { id, editoriais: ['produto novo'], imediatas: [] };
         }

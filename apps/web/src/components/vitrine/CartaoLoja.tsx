@@ -4,6 +4,7 @@ import { iniciais } from '@/lib/vitrine';
 import type { Categoria, Loja } from '@/types/domain';
 import { SeloLoja } from './SeloLoja';
 import { LogoLoja } from './LogoLoja';
+import { CategoriaNome } from './CategoriaNome';
 
 export function AvatarLoja({
   loja,
@@ -43,7 +44,12 @@ export function CartaoLoja({
         <span className="flex items-center gap-1 text-xs text-grafite-2">
           <Icone nome="star" tamanho="sm" />
           {loja.nota.toFixed(1)} · {loja.bairro}
-          {categoria ? ` · ${categoria.nome}` : ''}
+          {categoria && (
+            <>
+              {' '}
+              · <CategoriaNome categoria={categoria} />
+            </>
+          )}
         </span>
         <span className="flex flex-wrap gap-1">
           <span className="pill pill-local">

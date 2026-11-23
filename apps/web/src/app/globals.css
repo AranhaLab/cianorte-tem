@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* As cores são definidas pelo administrador nas telas de acesso. */
+.acesso-form-personalizado :is(h1, h2, h3, label, p, .dica) {
+  color: var(--acesso-cor-texto);
+}
+.acesso-form-personalizado a:not(.btn) {
+  color: var(--acesso-cor-links);
+}
+.acesso-form-personalizado .btn-primary {
+  background-color: var(--acesso-cor-botao);
+  color: var(--acesso-cor-texto-botao);
+}
+
+@keyframes carregando-marca {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.72;
+  }
+}
+
+.carregando-marca {
+  display: inline-flex;
+  animation: carregando-marca 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carregando-marca {
+    animation: none;
+  }
+}
+
 /*
  * Valores padrão do acento (Cianorte). O layout do tenant sobrescreve
  * --acento-*-rgb com a cor da cidade (getTenant().acento).
@@ -199,10 +234,10 @@
     @apply w-full min-w-[640px] border-collapse text-sm;
   }
   .tabela th {
-    @apply border-b border-solid border-borda-fria bg-neutro-50 px-4 py-3 text-left text-xs font-bold uppercase tracking-[.06em] text-grafite-2;
+    @apply border-b border-solid border-borda-fria bg-neutro-50 px-3 py-3 text-left 2xl:px-4 text-xs font-bold uppercase tracking-[.06em] text-grafite-2;
   }
   .tabela td {
-    @apply whitespace-nowrap border-b border-solid border-neutro-200 px-4 py-3 align-middle;
+    @apply whitespace-nowrap border-b border-solid border-neutro-200 px-3 py-3 align-middle 2xl:px-4;
   }
   .tabela tr:last-child td {
     @apply border-b-0;
@@ -214,13 +249,13 @@
     @apply font-titulo text-[26px] font-bold text-marinho;
   }
   .segmentado {
-    @apply inline-flex gap-0.5 rounded-[12px] bg-neutro-300 p-1;
+    @apply inline-flex max-w-full flex-wrap gap-0.5 rounded-[12px] bg-neutro-300 p-1;
   }
   .segmentado > button {
     @apply min-h-[38px] rounded-[9px] border-0 bg-transparent px-3.5 text-sm font-semibold text-grafite-2 aria-pressed:bg-branco aria-pressed:text-marinho aria-pressed:shadow-1;
   }
   .codigo {
-    @apply overflow-x-auto whitespace-pre rounded-[14px] bg-marinho-profundo p-4 font-mono text-[13px] leading-relaxed text-azul-borda;
+    @apply overflow-x-auto whitespace-pre-wrap rounded-[14px] [overflow-wrap:anywhere] bg-marinho-profundo p-4 font-mono text-[13px] leading-relaxed text-azul-borda;
   }
   .tecla {
     @apply rounded-[8px] bg-neutro-200 px-2.5 py-1.5 font-mono text-[13px];

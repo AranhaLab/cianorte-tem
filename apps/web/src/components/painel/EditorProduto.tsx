@@ -146,6 +146,8 @@ function Formulario({
   const [precoTxt, setPrecoTxt] = useState(emReais(inicial.precoCentavos));
   const [precoDeTxt, setPrecoDeTxt] = useState(emReais(inicial.precoDeCentavos));
   const [novaCarac, setNovaCarac] = useState('');
+  const [nomeAtributo, setNomeAtributo] = useState('');
+  const [valorAtributo, setValorAtributo] = useState('');
   const [tentou, setTentou] = useState(false);
   const fotos = useRef<HTMLInputElement>(null);
   const arquivoDigital = useRef<HTMLInputElement>(null);
@@ -166,7 +168,7 @@ function Formulario({
   }, [estoque, edicoes, r.id]);
 
   const n = normalizar(r);
-  const erros = errosProduto(n, { lojaId: loja.id, produtosDaLoja: produtos, skusDaLoja });
+  const erros = errosProduto(n, { lojaId: loja.id, produtosDaLoja: produtos, skusDaLoja, categorias });
   const visiveis = tentou ? erros : {};
   const alteracoes = publicado && !novo ? separarAlteracoes(publicado, n) : null;
 
@@ -357,6 +359,7 @@ function Formulario({
                 className="input"
                 value={r.subcategoriaId ?? ''}
                 onChange={(e) => muda({ subcategoriaId: e.target.value || null })}
+                {...inv('subcategoriaId')}
               >
                 <option value="">Sem subcategoria</option>
                 {categoria.subcategorias.map((s) => (
@@ -365,6 +368,7 @@ function Formulario({
                   </option>
                 ))}
               </select>
+              {erro('subcategoriaId')}
             </div>
             <div className="campo">
               <label htmlFor="campo-marca">Marca</label>
@@ -390,6 +394,20 @@ function Formulario({
             <span id="h-desc" className="dica">
               {r.descricao.length}/{MAX_DESCRICAO} · medidas, material, cuidados e o que vem na embalagem
             </span>
+          </div>
+          <div className="campo">
+            <span className="rotulo">Atributos para filtros da categoria</span>
+            <span className="dica">Cadastre pares como Material: Algodão ou Cor: Azul. As opções das variações também geram filtros após a aprovação.</span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+              <label className="campo">Atributo<input className="input" maxLength={40} placeholder="Ex.: Material" value={nomeAtributo} onChange={(e) => setNomeAtributo(e.target.value)} /></label>
+              <label className="campo">Valor do atributo<input className="input" maxLength={60} placeholder="Ex.: Algodão" value={valorAtributo} onChange={(e) => setValorAtributo(e.target.value)} /></label>
+              <button type="button" className="btn btn-ghost self-end" disabled={!nomeAtributo.trim() || !valorAtributo.trim() || (r.atributos?.length ?? 0) >= 20} onClick={() => {
+                const nome = nomeAtributo.trim(), valor = valorAtributo.trim();
+                if (!(r.atributos ?? []).some((a) => a.nome.toLocaleLowerCase('pt-BR') === nome.toLocaleLowerCase('pt-BR') && a.valor.toLocaleLowerCase('pt-BR') === valor.toLocaleLowerCase('pt-BR'))) muda({ atributos: [...(r.atributos ?? []), { nome, valor }] });
+                setValorAtributo('');
+              }}>Adicionar atributo</button>
+            </div>
+            {(r.atributos?.length ?? 0) > 0 && <ul className="m-0 flex list-none flex-wrap gap-2 p-0">{r.atributos!.map((a, i) => <li key={`${a.nome}-${a.valor}`}><button type="button" className="chip" aria-label={`Remover atributo ${a.nome}: ${a.valor}`} onClick={() => muda({ atributos: r.atributos!.filter((_, j) => j !== i) })}>{a.nome}: {a.valor}<Icone nome="x" tamanho="sm" /></button></li>)}</ul>}
           </div>
           <div className="campo">
             <label htmlFor="campo-carac">Características (usadas nos filtros)</label>

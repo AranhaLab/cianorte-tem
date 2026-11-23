@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useCaminho } from '@/hooks/useCaminho';
 import { linkEntrar } from '@/lib/regras/redirecionamento';
 import { useSessaoLojista } from '@/stores/sessaoLojista';
+import { Carregando } from '@/components/ui/Carregando';
 
 /**
  * Painel só com o lojista logado (demonstração: sessão no aparelho).
@@ -24,6 +25,6 @@ export function ExigeLojista({ children }: { children: ReactNode }) {
     if (hidratado && !lojista) router.replace(linkEntrar(caminho, '/lojista/entrar'));
   }, [hidratado, lojista, caminho, router]);
 
-  if (!hidratado || !lojista) return <div className="min-h-screen bg-neutro-150" aria-busy="true" />;
+  if (!hidratado || !lojista) return <Carregando mensagem="Carregando painel..." />;
   return children;
 }

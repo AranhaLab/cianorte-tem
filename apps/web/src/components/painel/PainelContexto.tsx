@@ -5,6 +5,7 @@ import { useAdmin } from '@/stores/admin';
 import { useLogos } from '@/stores/logos';
 import { usePainel } from '@/stores/painel';
 import type { Categoria, Loja, Produto } from '@/types/domain';
+import { useCategorias } from '@/stores/categorias';
 
 /** Dados da loja logada (vêm do servidor) para as telas do painel. */
 interface DadosLoja {
@@ -16,12 +17,13 @@ interface DadosLoja {
 const Ctx = createContext<DadosLoja | null>(null);
 
 export function PainelProvider({ dados, children }: { dados: DadosLoja; children: ReactNode }) {
+  const categorias = useCategorias(dados.categorias);
   useEffect(() => {
     void usePainel.persist.rehydrate();
     void useAdmin.persist.rehydrate(); // análises e comissão decididas pela plataforma
     void useLogos.persist.rehydrate();
   }, []);
-  return <Ctx.Provider value={dados}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ...dados, categorias }}>{children}</Ctx.Provider>;
 }
 
 /**

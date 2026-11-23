@@ -1,14 +1,17 @@
 import { JsonLd } from '@/components/ui/JsonLd';
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { GaleriaProduto } from '@/components/produto/GaleriaProduto';
 import { PainelCompra } from '@/components/produto/PainelCompra';
-import { Migalhas, StatusDisponibilidade } from '@/components/ui/Basicos';
+import { ProdutoLocal } from '@/components/produto/ProdutoLocal';
+import { StatusDisponibilidade } from '@/components/ui/Basicos';
 import { Icone } from '@/components/ui/Icone';
 import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { SecaoCarrossel } from '@/components/vitrine/SecaoCarrossel';
 import { SeloLoja } from '@/components/vitrine/SeloLoja';
+import { CategoriaNome, MigalhasProduto } from '@/components/vitrine/CategoriaNome';
 import { ResumoAvaliacoes } from '@/components/vitrine/AvaliacoesLoja';
 import { api } from '@/lib/api';
 import { ROTULO_DISPONIBILIDADE } from '@/lib/regras/disponibilidade';
@@ -55,6 +58,7 @@ export default async function PaginaProduto({ params }: Props) {
     api.lojas.listar(slug),
     api.categorias.listar(slug),
   ]);
+  if (!d && id.startsWith('novo-')) return <ProdutoLocal id={id} categorias={categorias} lojas={lojas} />;
   if (!d) notFound();
   const { produto: p, loja, categoria: c } = d;
   const off = desconto(p);
@@ -79,9 +83,7 @@ export default async function PaginaProduto({ params }: Props) {
   return (
     <>
       <JsonLd dados={jsonLd} />
-      <Migalhas
-        itens={[{ rotulo: 'Início', href: '/' }, { rotulo: c.nome, href: `/c/${c.id}` }, { rotulo: p.nome }]}
-      />
+      <MigalhasProduto categoria={c} nome={p.nome} />
 
       <div className="mt-3.5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-8">
         <div>
@@ -182,12 +184,14 @@ export default async function PaginaProduto({ params }: Props) {
           aparecer; preço e estoque atualizam na hora.]
         </p>
         <div className="grid grid-cols-2 gap-2.5">
-          {[
-            ['Categoria', c.nome],
-            ['Disponibilidade', ROTULO_DISPONIBILIDADE[p.disponibilidade]],
-            ['Garantia', 'Legal de 90 dias (CDC) + a do fabricante'],
-            ['Nota fiscal', 'Emitida pela loja vendedora'],
-          ].map(([k, v]) => (
+          {(
+            [
+              ['Categoria', <CategoriaNome key={c.id} categoria={c} />],
+              ['Disponibilidade', ROTULO_DISPONIBILIDADE[p.disponibilidade]],
+              ['Garantia', 'Legal de 90 dias (CDC) + a do fabricante'],
+              ['Nota fiscal', 'Emitida pela loja vendedora'],
+            ] as Array<[string, ReactNode]>
+          ).map(([k, v]) => (
             <div key={k} className="rounded-[12px] bg-neutro-100 px-3 py-2.5 text-[13px]">
               <b className="mb-0.5 block text-xs font-semibold text-grafite-2">{k}</b>
               {v}

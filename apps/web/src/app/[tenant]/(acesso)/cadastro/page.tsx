@@ -16,12 +16,15 @@ export default async function PaginaCadastro({ params, searchParams }: Props) {
   return (
     <FundoAcesso
       tenant={tenant}
-      titulo={`Crie sua conta no ${tenant.marca}.`}
+      tela="cadastro"
+      titulo="Crie sua conta e compre"
+      tituloDestaque={`das lojas de ${tenant.nome}.`}
       apoio="Uma conta só para comprar de todas as lojas da cidade, acompanhar pedidos e conversar com as lojas."
       destaques={[
-        ['bag', 'Sacola com várias lojas, um checkout só'],
-        ['chat', 'Converse com a loja depois da compra'],
-        ['lock', 'Seus dados protegidos pela LGPD'],
+        { icone: 'bag', titulo: 'Sacola com várias lojas', texto: 'um checkout só' },
+        { icone: 'chat', titulo: 'Converse com a loja', texto: 'depois da compra' },
+        { icone: 'heart', titulo: 'Favoritos e endereços', texto: 'salvos na sua conta' },
+        { icone: 'shield', titulo: 'Seus dados protegidos', texto: 'pela LGPD, você decide' },
       ]}
     >
       <Cadastro next={next} />

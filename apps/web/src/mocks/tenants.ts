@@ -16,8 +16,8 @@ export const TENANTS: Record<string, Tenant> = {
     associacao: 'ACIC',
     slogan: 'Tudo o que a cidade tem, num lugar só.',
     fundoAcesso: {
-      src: '/acesso/cianorte.svg',
-      legenda: 'Ilustração: Portal da Capital do Vestuário e Catedral de Cianorte',
+      src: '/acesso/vitrine-cianorte-tem.webp',
+      legenda: 'O Cianorte Tem no computador e no celular',
     },
     cepsAtendidos: ['87200', '87201', '87202', '87203', '87204', '87205', '87206', '87207', '87208', '87209'],
     dominios: ['cianorte.localhost', 'cianortetem.com.br', 'www.cianortetem.com.br'],

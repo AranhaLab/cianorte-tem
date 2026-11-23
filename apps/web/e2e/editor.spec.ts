@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { aviso, entrarComoLojista } from './ajuda';
+import { aviso, entrarComoLojista, abrirMenu } from './ajuda';
 
 const foto = { name: 'camiseta-frente.png', mimeType: 'image/png', buffer: Buffer.alloc(2048) };
 
@@ -85,6 +85,7 @@ test.describe('Editor de produto e logística (etapa 9)', () => {
   test('logística: trajeto de teste respeita cidade e distância máxima', async ({ page }) => {
     await page.goto('/painel/loja');
     // Carregamento direto: o menu marca a tela certa (caminho sem o segmento da cidade)
+    await abrirMenu(page);
     await expect(page.getByRole('link', { name: 'Minha loja', exact: true })).toHaveAttribute(
       'aria-current',
       'page',

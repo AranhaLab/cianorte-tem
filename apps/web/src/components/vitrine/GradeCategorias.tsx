@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import { Icone } from '@/components/ui/Icone';
 import type { Categoria } from '@/types/domain';
+import { useCategorias } from '@/stores/categorias';
 
 /** Grade de categorias (protótipo: .mega). Usada no modal e na página /categorias. */
 export function GradeCategorias({
@@ -10,9 +13,10 @@ export function GradeCategorias({
   categorias: Categoria[];
   contagem?: Record<string, number>;
 }) {
+  const categoriasAtuais = useCategorias(categorias);
   return (
     <div className="grid grid-cols-2 gap-2.5">
-      {categorias.map((c) => (
+      {categoriasAtuais.map((c) => (
         <Link
           key={c.id}
           href={`/c/${c.id}`}

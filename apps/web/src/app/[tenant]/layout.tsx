@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import localFont from 'next/font/local';
 import type { CSSProperties, ReactNode } from 'react';
 import { RegistrarSW } from '@/components/providers/RegistrarSW';
 import { TenantProvider } from '@/components/providers/TenantProvider';
@@ -12,15 +12,15 @@ import '../globals.css';
  * com a marca e a cor do acento corretas no SSR (sem piscar a cor errada).
  */
 
-const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
+const outfit = localFont({
+  src: '../../fonts/Outfit-Variable.ttf',
+  weight: '100 900',
   variable: '--font-outfit',
   display: 'swap',
 });
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const inter = localFont({
+  src: '../../fonts/Inter-Variable.ttf',
+  weight: '100 900',
   variable: '--font-inter',
   display: 'swap',
 });

@@ -264,7 +264,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ## 13. Front-end (Next.js)
 
 ### 13.1 Stack **[DECIDIDO 18/11/2026]**
-- **Next.js 15 (App Router) + TypeScript**, Tailwind CSS 3 (tokens no `tailwind.config.ts`), fontes Outfit e Inter via `next/font`, ícones `lucide-react`, estado da sacola e da sessão em Zustand.
+- **Next.js 15 (App Router) + TypeScript**, Tailwind CSS 3 (tokens no `tailwind.config.ts`), fontes Outfit e Inter locais via `next/font/local` (`apps/web/src/fonts`), ícones `lucide-react`, estado da sacola e da sessão em Zustand.
 - **Qualidade:** ESLint + Prettier; Vitest (regras) e Playwright (jornadas em 390 px e 1440 px) na etapa 6.
 - **Back-end (fase 2):** Node com NestJS + PostgreSQL, seguindo as seções 10 e 11. O front não muda quando ele entrar, só `src/lib/api`.
 - A migração terminou em 19/11/2026 e a pasta `prototipo/` foi removida. Para consultar a versão HTML/CSS/JS original: o protótipo original está no histórico do Git (commit cf1d609, branch feat/prototipo-front-end). Comentários "protótipo: vXxx" no código apontam para as funções de lá.

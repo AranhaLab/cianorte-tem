@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { aviso, entrarComoLojista } from './ajuda';
+import { aviso, entrarComoLojista, abrirMenu } from './ajuda';
 
 test.beforeEach(({ page }) => entrarComoLojista(page));
 
@@ -12,6 +12,7 @@ test.describe('Painel do lojista (CLAUDE.md §7, §8 e §9)', () => {
     await aviso(page, 'Pedido 10482-A: Em separação.');
     await expect(linha.getByRole('button', { name: 'Pronto para envio' })).toBeVisible();
 
+    await abrirMenu(page);
     const visivel = page.getByRole('switch', { name: 'Loja visível no marketplace' });
     await expect(visivel).toHaveAttribute('aria-checked', 'true');
     await visivel.click();

@@ -7,9 +7,12 @@ import { useTenant } from '@/components/providers/TenantProvider';
 import { Icone } from '@/components/ui/Icone';
 import { api } from '@/lib/api';
 import { VERSAO_TERMOS, celularValido, cpfValido, emailValido, senhaValida } from '@/lib/regras/cadastro';
+import { cnpjValido, mascaraCelular, mascaraCnpj } from '@/lib/regras/cadastroLoja';
 import { destinoSeguro } from '@/lib/regras/redirecionamento';
 import { useComprador } from '@/stores/comprador';
+import { usePainel } from '@/stores/painel';
 import { useSessaoLojista } from '@/stores/sessaoLojista';
+import { TextoFormularioAcesso } from './ContextoFormularioAcesso';
 
 /** Volta para a tela de origem (só caminhos deste site); sem origem, vai para o início. */
 const destino = (next: string | null) => destinoSeguro(next, '/');
@@ -41,11 +44,15 @@ export function Entrar({ next }: { next: string | null }) {
   return (
     <CaixaAuth>
       <div className="flex flex-col gap-1">
-        <h1>Entrar</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Entrar</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          {destino(next) === '/checkout'
-            ? 'Falta pouco: entre para fechar a compra. Sua sacola continua aqui.'
-            : 'Acompanhe pedidos, endereços e favoritos. Depois você volta para onde estava.'}
+          <TextoFormularioAcesso campo="apoio">
+            {destino(next) === '/checkout'
+              ? 'Falta pouco: entre para fechar a compra. Sua sacola continua aqui.'
+              : 'Acompanhe pedidos, endereços e favoritos. Depois você volta para onde estava.'}
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar}>
@@ -135,9 +142,13 @@ export function Cadastro({ next }: { next: string | null }) {
   return (
     <CaixaAuth>
       <div className="flex flex-col gap-1">
-        <h1>Criar conta</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Criar conta</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          Só pedimos o necessário para entregar e emitir a nota fiscal.
+          <TextoFormularioAcesso campo="apoio">
+            Só pedimos o necessário para entregar e emitir a nota fiscal.
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar} noValidate>
@@ -290,9 +301,13 @@ export function EntrarLojista({ next }: { next: string | null }) {
     <CaixaAuth>
       <div className="flex flex-col gap-1">
         <span className="pill pill-indicada self-start">Painel do lojista</span>
-        <h1>Entrar na sua loja</h1>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Entrar na sua loja</TextoFormularioAcesso>
+        </h1>
         <span className="text-[13px] text-grafite-2">
-          Use o e-mail do responsável ou da sua equipe. Cada pessoa tem login próprio.
+          <TextoFormularioAcesso campo="apoio">
+            Use o e-mail do responsável ou da sua equipe. Cada pessoa tem login próprio.
+          </TextoFormularioAcesso>
         </span>
       </div>
       <form method="post" className="flex flex-col gap-3" onSubmit={enviar}>
@@ -327,13 +342,143 @@ export function EntrarLojista({ next }: { next: string | null }) {
         <span className="text-xs text-grafite-2">ainda não vende aqui?</span>
         <span className="h-px flex-1 bg-borda" />
       </div>
-      <Link href="/vender" className="btn btn-ghost btn-lg">
+      <Link href="/lojista/cadastro" className="btn btn-ghost btn-lg">
         Quero vender
       </Link>
       <span className="text-center text-[13px] text-grafite-2">
         Vai comprar?{' '}
         <Link href="/entrar" className="underline">
           Entre como cliente
+        </Link>
+      </span>
+    </CaixaAuth>
+  );
+}
+
+/**
+ * Adesão de um lojista novo ("Quero vender"): cria o acesso e abre o cadastro da loja
+ * em etapas, já com o que foi digitado aqui. Demonstração: a sessão fica no aparelho.
+ * Real: POST /v1/auth/lojista/cadastro (cookie httpOnly) e rascunho do cadastro no servidor.
+ */
+export function CadastroLojistaNovo() {
+  const router = useRouter();
+  const avisar = useComprador.getState().avisar;
+  const [erros, setErros] = useState<string[]>([]);
+  const [cnpj, setCnpj] = useState('');
+  const [cel, setCel] = useState('');
+  useEffect(() => {
+    void useSessaoLojista.persist.rehydrate();
+    void usePainel.persist.rehydrate();
+  }, []);
+
+  const enviar = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const v = (k: string) => String(fd.get(k) ?? '').trim();
+    const lista: string[] = [];
+    if (v('fantasia').length < 2) lista.push('Informe o nome da loja.');
+    if (!cnpjValido(cnpj)) lista.push('CNPJ inválido.');
+    if (v('nome').split(/\s+/).length < 2) lista.push('Informe nome e sobrenome do responsável.');
+    if (!emailValido(v('email'))) lista.push('E-mail inválido.');
+    if (!celularValido(cel)) lista.push('Celular com DDD inválido.');
+    if (!senhaValida(String(fd.get('senha') ?? '')))
+      lista.push('A senha precisa de 8 caracteres, com letras e números.');
+    if (!fd.get('termos')) lista.push('Aceite os Termos de Uso e a Política de Privacidade.');
+    setErros(lista);
+    if (lista.length) return;
+    useSessaoLojista.getState().entrar(v('email'));
+    usePainel
+      .getState()
+      .novoLojista({ fantasia: v('fantasia'), cnpj, nome: v('nome'), email: v('email'), celular: cel });
+    avisar('Conta criada! Agora complete o cadastro da loja.');
+    router.push('/painel/cadastro');
+  };
+
+  return (
+    <CaixaAuth>
+      <div className="flex flex-col gap-1">
+        <span className="pill pill-indicada self-start">Quero vender</span>
+        <h1>
+          <TextoFormularioAcesso campo="titulo">Cadastre sua loja</TextoFormularioAcesso>
+        </h1>
+        <span className="text-[13px] text-grafite-2">
+          <TextoFormularioAcesso campo="apoio">
+            Leva 2 minutos. Depois você completa endereço, recebimento e documentos no painel.
+          </TextoFormularioAcesso>
+        </span>
+      </div>
+      <form method="post" className="flex flex-col gap-3" onSubmit={enviar} noValidate>
+        <div className="campo">
+          <label htmlFor="nl-fantasia">Nome da loja</label>
+          <input id="nl-fantasia" name="fantasia" className="input" autoComplete="organization" />
+        </div>
+        <div className="campo">
+          <label htmlFor="nl-cnpj">CNPJ</label>
+          <input
+            id="nl-cnpj"
+            name="cnpj"
+            className="input"
+            inputMode="numeric"
+            value={cnpj}
+            onChange={(e) => setCnpj(mascaraCnpj(e.target.value))}
+          />
+        </div>
+        <div className="campo">
+          <label htmlFor="nl-nome">Seu nome (responsável)</label>
+          <input id="nl-nome" name="nome" className="input" autoComplete="name" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="campo">
+            <label htmlFor="nl-email">E-mail</label>
+            <input id="nl-email" name="email" type="email" className="input" autoComplete="email" />
+          </div>
+          <div className="campo">
+            <label htmlFor="nl-cel">Celular (WhatsApp)</label>
+            <input
+              id="nl-cel"
+              name="celular"
+              className="input"
+              inputMode="tel"
+              autoComplete="tel"
+              value={cel}
+              onChange={(e) => setCel(mascaraCelular(e.target.value))}
+            />
+          </div>
+        </div>
+        <div className="campo">
+          <label htmlFor="nl-senha">Senha</label>
+          <input id="nl-senha" name="senha" type="password" className="input" autoComplete="new-password" />
+          <span className="dica">Mínimo de 8 caracteres, com letras e números.</span>
+        </div>
+        <Consentimento nome="termos">
+          Li e aceito os{' '}
+          <Link href="/termos" target="_blank">
+            Termos de Uso
+          </Link>{' '}
+          e a{' '}
+          <Link href="/privacidade" target="_blank">
+            Política de Privacidade
+          </Link>
+          . <b>(obrigatório)</b>
+        </Consentimento>
+        {erros.length > 0 && (
+          <div className="banner-info bg-acento-claro text-acento-escuro" role="alert">
+            <Icone nome="alert" />
+            <ul className="m-0 list-none p-0">
+              {erros.map((e) => (
+                <li key={e}>{e}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <button type="submit" className="btn btn-primary btn-lg">
+          Criar conta e continuar
+        </button>
+      </form>
+      <span className="text-center text-[13px] text-grafite-2">
+        Já vende aqui?{' '}
+        <Link href="/lojista/entrar" className="underline">
+          Entrar no painel
         </Link>
       </span>
     </CaixaAuth>

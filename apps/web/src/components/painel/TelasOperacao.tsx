@@ -250,7 +250,7 @@ function ProdutosConteudo() {
       };
     }),
     ...Object.entries(edicoes)
-      .filter(([, e]) => e.novo)
+      .filter(([id]) => !produtos.some((p) => p.id === id))
       .map(([id, e]) => ({
         id,
         nome: e.atual.nome,
@@ -261,7 +261,7 @@ function ProdutosConteudo() {
         foto: capaDe(e.atual.midias),
         disp: 'disponivel' as Disponibilidade,
         pendentes: e.pendentes.length,
-        novo: true,
+        novo: e.novo,
         reprovado: !!e.reprovacao,
       })),
   ].map((l) => {
@@ -269,7 +269,7 @@ function ProdutosConteudo() {
     return est
       ? {
           ...l,
-          disp: disponibilidadePublica({ saldo: est.saldo, reservaSeguranca: reserva, minimo: est.minimo }),
+          disp: est.indisponivelManual ? 'indisponivel' as const : disponibilidadePublica({ saldo: est.saldo, reservaSeguranca: reserva, minimo: est.minimo }),
         }
       : l;
   });
@@ -306,7 +306,8 @@ function ProdutosConteudo() {
           <tbody>
             {linhas.map((p) => (
               <tr key={p.id}>
-                <td>
+                {/* O nome é texto livre do lojista: quebra em até 2 linhas em vez de alargar a tabela */}
+                <td className="min-w-[220px] !whitespace-normal">
                   <span className="flex items-center gap-2.5">
                     <ArteProduto
                       categoria={cat(p.categoriaId)}
@@ -317,7 +318,7 @@ function ProdutosConteudo() {
                       tamanhoIcone="h-1/2 w-1/2"
                     />
                     <span className="flex flex-col">
-                      <b className="font-semibold">{p.nome}</b>
+                      <b className="line-clamp-2 font-semibold">{p.nome}</b>
                       <span className="text-xs text-grafite-2">
                         {cat(p.categoriaId).nome}
                         {p.opcoes ? ` · ${p.opcoes} variações` : ''}

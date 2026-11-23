@@ -16,10 +16,12 @@ Legenda: **[DECIDIDO]** regra confirmada · **[PROPOSTA]** usada no protótipo, 
 
 ## 2. White label (multi-cidade)
 
+- **Categorias na demonstração:** Admin › Categorias permite criar, editar e excluir categorias e subcategorias. As alterações ficam no navegador, separadas por cidade, e aparecem no catálogo e no editor de produtos do mesmo navegador. Os identificadores existentes permanecem ao alterar o nome. A exclusão de itens vinculados a produtos ou lojas exige reclassificação prévia. Na versão real, o cadastro, a integridade das referências e a publicação devem ser gerenciados pela API e pelo banco.
+
 - Cada cidade é um **tenant** com: `slug`, `nome`, `marca`, `uf`, `cepPadrao`, `acento` (cor da etiqueta "Tem"), `associacao`, `slogan`, `cepsAtendidos` e domínio/subdomínio.
 - Iguais em todas as cidades: layout, tipografia, marinho, azul de ação, neutros, verde de "loja local", pesponto e etiqueta.
 - Muda por cidade: nome, cor do acento (tirada da bandeira da cidade), associação parceira, textos institucionais e base de CEPs.
-- No front, essa configuração está em `window.CITY` (`js/data.js`). No back-end, ela deve vir de `GET /v1/tenant` resolvido pelo domínio.
+- No front atual, essa configuração vem de `src/mocks/tenants.ts`, passa por `getTenant()` e pelo `TenantProvider`; o middleware resolve a cidade pelo domínio. No back-end, ela deve vir de `GET /v1/tenant` resolvido pelo domínio. `window.CITY` pertencia ao protótipo antigo.
 - Lojas, produtos, pedidos e anúncios sempre pertencem a um tenant. Nenhuma consulta cruza tenants.
 
 ## 3. Identidade visual (tokens)
@@ -352,7 +354,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - **Anúncios:** valor de tabela, lance mínimo (lance atual + R$ 2) e limites de tempo vêm de `lib/regras/anuncios.ts`. O convite da vaga K1 na categoria abre `/painel/anuncios?vaga=K1` (antes `?slot=`).
 - **Simular aprovação** do cadastro só no modo demo.
 - Cidade sem loja de demonstração (ex.: Maringá) mostra "Nenhuma loja vinculada".
-- Tabelas não quebram linha nas células; no celular rolam na horizontal dentro do cartão.
+- Tabelas não quebram linha nas células; no celular rolam na horizontal dentro do cartão. **[PROPOSTA 19/11/2026]** Exceção: o nome do produto (texto livre do lojista) quebra em até 2 linhas.
 
 ### 13.6.3 PWA e testes (etapa 6)
 - **Manifest por cidade:** `/manifest.webmanifest` é gerado pelo host (nome, descrição, atalhos Ofertas/Sacola/Meus pedidos). Instalar em cianorte.* cria "Cianorte Tem"; em maringa.*, "Maringá Tem".
@@ -467,8 +469,15 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ### 13.12 Acesso, anúncios comprados e ajustes após a revisão do Codex (19/11/2026)
 - **[DECIDIDO] Login em página própria**, como nos grandes marketplaces.
     - Rotas `/entrar`, `/cadastro` e `/lojista/entrar`, no grupo `(acesso)`: sem cabeçalho, categorias, rodapé nem barra inferior. O banner de cookies e os avisos continuam.
-    - Fundo: foto da cidade em tela cheia com véu marinho, e o formulário num cartão translúcido com pesponto. No desktop, ao lado, fica uma frase da marca com três destaques.
-    - A foto atual é Cianorte vista do alto, de domínio público (CC0, Wikimedia Commons), otimizada em `public/acesso/cianorte.webp`. **[PENDENTE]** Foto do Portal de Cianorte com licença ou autorização de uso. Para trocar, basta substituir o arquivo; com várias cidades, a foto passa a vir do tenant.
+    - **[DECIDIDO 19/11/2026] Fundo:** imagem enviada pelo PO: o Cianorte Tem aberto no computador e no celular, numa mesa com caixas de pedido.
+        - Arquivo: `public/acesso/vitrine-cianorte-tem.webp` (1536×1024), servido sem recompressão para ficar nítido.
+        - Vem de `tenant.fundoAcesso`; cidade sem imagem fica com o fundo marinho da marca.
+        - A ilustração original do Portal (`public/acesso/cianorte.svg`, sem a Catedral) fica guardada no projeto, sem uso.
+    - **[DECIDIDO 19/11/2026] Layout (referência do PO):** foto em tela cheia sob véu marinho uniforme.
+        - **Desktop:** à esquerda, marca, frase com o final em azul-claro ("Tudo o que <Cidade> tem, a um toque de você."), texto de apoio, 4 vantagens em cartões translúcidos (2 × 2) e selos (Pix, Cartão de crédito, LGPD, Parceria <associação>). À direita, o cartão com "Voltar para a loja", o formulário e "Ambiente seguro · Termos · Privacidade".
+        - Cada tela (entrar, criar conta, lojista entrar e cadastro) tem frase e vantagens próprias.
+        - **Celular:** a foto é uma faixa no topo com a marca, e o cartão vem logo abaixo; frase e vantagens não aparecem.
+    - O cartão é branco sólido (o translúcido baixava o contraste das dicas dos campos, apontado pela checagem de acessibilidade).
 - **[DECIDIDO] Painel exige login do lojista.**
     - Sem sessão, vai para `/lojista/entrar?next=<tela>` e volta para a tela pedida. "Sair do painel" fica no menu.
     - Na demonstração a sessão fica no aparelho (`stores/sessaoLojista.ts`) e qualquer e-mail válido entra na loja de exemplo. Na versão real, o middleware exige cookie httpOnly.
@@ -494,6 +503,104 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - **Selo do anúncio unificado:** "Patrocinado" + logo (ou sigla na cor da loja) + nome da loja num só selo, em todas as vagas. Antes apareciam o selo e a marca com o nome repetido. Não é editável pelo lojista.
 - **Desempenho:** as logos das lojas saíram do estado do painel para `stores/logos.ts` (`ct-logos-v1`). A vitrine não lê mais pedidos, campanhas e artes do painel a cada página. As logos salvas antes são trazidas uma vez. As logos do projeto passam pelo `next/image`; só as enviadas na demo (data URL) dispensam a otimização.
 - **Testes:** Vitest (`arteAnuncio.test.ts`, `redirecionamento.test.ts`) e Playwright (`e2e/acesso.spec.ts`, `e2e/arte-anuncio.spec.ts`).
+- **Build em pasta separada:** `NEXT_DIST_DIR=.next-testes npm run test:e2e` (ou `next build`) gera o build fora do `.next`. Assim um `next dev` aberto não corrompe o build (erro "no direct app page entry found for /_not-found"). As pastas `.next-*` ficam fora do Git e do Docker.
+
+### 13.13 Preparação para a apresentação (19/11/2026)
+- **[DECIDIDO] Apresentar com `npm run demo`** (na raiz): gera a versão de produção e abre em modo demonstração em http://cianorte.localhost:3000 (`npm run demo -- 3100` para outra porta; build em `.next-demo-<porta>`).
+    - O `npm run dev` compila cada página na primeira visita e fica lento no Windows; ele serve só para desenvolver.
+    - Medido: páginas entre 0,01 s e 0,14 s.
+    - Varredura de 102 rotas e 164 imagens/ícones sem nenhum erro 500.
+    - `/favicon.ico` (ícone da cidade) e `/robots.txt` foram incluídos; antes davam 404 no console.
+- **[DECIDIDO] Cadastro do vendedor de verdade (na demo, salvo no aparelho):**
+    - "Quero vender" leva a `/lojista/cadastro`: o lojista cria o acesso (loja, CNPJ com máscara e dígito, responsável, e-mail, celular, senha, termos) e segue direto para o painel.
+    - `/painel/cadastro` virou um assistente em 6 etapas: empresa, responsável, unidade, recebimento, documentos e revisão.
+    - Tem barra de progresso, validação por etapa e salvamento automático a cada alteração, retomando de onde parou.
+    - Conexão simulada com o provedor de pagamento e anexos reais de documentos (PDF, JPG ou PNG até 5 MB; cartão CNPJ obrigatório).
+    - Envio para análise; na demo, "Simular aprovação". Regras em `lib/regras/cadastroLoja.ts`.
+    - Loja nova começa como rascunho e oculta, com o nome fantasia no menu e sem a logo da loja de exemplo.
+- **[DECIDIDO] Atalhos de categoria da home em carrossel:** uma fileira só, com setas no computador quando não cabem.
+- **[DECIDIDO] Letreiro de ofertas na barra do topo:** o botão "Categorias" (mega menu) continua. Os links de categoria e o "Mais", que repetiam os atalhos da home, deram lugar a um letreiro.
+    - O letreiro intercala frases patrocinadas das lojas (com "Patrocinado" e a marca) e avisos da cidade.
+    - Para com o mouse ou o foco, tem botão de pausa, e para quem pediu menos movimento no sistema a lista fica parada.
+- **[PROPOSTA] Vaga T1 (letreiro):** só texto (até 80 caracteres) e destino do clique, compra direta, R$ 150 por dia, até 8 lojas revezando, em todas as páginas.
+    - Aparece no mapa da central de anúncios. A "arte" é a frase, num editor próprio com prévia, e passa pela mesma moderação no admin.
+    - Valor a confirmar com a tabela comercial.
+- **Testes:** Vitest (`cadastroLoja.test.ts`) e Playwright (`e2e/vendedor.spec.ts`). Testes que procuravam textos que agora também aparecem no letreiro foram restritos ao conteúdo da página (`main`).
+
+### 13.14 Responsividade sem rolagem desnecessária (19/11/2026)
+- **Regra:** nenhuma página pode rolar na horizontal, de 320 px a 1920 px. Só tabelas e blocos largos rolam dentro do próprio cartão.
+- **[PROPOSTA] Menu do painel e do admin no celular e tablet (< 1000 px):** vira uma barra compacta com a marca e um botão com o nome da tela atual, que abre o menu. Antes, o menu inteiro (cerca de 900 px) vinha antes do conteúdo em toda tela. O menu fecha ao trocar de tela.
+- **Desktop:** o menu lateral fica fixo e nunca passa da altura da tela (rola dentro dele, se precisar). Os itens têm 40 px e os botões 36 px no desktop; no celular continuam com 44 px.
+- Controles segmentados (filtros Todos/Em andamento…, unidades de tempo) quebram linha em vez de vazar.
+- Células de tabela com 12 px de margem lateral (16 px a partir de 1100 px). Exemplos de código quebram linha.
+- A janela de conversa ocupa a altura que sobra na tela (entre 360 e 640 px).
+- Telas de acesso no celular: "Voltar para a loja" fica na faixa da foto, ao lado da marca, e o cartão sobe.
+- **Como medir:** varredura de todas as rotas em 320, 360, 390, 768, 900, 1024, 1280, 1440 e 1920 px, procurando rolagem horizontal e rolagens internas que sobram poucos pixels.
+
+### 13.15 Continuidade: ajustes desenvolvidos pelo Codex (22–23/11/2026)
+
+**Autoria e finalidade:** os ajustes descritos nesta seção foram desenvolvidos pelo **Codex**, a pedido do responsável pelo produto, e este registro foi consolidado pelo Codex em 23/11/2026 para passagem de contexto ao Claude e a outros desenvolvedores. Isso não atribui ao Codex o desenvolvimento das seções históricas anteriores. As regras e decisões anteriores continuam válidas; esta seção descreve o estado e os limites da demonstração no momento do registro.
+
+**Situação técnica geral**
+
+- O repositório contém `apps/web` (Next.js 15, React 19, TypeScript, Tailwind CSS e Zustand). Não há `apps/api` implementado nem banco integrado. Os dados iniciais vêm de `src/mocks`, e várias alterações são persistidas no `localStorage` do navegador. O cliente HTTP em `src/lib/api/http.ts` é uma preparação, não uma API de produção já conectada.
+- O projeto é uma demonstração: não confundir botões, dados persistidos localmente, valores fictícios ou exemplos de API com uma operação de marketplace pronta para produção. Outro navegador ou dispositivo não recebe automaticamente as alterações. A vitrine do comprador ainda usa dados mockados em partes que o painel altera localmente.
+- A infraestrutura prevista permanece NestJS e PostgreSQL; autorização, persistência, transações, pagamentos, auditoria confiável, uploads, estoque, avaliação e isolamento por tenant precisam ser implementados ou validados no servidor.
+
+**Categorias e subcategorias**
+
+- A administração tem a rota `/admin/categorias`, implementada em `src/components/admin/CategoriasAdmin.tsx`, acessível pelo menu administrativo. O formulário permite criar e editar nome, descrição, ícone e proporção de imagem; há criação e edição de subcategorias dentro da categoria mãe. A exclusão pede confirmação.
+- Nomes precisam ter pelo menos dois caracteres e são verificados contra duplicidade sem diferenciar maiúsculas ou acentos, dentro do escopo aplicável. IDs são gerados a partir dos nomes, com sufixo quando necessário; ao editar um nome o ID existente não muda, preservando URLs e vínculos.
+- A demonstração impede excluir categorias vinculadas a produtos ou lojas, e subcategorias vinculadas a produtos, inclusive edições publicadas ou em análise disponíveis no estado local. O fluxo solicita reclassificar os itens; isso é uma verificação da demo, não integridade referencial no banco.
+- `src/stores/categorias.ts` guarda listas por cidade em `ct-categorias-v1` no navegador. A lista editada alimenta o menu e a página de categorias, a vitrine e o editor de produtos no mesmo navegador. O cookie `ct-categorias-personalizadas` permite que uma URL de categoria nova chegue à renderização cliente; ele não contém o cadastro. Exclusão, publicação e validação devem passar para API/banco na versão real.
+- Na tela administrativa, cada categoria mãe mantém cartão branco e menu de três pontos verticais no canto, com apenas Editar e Excluir. Subcategorias aparecem em cartões azul-marinho com texto e três pontos brancos, com as mesmas ações. O menu fecha ao clicar fora ou pressionar Escape; adicionar subcategoria continua disponível.
+- Na vitrine, o bloco do título de todas as categorias usa o azul `marinho-2` do cabeçalho, título e descrição brancos e ícone sobre fundo branco. Mantém a largura original e o pesponto; o padrão está no componente compartilhado `PaginaCategoria.tsx` e vale também para categorias novas. O `tom` da categoria continua existindo como dado para outros usos.
+
+**Publicidade, imagens e navegação**
+
+- A home possui H1 em carrossel automático com até quatro anunciantes, navegação manual, pausa e respeito à preferência por movimento reduzido. Há carrosséis de produtos com navegação manual; os controles de filtros da categoria quebram linha para não ficarem cortados atrás da publicidade.
+- Há layouts e mapas de publicidade separados para home e categorias. Na categoria, a vaga K1 fica abaixo do título e L1 fica na lateral, após a lista de lojas no desktop; no celular, L1 entra na grade. Os anúncios de demonstração de categoria usam lojas relacionadas à categoria, e o destaque adicional de móveis “Sala nova até o Natal” foi preservado. Uma categoria nova sem criativo disponível pode mostrar o convite para anunciar: a presença de uma imagem em uma categoria recém-criada não é automática.
+- A compra de vagas, associação da loja à categoria, período, valores, disponibilidade e entrega de anúncios ainda exigem regras e persistência no backend. O pedido comercial mencionou que as vagas de categoria devem corresponder à atuação da loja e ao período contratado; não presumir que contratação simultânea de K1 e L1 esteja implementada. Os preços indicados em §9 são exemplos/propostas, não uma tabela comercial definitivamente aprovada.
+- As marcas fictícias e imagens de anúncios/produtos da demonstração ficam em `public/marcas`, `public/anuncios` e `public/produtos`. O selo `MarcaAnunciante` mostra “Patrocinado”, logo ou sigla e nome, em fundo branco translúcido. As imagens dos criativos usam véu neutro por padrão; o degradê colorido continua configurável no editor. Algumas imagens do catálogo foram preparadas para representar produtos embalados ou objetos de loja; não substituir indiscriminadamente as fotos de moda.
+- Em `/painel/cadastro`, `LogoCadastro.tsx` permite escolher, pré-visualizar, salvar e restaurar a logo da loja: JPG, PNG ou WebP, até 2 MB, reduzida no navegador para até 512 px e armazenada em `ct-logos-v1`, por cidade e loja. A logo aparece nas áreas conectadas da demonstração; o backend deve guardar e servir a imagem de forma persistente.
+
+**Avaliações e métricas de loja**
+
+- O comprador pode avaliar a loja em um subpedido pago e não cancelado, com nota inteira de 1 a 5 e comentário opcional de até 500 caracteres. Na demo é permitida uma avaliação por usuário e subpedido; o formulário e a regra estão em `AvaliacoesLoja.tsx` e `stores/comprador.ts`.
+- Exibir separadamente média e quantidade de avaliações e quantidade de itens vendidos; vendas são contadas por unidade, não por valor financeiro. A demo combina os valores fictícios da loja com avaliações e itens de pedidos pagos locais não cancelados. Uma venda maior não comprova por si só que a loja é confiável.
+- Avaliações, pedidos e contagens locais não são agregados entre aparelhos. O servidor precisa validar elegibilidade, impedir duplicidade, manter dados por tenant/loja e calcular as métricas reais.
+
+**Estoque e integração**
+
+- A tela `/painel/estoque` usa `GestaoEstoque.tsx` e possui modos Manual, Planilha e API aberta; o bloco de API aparece somente no modo API. A reserva de segurança continua configurável.
+- No Manual, o botão Ajustar abre o formulário para alterar saldo e mínimo, incluindo saldo por opção em produtos com variações; é possível zerar quantidades e marcar a disponibilidade como pausada sem apagar o saldo. Ao retomar, o status depende do saldo, do mínimo e da reserva. O botão Adicionar produto leva ao cadastro já existente, e produtos novos físicos entram no estoque da demo.
+- Em Planilha, o lojista seleciona um CSV com cabeçalhos `sku` e `quantidade`, separados por `;` ou `,`. Aceita BOM e campos entre aspas; a quantidade inteira não negativa substitui o saldo do SKU. Variações usam o SKU de cada opção. Há exportação de `estoque.csv` com SKU, quantidade e produto. SKU desconhecido, duplicado, ausente ou quantidade inválida impedem a aplicação do arquivo. Arquivo: `src/lib/regras/csvEstoque.ts`.
+- As mudanças passam por `atualizarEstoque` em `stores/painel.ts` e são persistidas no navegador. A pausa manual é considerada na tabela de estoque e na lista de produtos do painel; isso ainda não garante bloqueio da compra nem atualização da vitrine em outros navegadores. Não há remoção definitiva de produto do catálogo nessa tela: zerar saldo ou pausar é diferente de excluir cadastro.
+- A API aberta é apenas uma apresentação com exemplos de rotas e chave mascarada fictícia; não há integração externa, chave real, webhook funcional, histórico confiável nem controle transacional de reservas. A configuração de webhook é desabilitada na demonstração. As regras de estoque e segurança de §8 e §15 são requisitos futuros, não serviços já entregues.
+
+**Carregamento, erros e ambiente de desenvolvimento**
+
+- `src/components/ui/Carregando.tsx` exibe a marca da cidade no centro, pulsando suavemente sobre uma camada clara que desfoca a página. `role=status` e texto anunciam o carregamento; `prefers-reduced-motion` desativa a animação. É usado no fallback de rota `src/app/[tenant]/loading.tsx`, na hidratação do admin e do painel e na verificação da sessão do lojista. O `TenantProvider` no layout raiz fornece a marca também durante o fallback.
+- `src/app/[tenant]/error.tsx` apresenta uma mensagem e o botão “Tentar novamente” para erros capturados pelo limite de erro da rota. Isso não cobre todos os erros possíveis, inclusive falhas que ocorram antes da montagem do React.
+- A lentidão observada no Windows incluiu compilação na primeira visita pelo `next dev`, pouca memória livre e tentativas de rede para fontes. Houve também 404 de arquivos `/_next/static` quando duas instâncias de desenvolvimento disputaram a mesma pasta `.next`. Isso não prova que todos os problemas de desempenho ou recarga tenham a mesma causa.
+- O Playwright usa `NEXT_DIST_DIR=.next-e2e`; `npm run demo -- <porta>` usa `.next-demo-<porta>`. Não iniciar dois builds/servidores que escrevam na mesma pasta, nem ocupar a mesma porta. `EADDRINUSE` na porta 3000 indica outro processo escutando; identificar o processo antes de encerrá-lo. A demo otimizada ainda requer um build bem-sucedido e pode precisar de rede para as fontes.
+- Houve erro intermitente no navegador `Cannot read properties of undefined (reading 'length')`, apontando para `BarraCategorias`, após mudanças/recargas de desenvolvimento. Foram tentados `@refresh reset` e a separação da casca sem hooks do conteúdo interno. Em desenvolvimento, o layout também tenta desregistrar um service worker antigo de `/sw.js` e limpar caches `ct-v...` antes da montagem do React, recarregando uma vez se havia controle ativo; `RegistrarSW.tsx` complementa a limpeza. **A causa exata do erro relatado pelo usuário não foi confirmada**, e os testes em navegador isolado não comprovam que ele tenha desaparecido no perfil do usuário. Se reaparecer, coletar a pilha completa, versão do servidor, estado do service worker e requisições de arquivos estáticos antes de atribuir a causa ao Fast Refresh ou ao cache. Não limpar `localStorage` como solução genérica: há dados da demonstração ali.
+
+**Validação registrada**
+
+- `npm run verificar` passou na etapa de estoque/navegação: lint, checagem de tipos e 95 testes de regras. Em verificações posteriores, lint e typecheck também passaram conforme o escopo das alterações. Esses resultados são históricos, não substituem uma nova execução após outras mudanças.
+- Playwright em celular e desktop cobriu criação/edição/exclusão de categorias e proteção de vínculos (`e2e/categorias-admin.spec.ts`), estoque manual por variação, pausa, criação de produto e importação/exportação CSV (`e2e/estoque.spec.ts`), navegação/reload e limpeza de service worker/cache simulado (`e2e/navegacao.spec.ts`). A recuperação com JavaScript antigo simulado foi testada, mas não é reprodução comprovada do erro específico do usuário.
+- A tela de carregamento foi inspecionada visualmente em 390 e 1440 px, e foi verificado que a animação fica desativada com movimento reduzido. O cabeçalho azul das categorias foi conferido em desktop e celular. Após a inclusão da marca no carregamento, oito testes selecionados de categorias, estoque e navegação passaram nas duas resoluções.
+
+### 13.16 Atributos e telas de acesso configuráveis (Codex, 23/11/2026)
+
+- **Atributos:** o editor de produtos permite cadastrar pares de atributo e valor (por exemplo, `Material: Algodão`), além das características livres existentes. O nome e as opções da variação do produto também formam um atributo de filtro. São campos editoriais: alterações só entram na versão publicada após aprovação, seguindo a moderação de produto existente.
+- Em cada categoria, as facetas são montadas a partir dos atributos e variações dos produtos publicados, agrupadas por nome; nomes e valores equivalentes não diferem por caixa ou acento, e cada produto é contado uma vez por opção. Dentro de um atributo, opções selecionadas funcionam como OU; entre atributos diferentes, como E. Os filtros são conservados na URL via parâmetros `at`, sem dividir valores que contêm vírgulas. Implementação: `lib/regras/atributos.ts`, `lib/filtros.ts` e `PainelFiltros.tsx`.
+- Na demonstração, a categoria também combina o catálogo fictício com edições de produtos aprovadas e produtos novos aprovados no navegador, usando `lib/regras/vitrineLocal.ts` e `stores/painel.ts`. Produto novo ainda em análise não aparece nos filtros. A tela de detalhe local informa que a compra de um produto cadastrado no aparelho depende do servidor; não há integração de carrinho, checkout ou catálogo real para esses produtos. O comportamento não é compartilhado entre usuários e não substitui uma consulta/faceta do backend.
+- **Telas de acesso:** Admin › Telas de acesso (`/admin/acesso`) configura separadamente entrada e cadastro de compradores e de lojistas. É possível editar títulos e textos da área de campanha e do formulário, tópicos e ícones, selos, cores da marca, fundo, véu, textos, cartões, formulário, botões e links. Há opção para mostrar textos, tópicos e selos no celular. A imagem de fundo aceita JPG, PNG ou WebP até 700 KB; a tela pode ser aberta para conferência depois de salvar.
+- Cada tela pode ter banner opcional com imagem, título, descrição, link local ou HTTPS, identificação de patrocínio e anunciante, e datas de início/fim inclusivas (horário de São Paulo). A ativação é verificada no carregamento e periodicamente enquanto a tela está aberta. Uma campanha ativa patrocinada exige identificação do anunciante. O banner e o fundo são guardados como imagens locais; o limite de armazenamento do navegador pode impedir o salvamento.
+- A configuração é salva em `ct-acesso-visual-v1`, por cidade e por tela, e existe opção de restaurar o padrão. É uma demonstração local: não há publicação compartilhada, armazenamento de mídia no servidor, agenda central, contratação, cobrança, aprovação comercial ou rotação entre campanhas. A versão real deverá implementar permissões de administrador, persistência, upload seguro, agendamento e contratação no backend.
+- Testes de regras: `atributos.test.ts` e `acessoVisual.test.ts`. Jornadas: `e2e/configuracao-acesso-atributos.spec.ts`, incluindo configuração e banner, isolamento entre telas, atributos/variações após moderação e produto novo aprovado. Os resultados devem ser verificados novamente a cada mudança.
 
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 

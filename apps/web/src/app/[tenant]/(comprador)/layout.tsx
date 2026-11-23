@@ -22,12 +22,16 @@ export default async function CompradorLayout({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant: slug } = await params;
-  const [tenant, categorias] = await Promise.all([getTenant(slug), api.categorias.listar(slug)]);
+  const [tenant, categorias, letreiro] = await Promise.all([
+    getTenant(slug),
+    api.categorias.listar(slug),
+    api.vitrine.letreiro(slug),
+  ]);
 
   return (
     <TenantProvider tenant={tenant}>
       <Hidratar />
-      <Cabecalho tenant={tenant} categorias={categorias} />
+      <Cabecalho tenant={tenant} categorias={categorias} letreiro={letreiro} />
       <main className="pb-bottom-nav lg:pb-0">
         <div className="mx-auto w-full max-w-container px-4">{children}</div>
       </main>

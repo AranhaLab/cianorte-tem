@@ -69,13 +69,13 @@ export function CartaoProduto({ item, patrocinado = false }: { item: ItemVitrine
           </span>
         </div>
       </Link>
-      <AcoesCartao
+      {!p.id.startsWith('novo-') && <AcoesCartao
         produtoId={p.id}
         nome={p.nome}
         temVariacao={!!p.variacao || p.kit?.tipo === 'aberto'}
         nomeVariacao={p.kit?.tipo === 'aberto' ? 'os itens do kit' : p.variacao?.nome}
         esgotado={esgotado}
-      />
+      />}
     </div>
   );
 }

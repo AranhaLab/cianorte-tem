@@ -22,8 +22,8 @@ test.describe('Jornada de compra (CLAUDE.md §5)', () => {
     // Sacola multiloja, sem login
     await expect(page).toHaveURL(/\/sacola$/);
     await expect(page.getByText('Compra em mais de uma loja')).toBeVisible();
-    await expect(page.getByText('Casa & Obra Noroeste')).toBeVisible();
-    await expect(page.getByText('Confecções Vale Azul')).toBeVisible();
+    await expect(page.locator('main').getByText('Casa & Obra Noroeste')).toBeVisible();
+    await expect(page.locator('main').getByText('Confecções Vale Azul')).toBeVisible();
 
     // Fechar a compra exige conta; a sacola é mantida
     await page.getByRole('link', { name: 'Continuar a compra' }).click();

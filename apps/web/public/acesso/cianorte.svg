@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Ilustração de Cianorte ao anoitecer: o Portal da Capital do Vestuário">
+  <!-- Ilustração original do Cianorte Tem (sem uso de fotografias de terceiros).
+       Portal "Cianorte – Capital do Vestuário" (coluna com estátua, viga, arco bordado,
+       carretel e agulhas), ao anoitecer, na chegada pela avenida. -->
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1430"/>
+      <stop offset=".45" stop-color="#14213D"/>
+      <stop offset=".68" stop-color="#2A3B6E"/>
+      <stop offset=".8" stop-color="#6A5478"/>
+      <stop offset=".88" stop-color="#D88A5A"/>
+    </linearGradient>
+    <radialGradient id="brilho" cx=".62" cy=".74" r=".55">
+      <stop offset="0" stop-color="#F6B867" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#F6B867" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="chao" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14243F"/>
+      <stop offset="1" stop-color="#070E1F"/>
+    </linearGradient>
+    <linearGradient id="estrada" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2B3247"/>
+      <stop offset="1" stop-color="#151A28"/>
+    </linearGradient>
+    <linearGradient id="catedral" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6DC"/>
+      <stop offset="1" stop-color="#EEC97C"/>
+    </linearGradient>
+    <radialGradient id="aura" cx=".5" cy=".6" r=".5">
+      <stop offset="0" stop-color="#FFD98A" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#FFD98A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="poste" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FFE7A8" stop-opacity=".95"/>
+      <stop offset=".35" stop-color="#FFD27A" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FFD27A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dourado" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3D27A"/>
+      <stop offset="1" stop-color="#B8862F"/>
+    </linearGradient>
+    <linearGradient id="agulha" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#B9C4D8"/>
+    </linearGradient>
+    <pattern id="cobogo" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect width="16" height="16" fill="#FFE9AE"/>
+      <path d="M8 1 L15 8 L8 15 L1 8 Z" fill="#F7D57F" stroke="#C59443" stroke-width="1.6"/>
+      <circle cx="8" cy="8" r="1.6" fill="#FFF7DE"/>
+    </pattern>
+    <linearGradient id="nevoa" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#070E1F" stop-opacity="0"/>
+      <stop offset="1" stop-color="#070E1F" stop-opacity=".75"/>
+    </linearGradient>
+    <pattern id="ziper" width="9" height="20" patternUnits="userSpaceOnUse">
+      <rect width="9" height="20" fill="#C99A14"/>
+      <rect x="0.5" width="7" height="20" rx="1.5" fill="#F2C230"/>
+      <rect x="1.5" y="2" width="5" height="7" rx="1" fill="#FFE27A"/>
+    </pattern>
+  </defs>
+
+  <!-- Céu, estrelas e lua -->
+  <rect width="1600" height="900" fill="url(#ceu)"/>
+  <rect width="1600" height="900" fill="url(#brilho)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="70" r="1.6" opacity=".8"/><circle cx="150" cy="190" r="1.2" opacity=".6"/>
+    <circle cx="240" cy="40" r="1.8" opacity=".9"/><circle cx="380" cy="120" r="1.2" opacity=".7"/>
+    <circle cx="470" cy="60" r="1.5" opacity=".8"/><circle cx="560" cy="210" r="1.1" opacity=".5"/>
+    <circle cx="640" cy="90" r="1.7" opacity=".85"/><circle cx="730" cy="30" r="1.2" opacity=".6"/>
+    <circle cx="820" cy="150" r="1.4" opacity=".7"/><circle cx="900" cy="70" r="1.9" opacity=".9"/>
+    <circle cx="990" cy="200" r="1.1" opacity=".5"/><circle cx="1070" cy="40" r="1.5" opacity=".8"/>
+    <circle cx="1150" cy="130" r="1.2" opacity=".6"/><circle cx="1240" cy="60" r="1.7" opacity=".85"/>
+    <circle cx="1330" cy="180" r="1.1" opacity=".5"/><circle cx="1420" cy="90" r="1.6" opacity=".8"/>
+    <circle cx="1510" cy="30" r="1.3" opacity=".7"/><circle cx="1570" cy="160" r="1.5" opacity=".75"/>
+    <circle cx="330" cy="250" r="1" opacity=".45"/><circle cx="1010" cy="260" r="1" opacity=".45"/>
+    <circle cx="700" cy="250" r="1.1" opacity=".5"/><circle cx="110" cy="300" r="1" opacity=".4"/>
+  </g>
+  <circle cx="300" cy="150" r="30" fill="#F7EBCF" opacity=".95"/>
+  <circle cx="314" cy="141" r="27" fill="#0E1936" opacity=".9"/>
+
+  <!-- Cidade ao fundo -->
+  <path fill="#1B2950" d="M0 650 V610 H40 V585 H85 V600 H120 V560 H150 V540 H175 V575 H230 V598 H275 V570 H320 V545 H345 V520 H368 V545 H400 V588 H450 V600 H500 V575 H540 V598 H590 V610 H640 V590 H700 V612 H760 V598 H820 V612 H880 V590 H930 V605 H1000 V585 H1040 V560 H1075 V590 H1120 V603 H1180 V580 H1215 V600 H1600 V650 Z"/>
+  <g fill="#F2C76B" opacity=".55">
+    <rect x="128" y="570" width="5" height="7"/><rect x="140" y="585" width="5" height="7"/>
+    <rect x="160" y="552" width="4" height="6"/><rect x="330" y="556" width="5" height="7"/>
+    <rect x="352" y="532" width="4" height="6"/><rect x="352" y="560" width="4" height="6"/>
+    <rect x="510" y="584" width="5" height="7"/><rect x="1050" y="572" width="5" height="7"/>
+    <rect x="1062" y="590" width="5" height="7"/><rect x="1190" y="590" width="4" height="6"/>
+  </g>
+
+  <!-- Chão, gramados e avenida -->
+  <rect y="630" width="1600" height="270" fill="url(#chao)"/>
+  <path fill="#10303A" opacity=".9" d="M0 741 H1115 L820 900 H0 Z"/>
+  <path fill="#10303A" opacity=".9" d="M1143 741 H1600 V900 H1450 Z"/>
+  <path fill="url(#estrada)" d="M1117 739 H1141 L1450 900 H820 Z"/>
+  <path d="M1117 739 L820 900" stroke="#DCE3F2" stroke-width="4" opacity=".55"/>
+  <path d="M1141 739 L1450 900" stroke="#DCE3F2" stroke-width="4" opacity=".55"/>
+  <path d="M1127 739 L1115 900" stroke="#F2C230" stroke-width="5"/>
+  <path d="M1131 739 L1143 900" stroke="#F2C230" stroke-width="5"/>
+
+  <!-- Marcos da cidade, um pouco menores e ancorados no chão (deixa o céu livre para o texto) -->
+  <g transform="translate(342 222) scale(.82)">
+  <!-- Árvores ao longo da avenida -->
+  <g fill="#0C2230">
+    <circle cx="800" cy="618" r="26"/><circle cx="830" cy="610" r="30"/><circle cx="866" cy="622" r="22"/>
+    <circle cx="1050" cy="620" r="24"/><circle cx="1085" cy="608" r="32"/><circle cx="1122" cy="620" r="22"/>
+    <circle cx="560" cy="626" r="20"/><circle cx="590" cy="616" r="26"/>
+  </g>
+
+  <!-- Postes iluminados -->
+  <g stroke="#3A4766" stroke-width="4">
+    <path d="M1140 760 V690"/><path d="M1075 712 V660"/><path d="M800 712 V660"/><path d="M735 760 V690"/>
+  </g>
+  <g>
+    <circle cx="1140" cy="686" r="40" fill="url(#poste)"/><circle cx="1075" cy="657" r="30" fill="url(#poste)"/>
+    <circle cx="800" cy="657" r="30" fill="url(#poste)"/><circle cx="735" cy="686" r="40" fill="url(#poste)"/>
+  </g>
+
+  <!-- ===== Portal "Cianorte – Capital do Vestuário" (desenho baseado no portal da cidade) ===== -->
+
+  <!-- Alfinete de cabeça chata (atrás, à direita) -->
+  <path d="M1238 334 L1362 792" stroke="#9AA7BF" stroke-width="13" stroke-linecap="round"/>
+  <path d="M1236 334 L1358 792" stroke="#E8EDF5" stroke-width="4" opacity=".8"/>
+  <ellipse cx="1236" cy="326" rx="52" ry="12" fill="#F4F6FA" stroke="#9AA7BF" stroke-width="3" transform="rotate(-14 1236 326)"/>
+
+  <!-- Arco azul: continua da barra de baixo da viga e desce até a base da coluna (com os dentes do zíper) -->
+  <path d="M1334 506 H1120 C985 506 835 566 758 776" fill="none" stroke="#163F8A" stroke-width="34"/>
+  <path d="M1334 506 H1120 C985 506 835 566 758 776" fill="none" stroke="#1F4FA3" stroke-width="26"/>
+  <path d="M1296 486 H1118 C978 486 822 548 742 768" fill="none" stroke="#C99A14" stroke-width="16" stroke-dasharray="5 3"/>
+  <path d="M1296 484 H1118 C978 484 822 546 742 766" fill="none" stroke="#F2C230" stroke-width="13" stroke-dasharray="5 3"/>
+
+  <!-- Viga com o letreiro e o zíper amarelo (com o cursor na ponta) -->
+  <rect x="736" y="424" width="600" height="42" rx="3" fill="#1F4FA3"/>
+  <rect x="736" y="424" width="600" height="6" rx="3" fill="#3D6CC4"/>
+  <text x="1008" y="451" text-anchor="middle" font-family="Outfit, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="800" letter-spacing=".8" fill="#FFFFFF">CIANORTE - CAPITAL DO VESTUÁRIO</text>
+  <rect x="746" y="466" width="540" height="20" fill="url(#ziper)"/>
+  <rect x="1284" y="463" width="20" height="28" rx="3" fill="#E0AE16" stroke="#B88A0E" stroke-width="2"/>
+
+  <!-- Botão (com dois furos e a linha vermelha) preso à viga por um tubo vermelho -->
+  <path d="M1060 424 V376 Q1060 366 1070 366 H1074" fill="none" stroke="#C8102E" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="1118" cy="352" r="56" fill="#F3EEE2" stroke="#CFC4A8" stroke-width="5"/>
+  <circle cx="1118" cy="352" r="42" fill="none" stroke="#E2D9C2" stroke-width="3"/>
+  <circle cx="1100" cy="338" r="9" fill="#5A5A5A"/>
+  <circle cx="1136" cy="366" r="9" fill="#5A5A5A"/>
+
+  <!-- Haste vermelha: sai da coluna (com luva branca), sobe na diagonal e entra nos furos do botão -->
+  <path d="M664 702 L926 304 Q986 240 1072 260 Q1150 282 1146 318 Q1142 340 1100 338" fill="none" stroke="#C8102E" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1100 338 Q1118 356 1136 366" fill="none" stroke="#C8102E" stroke-width="7" stroke-linecap="round"/>
+  <path d="M652 716 L676 688" stroke="#F4F6FA" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Agulha atravessando o botão na diagonal -->
+  <path fill="url(#agulha)" d="M1064 286 L1078 278 L1492 786 L1478 794 Z"/>
+  <path d="M1071 282 L1485 790" stroke="#9AA7BF" stroke-width="1.5" opacity=".6"/>
+  <ellipse cx="1084" cy="306" rx="4" ry="12" fill="#14213D" transform="rotate(-40 1084 306)"/>
+
+  <!-- Coluna: anéis vermelhos na base, cone azul com o brasão, faixas, encaixe da viga e pedestal -->
+  <ellipse cx="700" cy="790" rx="96" ry="15" fill="#0A1226" opacity=".6"/>
+  <rect x="626" y="764" width="148" height="22" rx="10" fill="#C8102E"/>
+  <rect x="630" y="746" width="140" height="20" rx="9" fill="#D91F3C"/>
+  <rect x="634" y="729" width="132" height="19" rx="9" fill="#C8102E"/>
+  <g stroke="#FFFFFF" stroke-width="2" opacity=".55"><path d="M636 747 H764"/><path d="M640 730 H760"/></g>
+  <rect x="638" y="715" width="124" height="14" rx="2" fill="#FFFFFF"/>
+  <path fill="#1F4FA3" d="M642 715 H758 L732 540 H668 Z"/>
+  <path fill="#163F8A" opacity=".5" d="M700 715 H758 L732 540 H700 Z"/>
+  <!-- Brasão -->
+  <circle cx="676" cy="672" r="27" fill="#FFFFFF" stroke="#C9B48C" stroke-width="3"/>
+  <path fill="#1F4FA3" d="M664 656 H688 V676 Q676 690 664 676 Z"/>
+  <rect x="664" y="664" width="24" height="5" fill="#C8102E"/>
+  <path d="M656 676 Q660 692 676 696 Q692 692 696 676" fill="none" stroke="#2E7D32" stroke-width="3"/>
+  <rect x="668" y="648" width="16" height="6" rx="1" fill="#C9B48C"/>
+  <rect x="664" y="526" width="72" height="14" fill="#FFFFFF"/>
+  <path fill="#C8102E" d="M666 526 H734 L731 476 H669 Z"/>
+  <path fill="#A50D26" opacity=".45" d="M700 526 H734 L731 476 H700 Z"/>
+  <!-- Encaixe azul e branco onde a viga entra -->
+  <rect x="660" y="424" width="34" height="52" rx="3" fill="#1F4FA3"/>
+  <rect x="694" y="424" width="16" height="52" fill="#FFFFFF"/>
+  <rect x="710" y="424" width="26" height="52" fill="#1F4FA3"/>
+  <path fill="#C8102E" d="M672 424 H728 L726 398 H674 Z"/>
+  <!-- Pedestal vermelho da estátua -->
+  <rect x="680" y="384" width="40" height="16" fill="#C8102E"/>
+  <ellipse cx="700" cy="384" rx="20" ry="5" fill="#E24660"/>
+
+  <!-- Estátua dourada: mulher de costas, coque, cachecol ao vento, polo e jeans, mãos nos bolsos -->
+  <g>
+    <!-- cachecol ao vento (para a esquerda) -->
+    <path d="M697 318 C684 312 670 320 654 314 C644 310 636 316 626 312" fill="none" stroke="url(#dourado)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M627 312 l-6 -4 M627 312 l-7 0 M627 312 l-6 4" stroke="#C9962E" stroke-width="1.6" stroke-linecap="round"/>
+    <!-- pernas (jeans) -->
+    <path fill="url(#dourado)" d="M690 352 H700 L697 382 H688 Z"/>
+    <path fill="url(#dourado)" d="M700 352 H711 L715 382 H706 Z"/>
+    <path d="M693 360 V378 M708 360 L711 378" stroke="#A97C22" stroke-width="1" opacity=".6"/>
+    <ellipse cx="692" cy="383" rx="6" ry="2.5" fill="#B8862F"/>
+    <ellipse cx="711" cy="383" rx="6" ry="2.5" fill="#B8862F"/>
+    <!-- quadril com os bolsos de trás -->
+    <path fill="url(#dourado)" d="M689 340 H712 L713 354 H688 Z"/>
+    <rect x="691" y="344" width="7" height="6" rx="1" fill="none" stroke="#A97C22" stroke-width="1"/>
+    <rect x="703" y="344" width="7" height="6" rx="1" fill="none" stroke="#A97C22" stroke-width="1"/>
+    <!-- tronco (camisa polo de manga curta) -->
+    <path fill="url(#dourado)" d="M689 340 L687 322 Q700 314 714 322 L712 340 Z"/>
+    <path fill="url(#dourado)" d="M687 322 L682 331 L686 333 L690 327 Z"/>
+    <path fill="url(#dourado)" d="M714 322 L719 331 L715 333 L711 327 Z"/>
+    <!-- braços com as mãos nos bolsos -->
+    <path d="M684 332 L683 342 L692 347 M717 332 L718 342 L709 347" fill="none" stroke="url(#dourado)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- cabeça com coque -->
+    <rect x="697" y="311" width="7" height="6" fill="url(#dourado)"/>
+    <circle cx="700.5" cy="304" r="8" fill="url(#dourado)"/>
+    <circle cx="700.5" cy="300" r="4.5" fill="#E2B85A" stroke="#B8862F" stroke-width="1"/>
+  </g>
+  </g>
+
+  <!-- Brilho do anoitecer no chão e névoa para leitura -->
+  <rect y="620" width="1600" height="280" fill="url(#nevoa)"/>
+</svg>

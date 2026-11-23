@@ -9,6 +9,7 @@ import { PAINEL_DEMO } from '@/mocks/painel';
 import { limitarQuantidade, lanceMinimo, UNIDADES, type UnidadeTempo } from '@/lib/regras/anuncios';
 import type { LogisticaLoja } from '@/lib/regras/logistica';
 import { podeEnviarArte } from '@/lib/regras/arteAnuncio';
+import { cadastroVazio, type CadastroLoja } from '@/lib/regras/cadastroLoja';
 import { proximoStatus } from '@/lib/regras/pedidos';
 import {
   aplicarAprovacao,
@@ -49,6 +50,8 @@ interface Persistido extends PainelLojista {
   /** null = ainda não configurada (usa os dados da loja). */
   logistica: LogisticaLoja | null;
   filiais: Unidade[];
+  /** Cadastro da loja (adesão). null = ainda não aberto: o formulário parte dos dados da loja. */
+  cadastro: CadastroLoja | null;
   vagas: VagaAnuncio[];
   vagaSelecionada: VagaId;
   unidade: UnidadeTempo;
@@ -60,9 +63,20 @@ interface Acoes {
   alternarVisivel: () => 'ok' | 'nao_aprovada';
   simularAprovacao: () => void;
   enviarCadastro: () => void;
+  /** Salva o cadastro a cada alteração (como um rascunho no servidor). */
+  salvarCadastro: (c: CadastroLoja) => void;
+  /** Novo lojista (adesão pela página "Quero vender"): começa um cadastro do zero. */
+  novoLojista: (dados: {
+    fantasia: string;
+    cnpj: string;
+    nome: string;
+    email: string;
+    celular: string;
+  }) => void;
   avancarPedido: (id: string) => StatusSubpedido | null;
   definirModoSync: (m: ModoSincronizacao) => void;
   definirReserva: (n: number) => void;
+  atualizarEstoque: (r: RascunhoProduto, indisponivelManual?: boolean) => void;
   moverModulo: (i: number, d: -1 | 1) => void;
   removerModulo: (i: number) => void;
   adicionarModulo: (tipo: string) => void;
@@ -76,6 +90,8 @@ interface Acoes {
   resultadoLance: (campanhaId: string, venceu: boolean) => void;
   /** Envia a arte (só com o espaço garantido) → arte em análise. */
   enviarArte: (campanhaId: string, arte: ArteAnuncio) => 'ok' | 'sem_espaco';
+  /** T1: envia a frase do letreiro (só com o espaço garantido) → em análise. */
+  enviarLetreiro: (campanhaId: string, letreiro: { texto: string; destino: string }) => 'ok' | 'sem_espaco';
   /** Moderação da plataforma: aprova (no ar) ou reprova com motivo (lojista pode reenviar). */
   decidirArte: (campanhaId: string, aprovar: boolean, motivo?: string) => void;
   salvarProduto: (
@@ -112,6 +128,7 @@ const inicial = (): Persistido => ({
   edicoes: edicoesDemo(),
   logistica: null,
   filiais: [],
+  cadastro: null,
 });
 
 export const usePainel = create<Persistido & Acoes>()(
@@ -127,6 +144,15 @@ export const usePainel = create<Persistido & Acoes>()(
       },
       simularAprovacao: () => set({ status: 'aprovada' }),
       enviarCadastro: () => set((s) => (s.status === 'aprovada' ? {} : { status: 'em_analise' })),
+      salvarCadastro: (cadastro) => set({ cadastro }),
+      novoLojista: (d) => {
+        const c = cadastroVazio();
+        c.empresa.fantasia = d.fantasia;
+        c.empresa.cnpj = d.cnpj;
+        c.responsavel = { ...c.responsavel, nome: d.nome, email: d.email, celular: d.celular };
+        // Loja nova: rascunho, oculta e sem vender até a aprovação (§7.1 e §7.2).
+        set({ cadastro: c, status: 'rascunho', visivel: false, responsavel: d.nome });
+      },
 
       avancarPedido: (id) => {
         if (useAdmin.getState().analises[id]) return null; // em análise administrativa
@@ -140,6 +166,32 @@ export const usePainel = create<Persistido & Acoes>()(
       definirModoSync: (modo) => set((s) => ({ integracao: { ...s.integracao, modo } })),
       definirReserva: (n) =>
         set((s) => ({ integracao: { ...s.integracao, reservaSeguranca: Math.max(0, Math.floor(n) || 0) } })),
+      atualizarEstoque: (r, indisponivelManual) => set((s) => {
+        if (!r.id) return {};
+        const id = r.id;
+        const anterior = s.edicoes[id];
+        const atualizar = (destino: RascunhoProduto): RascunhoProduto => ({
+          ...destino,
+          saldo: r.saldo,
+          minimo: r.minimo,
+          variacao: destino.variacao && r.variacao ? {
+            ...destino.variacao,
+            opcoes: destino.variacao.opcoes.map((o) => ({
+              ...o, saldo: r.variacao?.opcoes.find((item) => item.sku === o.sku)?.saldo ?? o.saldo,
+            })),
+          } : destino.variacao,
+        });
+        const item = { produtoId: id, sku: r.sku, saldo: saldoTotal(r), minimo: r.minimo,
+          indisponivelManual: indisponivelManual ?? s.estoque.find((e) => e.produtoId === id)?.indisponivelManual ?? false };
+        return {
+          estoque: s.estoque.some((e) => e.produtoId === id)
+            ? s.estoque.map((e) => e.produtoId === id ? item : e)
+            : [...s.estoque, item],
+          edicoes: { ...s.edicoes, [id]: anterior
+            ? { ...anterior, atual: atualizar(anterior.atual), emAnalise: anterior.emAnalise ? atualizar(anterior.emAnalise) : null }
+            : { atual: r, emAnalise: null, pendentes: [], novo: false } },
+        };
+      }),
 
       moverModulo: (i, d) =>
         set((s) => {
@@ -224,6 +276,16 @@ export const usePainel = create<Persistido & Acoes>()(
         }));
         return 'ok';
       },
+      enviarLetreiro: (id, letreiro) => {
+        const c = get().campanhas.find((x) => x.id === id);
+        if (!c || !podeEnviarArte(c.status)) return 'sem_espaco';
+        set((s) => ({
+          campanhas: s.campanhas.map((x) =>
+            x.id === id ? { ...x, letreiro, status: 'arte_em_analise', motivoReprovacao: undefined } : x,
+          ),
+        }));
+        return 'ok';
+      },
       decidirArte: (id, aprovar, motivo) =>
         set((s) => ({
           campanhas: s.campanhas.map((x) =>
@@ -247,6 +309,9 @@ export const usePainel = create<Persistido & Acoes>()(
               ...s.edicoes,
               [id]: { atual: r, emAnalise: r, pendentes: ['produto novo'], novo: true },
             },
+            estoque: r.tipo === 'kit' || r.tipo === 'digital' ? s.estoque : [
+              ...s.estoque, { produtoId: id, sku: r.sku, saldo: saldoTotal(r), minimo: r.minimo },
+            ],
           }));
           return { id, editoriais: ['produto novo'], imediatas: [] };
         }
@@ -336,6 +401,19 @@ export const usePainel = create<Persistido & Acoes>()(
           }),
         };
       },
+      // A cada carga: vaga criada depois do que está salvo no aparelho (ex.: T1, o letreiro)
+      // entra na lista. Sem isto, o mapa de anúncios procurava a vaga nova e quebrava.
+      merge: (salvo, atual) => {
+        const dados = { ...atual, ...(salvo as Partial<Persistido>) };
+        const vagas = dados.vagas ?? VAGAS;
+        const faltam = VAGAS.filter((v) => !vagas.some((x) => x.id === v.id));
+        const todas = faltam.length ? [...vagas, ...structuredClone(faltam)] : vagas;
+        return {
+          ...dados,
+          vagas: todas,
+          vagaSelecionada: todas.some((v) => v.id === dados.vagaSelecionada) ? dados.vagaSelecionada : 'H1',
+        };
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       // Só os dados; ações e o sinal de hidratação não vão para o aparelho.
@@ -357,6 +435,7 @@ export const usePainel = create<Persistido & Acoes>()(
         edicoes: s.edicoes,
         logistica: s.logistica,
         filiais: s.filiais,
+        cadastro: s.cadastro,
       }),
       onRehydrateStorage: () => () => usePainel.setState({ hidratado: true }),
     },

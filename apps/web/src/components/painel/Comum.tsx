@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { Carregando } from '@/components/ui/Carregando';
 import { reais } from '@/lib/regras/dinheiro';
 import { proximoStatus, ROTULO_STATUS } from '@/lib/regras/pedidos';
 import { useComprador } from '@/stores/comprador';
@@ -34,7 +35,7 @@ export function TituloPainel({
 /** Espera o estado da demo carregar do aparelho antes de desenhar números. */
 export function AguardaPainel({ children }: { children: ReactNode }) {
   const ok = usePainel((s) => s.hidratado);
-  return ok ? children : <div className="min-h-[40vh]" aria-busy="true" />;
+  return ok ? children : <Carregando mensagem="Carregando painel..." />;
 }
 
 const COR_STATUS: Partial<Record<StatusSubpedido, string>> = {

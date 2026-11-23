@@ -101,7 +101,7 @@ export function LogoCadastro({ loja }: { loja: Loja }) {
             <span className="text-xs text-grafite-2">Sem logo</span>
           )}
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-[1_1_200px] flex-col gap-2">
           <label htmlFor="logo-loja" className="text-sm font-semibold">
             Selecionar logo
           </label>
@@ -110,6 +110,7 @@ export function LogoCadastro({ loja }: { loja: Loja }) {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={escolher}
+            className="w-full max-w-full text-sm"
             aria-describedby={erro ? 'ajuda-logo erro-logo' : 'ajuda-logo'}
           />
           <span id="ajuda-logo" className="text-xs text-grafite-2">

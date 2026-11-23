@@ -25,15 +25,16 @@ export default async function AdminLayout({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant: slug } = await params;
-  const [tenant, lojas, categorias] = await Promise.all([
+  const [tenant, lojas, categorias, produtos] = await Promise.all([
     getTenant(slug),
     api.lojas.listar(slug),
     api.categorias.listar(slug),
+    api.produtos.buscar(slug),
   ]);
   return (
     <TenantProvider tenant={tenant}>
       <div className="min-h-screen bg-neutro-150">
-        <AdminProvider dados={{ lojas, categorias }}>
+        <AdminProvider dados={{ lojas, categorias, produtos }}>
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-start gap-5 p-4">
             <MenuAdmin />
             <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px]">{children}</main>

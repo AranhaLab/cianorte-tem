@@ -16,12 +16,15 @@ export default async function PaginaEntrar({ params, searchParams }: Props) {
   return (
     <FundoAcesso
       tenant={tenant}
-      titulo={`O comércio de ${tenant.nome} num lugar só.`}
-      apoio="Compre das lojas da sua cidade, receba no mesmo dia ou retire no balcão."
+      tela="entrar"
+      titulo={`Tudo o que ${tenant.nome} tem,`}
+      tituloDestaque="a um toque de você."
+      apoio="Compre das lojas da cidade e receba no mesmo dia, ou retire no balcão sem pagar frete."
       destaques={[
-        ['store', `Só lojas de ${tenant.nome}`],
-        ['truck', 'Entrega no mesmo dia ou retirada sem frete'],
-        ['shield', 'Pagamento protegido e 7 dias para desistir'],
+        { icone: 'store', titulo: 'Lojas locais verificadas', texto: 'CNPJ e endereço na cidade' },
+        { icone: 'truck', titulo: 'Entrega no mesmo dia', texto: 'ou retirada grátis no balcão' },
+        { icone: 'lock', titulo: 'Pagamento protegido', texto: 'Pix ou cartão, dados criptografados' },
+        { icone: 'refresh', titulo: '7 dias para desistir', texto: 'direito de arrependimento garantido' },
       ]}
     >
       <Entrar next={next} />

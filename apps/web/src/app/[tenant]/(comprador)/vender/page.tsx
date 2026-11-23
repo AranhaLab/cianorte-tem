@@ -30,7 +30,7 @@ export default async function Vender({ params }: Props) {
             balcão.
           </p>
           <div className="flex flex-wrap gap-2.5">
-            <Link href="/painel/cadastro" className="btn btn-lg bg-branco text-marinho hover:text-marinho">
+            <Link href="/lojista/cadastro" className="btn btn-lg bg-branco text-marinho hover:text-marinho">
               Cadastrar minha loja
             </Link>
             <Link

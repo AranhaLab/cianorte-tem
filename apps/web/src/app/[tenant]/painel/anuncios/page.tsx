@@ -3,7 +3,7 @@ import type { VagaId } from '@/types/domain';
 
 export const metadata = { title: 'Anúncios' };
 
-const VAGAS: VagaId[] = ['H1', 'M1', 'M2', 'C1', 'K1', 'L1'];
+const VAGAS: VagaId[] = ['H1', 'M1', 'M2', 'C1', 'K1', 'L1', 'T1'];
 
 /** /painel/anuncios?vaga=K1 abre direto na vaga (link do convite da categoria). */
 export default async function Pagina({

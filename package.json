@@ -18,6 +18,7 @@
     "test:e2e": "npm --prefix apps/web run test:e2e",
     "test:e2e:instalar": "npm --prefix apps/web exec playwright install chromium",
     "test:todos": "npm --prefix apps/web run test:todos",
-    "verificar": "npm run lint && npm run typecheck && npm test"
+    "verificar": "npm run lint && npm run typecheck && npm test",
+    "demo": "npm --prefix apps/web run demo --"
   }
 }

@@ -3,7 +3,7 @@
  * Volta para a tela de onde a pessoa saiu, mas só para caminhos DESTE site:
  * nada de "//outro.site", "https://…", "\\" ou "javascript:" (evita redirecionamento aberto).
  */
-const TELAS_DE_ACESSO = /^\/(entrar|cadastro|lojista\/entrar)(\/|\?|$)/;
+const TELAS_DE_ACESSO = /^\/(entrar|cadastro|lojista\/entrar|lojista\/cadastro)(\/|\?|$)/;
 
 export function destinoSeguro(next: string | null | undefined, padrao = '/'): string {
   if (!next) return padrao;

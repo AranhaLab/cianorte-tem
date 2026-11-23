@@ -63,7 +63,8 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
     }
   }, [vagaInicial, selecionarVaga]);
 
-  const vaga = vagas.find((v) => v.id === sel)!;
+  // Defesa: se a vaga escolhida não existir (dado antigo no aparelho), mostra a primeira.
+  const vaga = vagas.find((v) => v.id === sel) ?? vagas[0]!;
   const u = UNIDADES[unidade];
   const qtd = limitarQuantidade(unidade, quantidade);
   const tabela = valorTabela(vaga, unidade, qtd);
@@ -83,7 +84,8 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
   };
 
   const Vaga = ({ id, altura, className = '' }: { id: VagaId; altura: number; className?: string }) => {
-    const v = vagas.find((x) => x.id === id)!;
+    const v = vagas.find((x) => x.id === id);
+    if (!v) return null; // vaga que ainda não existe nos dados salvos: não quebra o mapa
     const on = sel === id;
     return (
       <button
@@ -148,6 +150,7 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
             <>
               <Rotulo>Home</Rotulo>
               <div className="h-[26px] rounded-[8px] bg-marinho" />
+              <Vaga id="T1" altura={22} />
               <Vaga id="H1" altura={86} />
               <div className="flex gap-1.5">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -190,6 +193,7 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
                 <Rotulo>Página de categoria</Rotulo>
               </span>
               <div className="h-[26px] rounded-[8px] bg-marinho" />
+              <Vaga id="T1" altura={22} />
               <Vaga id="K1" altura={44} />
               <div className="flex gap-1.5">
                 <div className="grid flex-[3] grid-cols-3 gap-1.5">
@@ -271,8 +275,15 @@ function Conteudo({ vagaInicial }: { vagaInicial?: VagaId }) {
                 ['Desktop', vaga.formato.desktop],
                 ['Celular', vaga.formato.mobile],
                 ['Proporção', vaga.formato.proporcao],
-                ['Arquivo', 'JPG, PNG ou WebP · até 500 KB'],
-                ['Área segura', 'Textos e logo a 40 px das bordas'],
+                ...(vaga.id === 'T1'
+                  ? [
+                      ['Conteúdo', 'Uma frase com a marca da loja'],
+                      ['Onde', 'Barra do topo, em todas as páginas'],
+                    ]
+                  : [
+                      ['Arquivo', 'JPG, PNG ou WebP · até 500 KB'],
+                      ['Área segura', 'Textos e logo a 40 px das bordas'],
+                    ]),
                 ['Rotação', `Até ${vaga.rotacao} anunciantes revezando`],
               ].map(([k, v]) => (
                 <div key={k} className="rounded-[12px] bg-neutro-100 px-3 py-2.5 text-[13px]">

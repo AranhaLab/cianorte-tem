@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:todos": "vitest run && playwright test"
+    "test:todos": "vitest run && playwright test",
+    "demo": "node scripts/demo.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.75.0",

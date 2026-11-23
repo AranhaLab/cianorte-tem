@@ -640,7 +640,7 @@ function ArtesEmAnalise() {
   const lojaId = usePainel((s) => s.lojaId);
   const { lojas } = useDadosAdmin();
   const loja = lojas.find((l) => l.id === lojaId);
-  const emAnalise = campanhas.filter((c) => c.status === 'arte_em_analise' && c.arte);
+  const emAnalise = campanhas.filter((c) => c.status === 'arte_em_analise' && (c.arte || c.letreiro));
 
   return (
     <section className="flex flex-col gap-3" aria-label="Artes de anúncio">
@@ -650,6 +650,54 @@ function ArtesEmAnalise() {
       ) : (
         emAnalise.map((c) => {
           const vaga = vagas.find((v) => v.id === c.vaga);
+          if (c.letreiro)
+            return (
+              <article
+                key={c.id}
+                className="card flex flex-col gap-3"
+                aria-label={`Arte ${c.vaga} de ${loja.nome}`}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <b>T1 · Letreiro de ofertas</b>
+                    <span className="text-xs text-grafite-2">
+                      {loja.nome} · {c.periodo} · abre {c.letreiro.destino}
+                    </span>
+                  </span>
+                  <span className="status st-amber">Frase em análise</span>
+                </div>
+                <div className="rounded-[12px] bg-marinho-2 px-4 py-2.5 text-[13px] text-branco">
+                  <span className="mr-2 rounded-full bg-branco/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-sobre-marinho-forte">
+                    Patrocinado · {loja.nome}
+                  </span>
+                  {c.letreiro.texto}
+                </div>
+                <div className="flex flex-wrap items-start gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    onClick={() => {
+                      usePainel.getState().decidirArte(c.id, true);
+                      registrar('Aprovou frase do letreiro', `T1 · ${loja.nome}`);
+                      avisar('Frase aprovada. Entra no letreiro no período contratado.');
+                    }}
+                  >
+                    Aprovar frase
+                  </button>
+                  <AcaoComMotivo
+                    rotulo="Reprovar frase"
+                    confirmar="Confirmar reprovação"
+                    perigo
+                    ajuda="o lojista vê este texto e pode reenviar"
+                    onConfirmar={(m) => {
+                      usePainel.getState().decidirArte(c.id, false, m);
+                      registrar('Reprovou frase do letreiro', `T1 · ${loja.nome}`, m);
+                      avisar('Frase reprovada. O lojista pode reenviar.');
+                    }}
+                  />
+                </div>
+              </article>
+            );
           const criativo = criativoDaArte(c.arte!, c.vaga, {
             nome: loja.nome,
             cor: loja.cor,

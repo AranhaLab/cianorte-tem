@@ -6,7 +6,9 @@ test('anúncios da categoria e o destaque de móveis aparecem nas posições cor
   await page.goto('/c/mercado');
   await expect(page.locator('[data-anuncio="K1"]')).toContainText('Mercado Bom Preço');
   await expect(page.locator('[data-anuncio="L1"]').first()).toContainText('Mercado Bom Preço');
-  await expect(page.getByText('Sala nova até o Natal').filter({ visible: true })).toBeVisible();
+  await expect(
+    page.locator('main').getByText('Sala nova até o Natal').filter({ visible: true }),
+  ).toBeVisible();
   await page.goto('/c/moda');
   await expect(page.locator('[data-anuncio="K1"]')).toContainText('Confecções Vale Azul');
   await expect(page.locator('[data-anuncio="L1"]').first()).toContainText('Confecções Vale Azul');

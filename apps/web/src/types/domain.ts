@@ -20,6 +20,8 @@ export interface Tenant {
   acento: string; // hex da etiqueta "Tem" (bandeira da cidade)
   associacao: string; // associação comercial parceira (ex.: ACIC)
   slogan: string;
+  /** Ilustração da cidade no fundo das telas de acesso (opcional; sem ela, fundo da marca). */
+  fundoAcesso?: { src: string; legenda: string };
   cepsAtendidos: string[]; // prefixos de 5 dígitos
   dominios: string[]; // hosts que resolvem para este tenant
   razaoSocialOperadora: string; // identificação do fornecedor (Decreto 7.962/2013)
@@ -76,6 +78,9 @@ export interface Variacao {
   opcoes: string[];
 }
 
+/** Atributos informados pela loja e usados como filtros do catálogo. */
+export interface AtributoProduto { nome: string; valor: string }
+
 export interface Produto {
   id: string;
   nome: string;
@@ -89,6 +94,7 @@ export interface Produto {
   subcategoriaId: string | null;
   marca: string | null;
   caracteristicas: string[]; // usadas nos filtros laterais
+  atributos?: AtributoProduto[];
   /** Galeria em ordem definida pelo lojista (até 20). A 1ª é a capa do cartão. */
   midias: Midia[];
   /** Produto digital (download): não gera frete e é liberado após o pagamento (PRD-15). */
@@ -134,7 +140,7 @@ export interface ComponenteKit {
 }
 
 /* ---------- Publicidade ---------- */
-export type VagaId = 'H1' | 'M1' | 'M2' | 'C1' | 'K1' | 'L1';
+export type VagaId = 'H1' | 'M1' | 'M2' | 'C1' | 'K1' | 'L1' | 'T1';
 export type StatusVaga = 'disponivel' | 'leilao' | 'ocupado';
 
 /** [PROPOSTA] Como a vaga é comprada: só por lance (H1) ou compra direta pelo valor de tabela. */
@@ -290,6 +296,7 @@ export interface EstoqueItem {
   sku: string;
   saldo: number; // só o lojista vê
   minimo: number;
+  indisponivelManual?: boolean;
 }
 
 export interface MembroEquipe {
@@ -334,6 +341,8 @@ export interface Campanha {
   valorDiaCentavos: Centavos;
   periodo: string;
   arte?: ArteAnuncio;
+  /** T1 (letreiro): só texto curto e destino do clique. */
+  letreiro?: { texto: string; destino: string };
   motivoReprovacao?: string;
 }
 

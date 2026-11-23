@@ -2,13 +2,15 @@
 
 import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Icone } from '@/components/ui/Icone';
+import { Carregando } from '@/components/ui/Carregando';
 import { MOTIVO_MINIMO, motivoValido } from '@/lib/regras/admin';
 import { LOJAS_INFO, PEDIDOS_GLOBAIS } from '@/mocks/admin';
 import { useAdmin } from '@/stores/admin';
 import { useLogos } from '@/stores/logos';
 import { useComprador } from '@/stores/comprador';
 import { usePainel } from '@/stores/painel';
-import type { Categoria, Loja, Selo, StatusCadastroLoja } from '@/types/domain';
+import type { Categoria, Loja, Produto, Selo, StatusCadastroLoja } from '@/types/domain';
+import { useCategorias } from '@/stores/categorias';
 
 export const avisar = (t: string) => useComprador.getState().avisar(t);
 
@@ -25,17 +27,19 @@ export const dataHora = (iso: string) =>
 interface DadosAdmin {
   lojas: Loja[];
   categorias: Categoria[];
+  produtos: Produto[];
 }
 const Ctx = createContext<DadosAdmin | null>(null);
 
 export function AdminProvider({ dados, children }: { dados: DadosAdmin; children: ReactNode }) {
+  const categorias = useCategorias(dados.categorias);
   useEffect(() => {
     // O admin decide sobre o que o painel da demo enviou (mesmo navegador).
     void useAdmin.persist.rehydrate();
     void usePainel.persist.rehydrate();
     void useLogos.persist.rehydrate();
   }, []);
-  return <Ctx.Provider value={dados}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ...dados, categorias }}>{children}</Ctx.Provider>;
 }
 
 export function useDadosAdmin(): DadosAdmin {
@@ -48,7 +52,7 @@ export function useDadosAdmin(): DadosAdmin {
 export function AguardaAdmin({ children }: { children: ReactNode }) {
   const a = useAdmin((s) => s.hidratado);
   const p = usePainel((s) => s.hidratado);
-  return a && p ? children : <div className="min-h-[40vh]" aria-busy="true" />;
+  return a && p ? children : <Carregando mensagem="Carregando administração..." />;
 }
 
 export function TituloAdmin({

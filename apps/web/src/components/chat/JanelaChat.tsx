@@ -76,7 +76,7 @@ export function JanelaChat({
   };
 
   return (
-    <div className="flex h-[min(70vh,640px)] flex-col overflow-hidden rounded-xl border border-solid border-borda bg-branco">
+    <div className="flex h-[clamp(360px,calc(100dvh-280px),640px)] flex-col overflow-hidden rounded-xl border border-solid border-borda bg-branco">
       <ol
         ref={lista}
         aria-label={`Mensagens com ${nomeOutroLado}`}

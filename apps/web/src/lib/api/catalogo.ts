@@ -9,6 +9,7 @@ import type { Categoria, CriativoAnuncio, Loja, Produto, Tenant } from '@/types/
 import { mock } from './http';
 import { desconto } from '@/lib/regras/dinheiro';
 import { disponibilidadeKit, precoMinimoKitAberto } from '@/lib/regras/kits';
+import { agruparAtributos, possuiAtributos, type GrupoAtributo } from '@/lib/regras/atributos';
 
 const cat = (t: string) => CATALOGO[t] ?? { categorias: [], lojas: [], produtos: [] };
 
@@ -45,6 +46,7 @@ export interface FiltrosLaterais {
   marcas?: string[];
   lojas?: string[];
   caracteristicas?: string[];
+  atributos?: string[];
   precoMin?: number;
   precoMax?: number;
 }
@@ -53,6 +55,7 @@ export interface Facetas {
   marcas: Array<{ valor: string; total: number }>;
   lojas: Array<{ valor: string; rotulo: string; total: number }>;
   caracteristicas: Array<{ valor: string; total: number }>;
+  atributos?: GrupoAtributo[];
   preco: { min: number; max: number };
 }
 
@@ -63,6 +66,7 @@ function aplicarLaterais(lista: Produto[], f: FiltrosLaterais = {}): Produto[] {
       (!f.marcas?.length || (p.marca !== null && f.marcas.includes(p.marca))) &&
       (!f.lojas?.length || f.lojas.includes(p.lojaId)) &&
       (!f.caracteristicas?.length || f.caracteristicas.every((c) => p.caracteristicas.includes(c))) &&
+      possuiAtributos(p, f.atributos) &&
       (f.precoMin === undefined || p.precoCentavos >= f.precoMin) &&
       (f.precoMax === undefined || p.precoCentavos <= f.precoMax),
   );
@@ -86,6 +90,7 @@ function facetas(t: string, lista: Produto[]): Facetas {
       rotulo: cat(t).lojas.find((l) => l.id === x.valor)?.nome ?? x.valor,
     })),
     caracteristicas: contar(lista.flatMap((p) => p.caracteristicas)),
+    atributos: agruparAtributos(lista),
     preco: { min: precos.length ? Math.min(...precos) : 0, max: precos.length ? Math.max(...precos) : 0 },
   };
 }
@@ -136,6 +141,10 @@ export interface VitrineCategoria {
 }
 
 export const vitrine = {
+  /** GET /v1/vitrine/letreiro — frases patrocinadas da barra do topo (vaga T1) */
+  letreiro: (t: string): Promise<CriativoAnuncio[]> =>
+    mock((CRIATIVOS[t] ?? []).filter((a) => a.vaga === 'T1')),
+
   /** GET /v1/vitrine/home — seções + anúncios ativos por vaga */
   home: (t: string): Promise<VitrineHome> => {
     const ps = visiveis(t).filter((p) => p.disponibilidade !== 'indisponivel');

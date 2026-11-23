@@ -8,6 +8,7 @@ import { AvatarLoja } from '@/components/vitrine/CartaoLoja';
 import { CartaoProduto } from '@/components/vitrine/CartaoProduto';
 import { GradeProdutos } from '@/components/vitrine/GradeProdutos';
 import { SeloLoja } from '@/components/vitrine/SeloLoja';
+import { CategoriaNome } from '@/components/vitrine/CategoriaNome';
 import { ResumoAvaliacoes } from '@/components/vitrine/AvaliacoesLoja';
 import { api } from '@/lib/api';
 import { getTenant } from '@/lib/tenant';
@@ -69,7 +70,12 @@ export default async function PaginaLoja({ params }: Props) {
           </div>
           <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-grafite-2">
             {l.bairro}, {t.nome}
-            {cat ? ` · ${cat.nome}` : ''}
+            {cat && (
+              <>
+                {' '}
+                · <CategoriaNome categoria={cat} />
+              </>
+            )}
           </span>
           <div className="flex flex-wrap gap-2.5">
             <span className="pill pill-local">

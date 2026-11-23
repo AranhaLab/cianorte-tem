@@ -1,16 +1,27 @@
 import Link from 'next/link';
 import { Marca } from '@/components/marca/Marca';
 import { Icone } from '@/components/ui/Icone';
-import type { Categoria, Tenant } from '@/types/domain';
+import type { Categoria, CriativoAnuncio, Tenant } from '@/types/domain';
 import { BarraCategorias } from './BarraCategorias';
 import { AcoesTopo, BotaoCep, Busca } from './CabecalhoCliente';
 
 /** Faixa utilitária (desktop) + cabeçalho marinho fixo + barra de categorias. */
-export function Cabecalho({ tenant, categorias }: { tenant: Tenant; categorias: Categoria[] }) {
-  const itens = [
-    ...categorias.map((c) => ({ href: `/c/${c.id}`, rotulo: c.nome })),
-    { href: '/lojas', rotulo: 'Lojas' },
-    { href: '/ofertas', rotulo: 'Ofertas' },
+export function Cabecalho({
+  tenant,
+  categorias,
+  letreiro,
+}: {
+  tenant: Tenant;
+  categorias: Categoria[];
+  letreiro: CriativoAnuncio[];
+}) {
+  // Avisos da cidade intercalados com as frases patrocinadas do letreiro (T1).
+  const informativos = [
+    { icone: 'truck' as const, texto: `Entrega no mesmo dia em ${tenant.nome}` },
+    { icone: 'store' as const, texto: 'Retirada grátis no balcão da loja' },
+    { icone: 'tag' as const, texto: 'Ofertas do dia', href: '/ofertas' },
+    { icone: 'shield' as const, texto: 'Pix ou cartão, com 7 dias para desistir' },
+    { icone: 'megaphone' as const, texto: 'Anuncie neste letreiro', href: '/painel/anuncios?vaga=T1' },
   ];
   return (
     <>
@@ -41,7 +52,7 @@ export function Cabecalho({ tenant, categorias }: { tenant: Tenant; categorias: 
           <Busca cidade={tenant.nome} />
           <AcoesTopo />
         </div>
-        <BarraCategorias itens={itens} categorias={categorias} />
+        <BarraCategorias categorias={categorias} letreiro={letreiro} informativos={informativos} />
       </header>
     </>
   );

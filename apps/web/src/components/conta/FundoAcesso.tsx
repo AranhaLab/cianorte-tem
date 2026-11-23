@@ -100,7 +100,7 @@ export function FundoAcesso({
         {/* Esquerda: marca, frase e vantagens (no celular, só a marca) */}
         <section
           className="flex flex-col gap-6 text-branco"
-          aria-label={`${titulo} ${tituloDestaque}`}
+          aria-label={`${titulo} ${tituloDestaque}`.trim() || 'Apresentação'}
           style={config ? { color: config.corTexto } : undefined}
         >
           <div className="flex items-center justify-between gap-3">
@@ -123,21 +123,25 @@ export function FundoAcesso({
           </div>
 
           <div className={`${config?.mostrarConteudoMobile ? 'flex' : 'hidden lg:flex'} flex-col gap-6`}>
-            <p
-              className="m-0 max-w-[620px] font-titulo text-[28px] font-bold leading-[1.06] tracking-[-0.01em] text-branco lg:text-[40px] xl:text-[48px] 3xl:text-[54px]"
-              style={config ? { color: config.corTexto } : undefined}
-            >
-              {titulo}{' '}
-              <span className="text-azul-claro" style={config ? { color: config.corDestaque } : undefined}>
-                {tituloDestaque}
-              </span>
-            </p>
-            <p
-              className="m-0 max-w-[520px] text-[17px] leading-relaxed text-branco/90"
-              style={config ? { color: config.corTexto } : undefined}
-            >
-              {apoio}
-            </p>
+            {(titulo || tituloDestaque) && (
+              <p
+                className="m-0 max-w-[620px] font-titulo text-[28px] font-bold leading-[1.06] tracking-[-0.01em] text-branco lg:text-[40px] xl:text-[48px] 3xl:text-[54px]"
+                style={config ? { color: config.corTexto } : undefined}
+              >
+                {titulo}{' '}
+                <span className="text-azul-claro" style={config ? { color: config.corDestaque } : undefined}>
+                  {tituloDestaque}
+                </span>
+              </p>
+            )}
+            {apoio && (
+              <p
+                className="m-0 max-w-[520px] text-[17px] leading-relaxed text-branco/90"
+                style={config ? { color: config.corTexto } : undefined}
+              >
+                {apoio}
+              </p>
+            )}
 
             <ul className="m-0 grid max-w-[640px] list-none grid-cols-2 gap-3 p-0">
               {destaques.map((d) => (

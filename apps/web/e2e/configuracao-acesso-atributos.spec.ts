@@ -23,6 +23,10 @@ test('admin configura uma tela de acesso e uma campanha patrocinada por período
   await page.getByLabel('Texto do formulário (opcional)').fill('Bem-vindo à campanha.');
   await page.getByLabel('Fundo do formulário').fill('#eeeeee');
   await page.getByLabel('Botão principal').fill('#123456');
+  await page
+    .getByLabel('Imagem de fundo')
+    .setInputFiles({ name: 'invalida.png', mimeType: 'image/png', buffer: Buffer.from('não é uma imagem') });
+  await expect(page.getByRole('alert').filter({ hasText: 'Não foi possível abrir a imagem' })).toBeVisible();
   await page.getByLabel('Imagem de fundo').setInputFiles({
     name: 'fundo.png',
     mimeType: 'image/png',
@@ -70,6 +74,14 @@ test('admin configura uma tela de acesso e uma campanha patrocinada por período
   await expect(page.getByText('Semana especial')).toBeVisible();
   await page.goto('/cadastro');
   await expect(page.getByText('Semana especial')).toHaveCount(0);
+  await page.goto('/admin/acesso');
+  await page.getByLabel('Tela para configurar').selectOption('cadastro');
+  await page.getByLabel('Título', { exact: true }).fill('');
+  await page.getByLabel('Complemento do título').fill('');
+  await page.getByLabel('Texto de apoio').fill('');
+  await page.getByRole('button', { name: 'Salvar configuração' }).click();
+  await page.goto('/cadastro');
+  await expect(page.getByText('Crie sua conta e compre')).toHaveCount(0);
   await page.goto('/admin/acesso');
   await page.getByLabel('Tela para configurar').selectOption('lojista-entrar');
   await page.getByLabel('Título', { exact: true }).fill('Campanha para lojistas');

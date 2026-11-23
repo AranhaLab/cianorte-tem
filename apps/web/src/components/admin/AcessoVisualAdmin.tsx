@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTenant } from '@/components/providers/TenantProvider';
 import type { NomeIcone } from '@/components/ui/Icone';
 import { destinoValido, padraoAcesso } from '@/lib/regras/acessoVisual';
@@ -49,7 +49,12 @@ function Conteudo() {
   const salvo = useConfigAcesso(tenant.slug, tela);
   const [r, setR] = useState<ConfigAcesso>(() => padraoAcesso(tenant, 'entrar'));
   const [erro, setErro] = useState('');
+  const sequencias = useRef({ fundo: 0, banner: 0 });
+  const [lendo, setLendo] = useState({ fundo: false, banner: false });
   useEffect(() => {
+    sequencias.current.fundo++;
+    sequencias.current.banner++;
+    setLendo({ fundo: false, banner: false });
     const padrao = padraoAcesso(tenant, tela);
     setR(
       structuredClone(
@@ -65,29 +70,41 @@ function Conteudo() {
     const f = e.target.files?.[0];
     e.target.value = '';
     if (!f) return;
+    const sequencia = ++sequencias.current[alvo];
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type) || f.size > 700_000) {
+      setLendo((atual) => ({ ...atual, [alvo]: false }));
       setErro('Escolha uma imagem JPG, PNG ou WebP de até 700 KB.');
       return;
     }
+    setLendo((atual) => ({ ...atual, [alvo]: true }));
     const leitor = new FileReader();
-    leitor.onerror = () => setErro('Não foi possível abrir a imagem.');
+    const falhar = () => {
+      if (sequencia !== sequencias.current[alvo]) return;
+      setLendo((atual) => ({ ...atual, [alvo]: false }));
+      setErro('Não foi possível abrir a imagem. Escolha outro arquivo.');
+    };
+    leitor.onerror = falhar;
     leitor.onload = () => {
-      if (typeof leitor.result === 'string') {
-        if (alvo === 'fundo') mudar({ fundo: leitor.result });
-        else mudarBanner({ imagem: leitor.result });
+      if (sequencia !== sequencias.current[alvo] || typeof leitor.result !== 'string') return;
+      const dados = leitor.result;
+      const imagem = new window.Image();
+      imagem.onerror = falhar;
+      imagem.onload = () => {
+        if (sequencia !== sequencias.current[alvo]) return;
+        if (alvo === 'fundo') mudar({ fundo: dados });
+        else mudarBanner({ imagem: dados });
+        setLendo((atual) => ({ ...atual, [alvo]: false }));
         setErro('');
-      }
+      };
+      imagem.src = dados;
     };
     leitor.readAsDataURL(f);
   };
   const salvar = (e: FormEvent) => {
     e.preventDefault();
-    if (!r.titulo.trim() || !r.tituloDestaque.trim() || !r.apoio.trim()) {
-      setErro('Preencha o título e o texto de apoio.');
-      return;
-    }
-    if (r.destaques.some((d) => !d.titulo.trim() || !d.texto.trim())) {
-      setErro('Preencha o título e o texto de cada destaque.');
+    if (lendo.fundo || lendo.banner) return;
+    if (r.destaques.some((d) => !d.titulo.trim())) {
+      setErro('Preencha o título de cada destaque.');
       return;
     }
     if ((r.selos ?? []).some((s) => !s.texto.trim())) {
@@ -154,6 +171,11 @@ function Conteudo() {
         </Link>
       </div>
       <form onSubmit={salvar} className="flex flex-col gap-4">
+        {(lendo.fundo || lendo.banner) && (
+          <p role="status" className="text-sm text-grafite-2">
+            Carregando imagem...
+          </p>
+        )}
         {erro && (
           <p role="alert" className="banner-info bg-acento-claro text-acento-escuro">
             {erro}
@@ -239,7 +261,12 @@ function Conteudo() {
                 unoptimized
                 className="h-20 w-32 rounded-lg object-cover"
               />
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => mudar({ fundo: '' })}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={lendo.fundo}
+                onClick={() => mudar({ fundo: '' })}
+              >
                 Remover fundo
               </button>
             </div>
@@ -462,6 +489,7 @@ function Conteudo() {
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
+                disabled={lendo.banner}
                 onClick={() => mudarBanner({ imagem: '' })}
               >
                 Remover imagem
@@ -520,12 +548,13 @@ function Conteudo() {
           </p>
         </section>
         <div className="flex flex-wrap gap-3">
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary" disabled={lendo.fundo || lendo.banner}>
             Salvar configuração
           </button>
           <button
             type="button"
             className="btn btn-ghost"
+            disabled={lendo.fundo || lendo.banner}
             onClick={() => {
               useAcessoVisual.getState().restaurar(tenant.slug, tela);
               setR(padraoAcesso(tenant, tela));

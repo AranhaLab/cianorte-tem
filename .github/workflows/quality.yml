@@ -1,0 +1,22 @@
+name: Quality Gate
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.18'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Instalar dependências da aplicação
+        run: npm ci --prefix apps/web
+      - name: Quality Gate
+        run: bash scripts/harness-quality.sh

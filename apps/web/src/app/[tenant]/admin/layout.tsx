@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { AdminProvider } from '@/components/admin/Comum';
-import { MenuAdmin } from '@/components/admin/MenuAdmin';
+import { EstruturaAdmin } from '@/components/admin/EstruturaAdmin';
 import { Aviso } from '@/components/layout/comprador/Aviso';
 import { TenantProvider } from '@/components/providers/TenantProvider';
 import { api } from '@/lib/api';
@@ -35,10 +35,7 @@ export default async function AdminLayout({
     <TenantProvider tenant={tenant}>
       <div className="min-h-screen bg-neutro-150">
         <AdminProvider dados={{ lojas, categorias, produtos }}>
-          <div className="mx-auto flex max-w-[1440px] flex-wrap items-start gap-5 p-4">
-            <MenuAdmin />
-            <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px]">{children}</main>
-          </div>
+          <EstruturaAdmin>{children}</EstruturaAdmin>
         </AdminProvider>
       </div>
       <Aviso />

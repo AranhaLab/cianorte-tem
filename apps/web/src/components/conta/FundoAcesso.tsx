@@ -8,6 +8,7 @@ import { ContextoFormularioAcesso } from '@/components/conta/ContextoFormularioA
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
 import type { Tenant } from '@/types/domain';
 import { bannerAtivo, destinoValido, padraoAcesso } from '@/lib/regras/acessoVisual';
+import { usePreviaAcesso } from '@/hooks/usePreviaAcesso';
 import { useConfigAcesso, type TelaAcesso } from '@/stores/acessoVisual';
 
 export type DestaqueAcesso = { icone: NomeIcone; titulo: string; texto: string };
@@ -42,7 +43,10 @@ export function FundoAcesso({
   selos?: Array<[NomeIcone, string]>;
   children: ReactNode;
 }) {
-  const salvo = useConfigAcesso(tenant.slug, tela);
+  const gravado = useConfigAcesso(tenant.slug, tela);
+  // No editor do admin, mostra a configuração em edição (ainda não salva).
+  const previa = usePreviaAcesso(tela);
+  const salvo = previa.config ?? gravado;
   const [, atualizarHorario] = useState(0);
   useEffect(() => {
     if (!salvo?.banner?.ativo) return;
@@ -66,6 +70,8 @@ export function FundoAcesso({
     ];
   return (
     <div
+      // Na prévia, a página é só para ver: sem cliques nem foco (a rolagem continua).
+      inert={previa.emPrevia || undefined}
       className="relative isolate min-h-dvh overflow-hidden bg-marinho"
       style={config ? { backgroundColor: config.corFundo } : undefined}
     >

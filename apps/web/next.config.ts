@@ -25,6 +25,9 @@ const csp = [
   ...(dev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
+/** Prévia do editor de telas de acesso: só a própria origem pode abrir a página num iframe. */
+const cspPrevia = csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'");
+
 /** Cabeçalhos de segurança aplicados a todas as rotas. */
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
@@ -52,6 +55,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
+      // Regra mais específica depois da geral: sobrescreve só estes dois cabeçalhos.
+      ...['/entrar', '/cadastro', '/lojista/entrar', '/lojista/cadastro'].map((source) => ({
+        source,
+        has: [{ type: 'query' as const, key: 'previa', value: '1' }],
+        headers: [
+          { key: 'Content-Security-Policy', value: cspPrevia },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        ],
+      })),
       // O service worker não pode ficar em cache longo, senão o PWA não atualiza.
       { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }] },
     ];

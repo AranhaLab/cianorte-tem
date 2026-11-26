@@ -583,7 +583,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - `src/components/ui/Carregando.tsx` exibe a marca da cidade no centro, pulsando suavemente sobre uma camada clara que desfoca a página. `role=status` e texto anunciam o carregamento; `prefers-reduced-motion` desativa a animação. É usado no fallback de rota `src/app/[tenant]/loading.tsx`, na hidratação do admin e do painel e na verificação da sessão do lojista. O `TenantProvider` no layout raiz fornece a marca também durante o fallback.
 - `src/app/[tenant]/error.tsx` apresenta uma mensagem e o botão “Tentar novamente” para erros capturados pelo limite de erro da rota. Isso não cobre todos os erros possíveis, inclusive falhas que ocorram antes da montagem do React.
 - A lentidão observada no Windows incluiu compilação na primeira visita pelo `next dev`, pouca memória livre e tentativas de rede para fontes. Houve também 404 de arquivos `/_next/static` quando duas instâncias de desenvolvimento disputaram a mesma pasta `.next`. Isso não prova que todos os problemas de desempenho ou recarga tenham a mesma causa.
-- O Playwright usa `NEXT_DIST_DIR=.next-e2e`; `npm run demo -- <porta>` usa `.next-demo-<porta>`. Não iniciar dois builds/servidores que escrevam na mesma pasta, nem ocupar a mesma porta. `EADDRINUSE` na porta 3000 indica outro processo escutando; identificar o processo antes de encerrá-lo. A demo otimizada ainda requer um build bem-sucedido e pode precisar de rede para as fontes.
+- O Playwright usa `NEXT_DIST_DIR=.next-e2e`; `npm run demo -- <porta>` usa `.next-demo-<porta>`. Não iniciar dois builds/servidores que escrevam na mesma pasta, nem ocupar a mesma porta. `EADDRINUSE` na porta 3000 indica outro processo escutando; identificar o processo antes de encerrá-lo. A demo otimizada ainda requer um build bem-sucedido; desde a correção em §13.17, as fontes do projeto não precisam ser baixadas durante o build.
 - Houve erro intermitente no navegador `Cannot read properties of undefined (reading 'length')`, apontando para `BarraCategorias`, após mudanças/recargas de desenvolvimento. Foram tentados `@refresh reset` e a separação da casca sem hooks do conteúdo interno. Em desenvolvimento, o layout também tenta desregistrar um service worker antigo de `/sw.js` e limpar caches `ct-v...` antes da montagem do React, recarregando uma vez se havia controle ativo; `RegistrarSW.tsx` complementa a limpeza. **A causa exata do erro relatado pelo usuário não foi confirmada**, e os testes em navegador isolado não comprovam que ele tenha desaparecido no perfil do usuário. Se reaparecer, coletar a pilha completa, versão do servidor, estado do service worker e requisições de arquivos estáticos antes de atribuir a causa ao Fast Refresh ou ao cache. Não limpar `localStorage` como solução genérica: há dados da demonstração ali.
 
 **Validação registrada**
@@ -601,6 +601,32 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - Cada tela pode ter banner opcional com imagem, título, descrição, link local ou HTTPS, identificação de patrocínio e anunciante, e datas de início/fim inclusivas (horário de São Paulo). A ativação é verificada no carregamento e periodicamente enquanto a tela está aberta. Uma campanha ativa patrocinada exige identificação do anunciante. O banner e o fundo são guardados como imagens locais; o limite de armazenamento do navegador pode impedir o salvamento.
 - A configuração é salva em `ct-acesso-visual-v1`, por cidade e por tela, e existe opção de restaurar o padrão. É uma demonstração local: não há publicação compartilhada, armazenamento de mídia no servidor, agenda central, contratação, cobrança, aprovação comercial ou rotação entre campanhas. A versão real deverá implementar permissões de administrador, persistência, upload seguro, agendamento e contratação no backend.
 - Testes de regras: `atributos.test.ts` e `acessoVisual.test.ts`. Jornadas: `e2e/configuracao-acesso-atributos.spec.ts`, incluindo configuração e banner, isolamento entre telas, atributos/variações após moderação e produto novo aprovado. Os resultados devem ser verificados novamente a cada mudança.
+
+### 13.17 Fontes locais e build na Vercel (Codex, 23/11/2026)
+
+**Implementação e assinatura: Codex**, a pedido do responsável pelo produto, em 23/11/2026. Esta seção complementa os ajustes e a autoria das seções 13.15 e 13.16.
+
+- Durante uma tentativa de implantação na Vercel, o build falhou na etapa `next/font/google` relacionada à fonte Inter. O trecho de log fornecido mostrava a falha do carregador, mas não incluía a mensagem inicial completa; portanto, a causa exata da falha remota não foi confirmada. Antes da alteração, `next/font/google` buscava as fontes durante o build, introduzindo uma dependência de rede nessa etapa.
+- Para eliminar essa dependência de download e preservar a identidade visual, o Codex incluiu as fontes variáveis oficiais **Inter** e **Outfit** em `apps/web/src/fonts/` e trocou `src/app/[tenant]/layout.tsx` para `next/font/local`. São mantidas as variáveis `--font-inter` e `--font-outfit`, `display: swap` e os pesos variáveis de 100 a 900. Não é necessário usar fontes externas no navegador ou baixar Google Fonts durante a compilação.
+- Os arquivos `Inter-Variable.ttf` e `Outfit-Variable.ttf` vieram do repositório oficial Google Fonts. A documentação de origem está em `apps/web/src/fonts/README.md`, e as licenças SIL Open Font License 1.1 estão em `LICENSE-Inter.txt` e `LICENSE-Outfit.txt`; mantê-las ao redistribuir as fontes.
+- **Validação local:** o build de produção foi executado com `NEXT_DIST_DIR=.next-verificacao`, `DEFAULT_TENANT=cianorte` e `NEXT_PUBLIC_DEMO_MODE=true`. A compilação, o lint, a checagem de tipos e a geração das 81 páginas foram concluídos com sucesso. Não há confirmação neste registro de que um novo deployment na Vercel tenha sido concluído; verificar o log e o commit do deployment real.
+- **Configuração discutida para a Vercel:** repositório `AranhaLab/cianorte-tem`, diretório raiz `apps/web`, framework Next.js e comandos de build/instalação padrão. Para apresentação da demonstração, foram sugeridos `DEFAULT_TENANT=cianorte` e `NEXT_PUBLIC_DEMO_MODE=true`; esse modo ativa simulações e não torna o projeto pronto para uso comercial real. Não configurar API ou banco fictícios como se fossem serviços existentes.
+- Os ajustes e a correção das fontes foram enviados à branch `feat/migra-front-next` do repositório `AranhaLab/cianorte-tem`; a correção das fontes corresponde ao commit `8af0076`. A Vercel só recebe a correção se o deployment usar um commit que a contenha. O envio anterior ao `origin` pessoal foi recusado por permissão, e o remoto local continuou apontando para `ViniciusAranhaQA/cianorte-tem`; conferir destino, branch e histórico atuais antes de enviar ou mesclar novamente.
+
+**Assinado: Codex — implementação e documentação, 23/11/2026.**
+
+### 13.18 Editor das telas de acesso com prévia ao vivo (26/11/2026)
+- **[DECIDIDO pelo PO]** Admin › Telas de acesso virou uma lista das 4 telas (Entrada e Cadastro do comprador e do lojista), cada uma com "Personalizada" ou "Padrão", "Campanha no ar", **Editar com prévia** e **Abrir tela ↗**.
+- **Editor em tela cheia** em `/admin/acesso/editor?tela=<tela>`, sem o menu lateral do admin (`EstruturaAdmin`):
+    - Barra do topo: "Voltar ao admin", troca de tela, prévia em **Computador** (1440 × 900) ou **Celular** (390 × 844), situação ("Alterações não salvas" / "Tudo salvo"), "Abrir tela", "Restaurar padrão" (pede confirmação) e "Salvar configuração" (só com alterações).
+    - Esquerda: as mesmas ferramentas de antes (§13.16), em blocos recolhíveis.
+    - Direita: a **página de acesso real** num iframe do tamanho do aparelho, reduzida para caber. Cada alteração aparece na hora; nada vai para a tela real até salvar.
+    - Sair, trocar de tela ou fechar a aba com alterações não salvas pede confirmação.
+    - Celular e tablet (< 900 px): botões "Configurar" e "Prévia" alternam os dois painéis.
+- **Como a prévia funciona:** o iframe abre `/entrar?previa=1` (ou a tela escolhida). A página avisa que está pronta e o editor manda a configuração em edição por `postMessage`, só para a própria origem (`lib/regras/previaAcesso.ts`, `hooks/usePreviaAcesso.ts`). Na prévia a página fica `inert` (só para ver) e o banner de cookies não aparece.
+- **Segurança (§15):** só as 4 telas de acesso com `?previa=1` podem ser abertas num iframe, e só pela própria origem (`X-Frame-Options: SAMEORIGIN` e `frame-ancestors 'self'`). Todo o resto continua com `DENY` / `'none'`.
+- O banner ligado mas fora do período aparece na prévia como fica hoje (oculto), com um aviso no editor.
+- **Testes:** Vitest (`previaAcesso.test.ts`) e Playwright (`e2e/configuracao-acesso-atributos.spec.ts`: abre o editor sem menu lateral e confere a prévia mudando antes de salvar).
 
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 
@@ -621,7 +647,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ## 15. Segurança
 
 **Já aplicado no front:**
-- Cabeçalhos em todas as rotas: CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP. `X-Powered-By` removido.
+- Cabeçalhos em todas as rotas: CSP, HSTS, `X-Frame-Options: DENY` (exceção: prévia das telas de acesso, só pela própria origem, §13.18), `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP. `X-Powered-By` removido.
 - A CSP é estática para manter o cache por cidade (ISR). Por isso `script-src` aceita `'unsafe-inline'`, que o Next exige sem nonce. **[PROPOSTA]** Reavaliar nonce quando o checkout for implementado.
 - Dependências sem vulnerabilidades conhecidas (`npm audit` = 0). O `postcss` interno do Next foi forçado para a versão corrigida via `overrides`.
 - Container: imagem mínima (alpine), usuário sem root, `read_only`, `cap_drop: ALL`, `no-new-privileges`, healthcheck.

@@ -9,7 +9,12 @@ import { useComprador } from '@/stores/comprador';
  */
 export function BannerCookies() {
   const mostrar = useComprador((s) => s.hidratado && s.cookies === null);
-  if (!mostrar) return null;
+  // Na prévia do editor de telas de acesso (iframe com ?previa=1), o banner esconderia a tela.
+  const emPrevia =
+    typeof window !== 'undefined' &&
+    window.parent !== window &&
+    new URLSearchParams(window.location.search).get('previa') === '1';
+  if (!mostrar || emPrevia) return null;
   const escolher = useComprador.getState().escolherCookies;
   return (
     <div

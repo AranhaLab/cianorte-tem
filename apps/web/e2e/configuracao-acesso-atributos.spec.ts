@@ -16,12 +16,30 @@ test.beforeEach(async ({ page }) => {
 
 test('admin configura uma tela de acesso e uma campanha patrocinada por período', async ({ page }) => {
   await page.goto('/admin/acesso');
+  await page.getByRole('link', { name: 'Editar com prévia: Entrada do comprador' }).click();
+  await expect(page).toHaveURL(/\/admin\/acesso\/editor\?tela=entrar$/);
+  // Tela cheia: sem o menu lateral do admin
+  await expect(page.getByRole('navigation', { name: 'Administração' })).toHaveCount(0);
   await page.getByLabel('Título', { exact: true }).fill('Uma campanha local');
+  // Prévia ao vivo: a página real no iframe muda antes de salvar
+  // No celular, ferramentas e prévia se alternam pelos botões "Configurar" e "Prévia".
+  const alternar = async (nome: string) => {
+    const botao = page.getByRole('button', { name: nome, exact: true });
+    if (await botao.isVisible()) await botao.click();
+  };
+  await alternar('Prévia');
+  const previa = page.frameLocator('iframe[title^="Prévia"]');
+  await expect(previa.getByText('Uma campanha local')).toBeVisible();
+  await expect(page.getByText('Alterações não salvas')).toBeVisible();
+  await alternar('Configurar');
   await page.getByLabel('Complemento do título').fill('para a sua cidade.');
   await page.getByLabel('Texto de apoio').fill('Uma mensagem escolhida pelo administrador.');
   await page.getByLabel('Título do formulário (opcional)').fill('Acesse sua conta local');
   await page.getByLabel('Texto do formulário (opcional)').fill('Bem-vindo à campanha.');
+  // Cores de teste digitadas no seletor (dado, não estilo do app).
+  // eslint-disable-next-line no-restricted-syntax
   await page.getByLabel('Fundo do formulário').fill('#eeeeee');
+  // eslint-disable-next-line no-restricted-syntax
   await page.getByLabel('Botão principal').fill('#123456');
   await page
     .getByLabel('Imagem de fundo')
@@ -74,16 +92,14 @@ test('admin configura uma tela de acesso e uma campanha patrocinada por período
   await expect(page.getByText('Semana especial')).toBeVisible();
   await page.goto('/cadastro');
   await expect(page.getByText('Semana especial')).toHaveCount(0);
-  await page.goto('/admin/acesso');
-  await page.getByLabel('Tela para configurar').selectOption('cadastro');
+  await page.goto('/admin/acesso/editor?tela=cadastro');
   await page.getByLabel('Título', { exact: true }).fill('');
   await page.getByLabel('Complemento do título').fill('');
   await page.getByLabel('Texto de apoio').fill('');
   await page.getByRole('button', { name: 'Salvar configuração' }).click();
   await page.goto('/cadastro');
   await expect(page.getByText('Crie sua conta e compre')).toHaveCount(0);
-  await page.goto('/admin/acesso');
-  await page.getByLabel('Tela para configurar').selectOption('lojista-entrar');
+  await page.goto('/admin/acesso/editor?tela=lojista-entrar');
   await page.getByLabel('Título', { exact: true }).fill('Campanha para lojistas');
   await page.getByLabel('Exibir textos, tópicos e selos também no celular').check();
   await page.getByRole('button', { name: 'Salvar configuração' }).click();

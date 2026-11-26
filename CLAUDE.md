@@ -615,6 +615,19 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 
 **Assinado: Codex — implementação e documentação, 23/11/2026.**
 
+### 13.18 Editor das telas de acesso com prévia ao vivo (26/11/2026)
+- **[DECIDIDO pelo PO]** Admin › Telas de acesso virou uma lista das 4 telas (Entrada e Cadastro do comprador e do lojista), cada uma com "Personalizada" ou "Padrão", "Campanha no ar", **Editar com prévia** e **Abrir tela ↗**.
+- **Editor em tela cheia** em `/admin/acesso/editor?tela=<tela>`, sem o menu lateral do admin (`EstruturaAdmin`):
+    - Barra do topo: "Voltar ao admin", troca de tela, prévia em **Computador** (1440 × 900) ou **Celular** (390 × 844), situação ("Alterações não salvas" / "Tudo salvo"), "Abrir tela", "Restaurar padrão" (pede confirmação) e "Salvar configuração" (só com alterações).
+    - Esquerda: as mesmas ferramentas de antes (§13.16), em blocos recolhíveis.
+    - Direita: a **página de acesso real** num iframe do tamanho do aparelho, reduzida para caber. Cada alteração aparece na hora; nada vai para a tela real até salvar.
+    - Sair, trocar de tela ou fechar a aba com alterações não salvas pede confirmação.
+    - Celular e tablet (< 900 px): botões "Configurar" e "Prévia" alternam os dois painéis.
+- **Como a prévia funciona:** o iframe abre `/entrar?previa=1` (ou a tela escolhida). A página avisa que está pronta e o editor manda a configuração em edição por `postMessage`, só para a própria origem (`lib/regras/previaAcesso.ts`, `hooks/usePreviaAcesso.ts`). Na prévia a página fica `inert` (só para ver) e o banner de cookies não aparece.
+- **Segurança (§15):** só as 4 telas de acesso com `?previa=1` podem ser abertas num iframe, e só pela própria origem (`X-Frame-Options: SAMEORIGIN` e `frame-ancestors 'self'`). Todo o resto continua com `DENY` / `'none'`.
+- O banner ligado mas fora do período aparece na prévia como fica hoje (oculto), com um aviso no editor.
+- **Testes:** Vitest (`previaAcesso.test.ts`) e Playwright (`e2e/configuracao-acesso-atributos.spec.ts`: abre o editor sem menu lateral e confere a prévia mudando antes de salvar).
+
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 
 - **Servidor:** uma VPS. **Tudo roda em Docker** (front, back, banco e serviços futuros). Qualquer máquina sobe o ambiente inteiro com `docker compose`, o que facilita trocar de máquina ou receber um novo desenvolvedor.
@@ -634,7 +647,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 ## 15. Segurança
 
 **Já aplicado no front:**
-- Cabeçalhos em todas as rotas: CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP. `X-Powered-By` removido.
+- Cabeçalhos em todas as rotas: CSP, HSTS, `X-Frame-Options: DENY` (exceção: prévia das telas de acesso, só pela própria origem, §13.18), `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP. `X-Powered-By` removido.
 - A CSP é estática para manter o cache por cidade (ISR). Por isso `script-src` aceita `'unsafe-inline'`, que o Next exige sem nonce. **[PROPOSTA]** Reavaliar nonce quando o checkout for implementado.
 - Dependências sem vulnerabilidades conhecidas (`npm audit` = 0). O `postcss` interno do Next foi forçado para a versão corrigida via `overrides`.
 - Container: imagem mínima (alpine), usuário sem root, `read_only`, `cap_drop: ALL`, `no-new-privileges`, healthcheck.

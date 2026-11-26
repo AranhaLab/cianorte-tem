@@ -45,10 +45,12 @@ function VisaoGeralConteudo() {
   const tarefa = (icone: NomeIcone, texto: string, href: string) => (
     <Link
       href={href}
-      className="flex min-h-toque items-center gap-2.5 border-t border-solid border-neutro-200 py-2.5 text-grafite hover:text-marinho"
+      className="-mx-2 flex min-h-toque items-center gap-3 rounded-[12px] border-t border-solid border-branco/15 px-2 py-2.5 text-branco first-of-type:border-t-0 hover:bg-branco/10 hover:text-branco"
     >
-      <Icone nome={icone} />
-      <span className="flex-1">{texto}</span>
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-branco/15">
+        <Icone nome={icone} tamanho="sm" />
+      </span>
+      <span className="flex-1 font-medium">{texto}</span>
       <Icone nome="chevR" tamanho="sm" />
     </Link>
   );
@@ -132,17 +134,34 @@ function VisaoGeralConteudo() {
         />
       </div>
 
-      <div className="card flex flex-col">
-        <h2 className="mb-3">O que precisa da sua atenção</h2>
-        {tarefa('receipt', `${aSeparar} pedidos esperando separação`, '/painel/pedidos')}
-        {tarefa('box', `${baixo} produtos com estoque baixo ou zerado`, '/painel/estoque')}
+      {/* Em destaque (marinho, como o topo das categorias): o lojista não pode deixar passar */}
+      <section
+        aria-labelledby="titulo-atencao"
+        className="stitch flex flex-col rounded-xl bg-marinho-2 p-5 text-branco shadow-1 [--r:16px]"
+      >
+        <h2 id="titulo-atencao" className="mb-3 flex items-center gap-2.5 text-branco">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-acento text-branco">
+            <Icone nome="alert" tamanho="sm" />
+          </span>
+          O que precisa da sua atenção
+        </h2>
+        {tarefa(
+          'receipt',
+          `${aSeparar} ${aSeparar === 1 ? 'pedido esperando' : 'pedidos esperando'} separação`,
+          '/painel/pedidos',
+        )}
+        {tarefa(
+          'box',
+          `${baixo} ${baixo === 1 ? 'produto' : 'produtos'} com estoque baixo ou zerado`,
+          '/painel/estoque',
+        )}
         {tarefa('clock', '1 produto aguardando moderação de conteúdo', '/painel/produtos')}
         {tarefa(
           'gavel',
           'Seu lance na vitrine principal (H1) termina em 2 d 14 h',
           '/painel/anuncios?vaga=H1',
         )}
-      </div>
+      </section>
 
       <div className="flex items-center justify-between">
         <h2>Pedidos recentes</h2>

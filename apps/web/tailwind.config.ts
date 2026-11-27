@@ -1,4 +1,13 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
+import { PALETA_PADRAO, type Paleta } from './src/mocks/identidades';
+
+/** Cor da marca lida da variável CSS (muda por identidade; padrão em :root). */
+const v = (chave: keyof Paleta) => `rgb(var(--c-${chave}) / <alpha-value>)`;
+const triplo = (hex: string) => {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+};
 
 /**
  * Tokens do Cianorte Tem (fonte: :root do css/styles.css do protótipo original + CLAUDE.md, seção 3).
@@ -11,6 +20,9 @@ import type { Config } from 'tailwindcss';
  *
  * White label: `acento` muda por cidade. Vem de getTenant() e é injetado como
  * variável CSS (--acento-rgb) no <html>, por isso é declarado com rgb(var()).
+ * As cores da marca (marinho, azul, linho, bordas, neutros) também são variáveis
+ * (--c-*): a paleta padrão (Cianorte) entra no :root e a identidade da cidade
+ * (src/mocks/identidades.ts) sobrescreve no <html> (CLAUDE.md §13.20).
  */
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
@@ -30,16 +42,16 @@ const config: Config = {
       inherit: 'inherit',
       branco: '#FFFFFF',
       marinho: {
-        DEFAULT: '#14213D', // cabeçalho, rodapé, títulos, item ativo
-        2: '#1C2C50',
-        profundo: '#0F1830',
+        DEFAULT: v('marinho'), // cabeçalho, rodapé, títulos, item ativo
+        2: v('marinho-2'),
+        profundo: v('marinho-profundo'),
       },
       azul: {
-        DEFAULT: '#1F4FA3', // ação: botões, links, foco
-        escuro: '#173E82',
-        claro: '#8FB0EA', // texto de apoio sobre marinho
-        borda: '#CDD6EA',
-        nevoa: '#EEF2FA', // fundos de apoio
+        DEFAULT: v('azul'), // ação: botões, links, foco
+        escuro: v('azul-escuro'),
+        claro: v('azul-claro'), // texto de apoio sobre marinho
+        borda: v('azul-borda'),
+        nevoa: v('azul-nevoa'), // fundos de apoio
       },
       acento: {
         DEFAULT: 'rgb(var(--acento-rgb) / <alpha-value>)', // etiqueta "Tem", ofertas, alertas (pouco)
@@ -56,32 +68,32 @@ const config: Config = {
         texto: '#7A5200',
         claro: '#FFF4DE',
       },
-      linho: '#F7F6F2', // fundo da página
+      linho: v('linho'), // fundo da página
       grafite: {
         DEFAULT: '#1A1F2B', // texto principal
         2: '#4A5468', // texto secundário
         3: '#6B7487', // texto terciário
       },
       borda: {
-        DEFAULT: '#E3E1DA',
-        fria: '#DCE1EC',
+        DEFAULT: v('borda'),
+        fria: v('borda-fria'),
       },
       // Textos sobre fundo marinho (cabeçalho, rodapé, banners escuros)
       'sobre-marinho': {
-        DEFAULT: '#C9D3EA',
-        forte: '#DCE3F2',
-        claro: '#E6EBF5',
-        suave: '#AEBBD6',
+        DEFAULT: v('sobre-marinho'),
+        forte: v('sobre-marinho-forte'),
+        claro: v('sobre-marinho-claro'),
+        suave: v('sobre-marinho-suave'),
       },
       neutro: {
-        50: '#FAFBFD',
-        100: '#F6F7FA',
-        150: '#F1F3F8',
-        200: '#EEF0F5',
-        300: '#E3E7EF',
-        400: '#CDD3DF',
-        500: '#A3AABA',
-        700: '#333B4D',
+        50: v('neutro-50'),
+        100: v('neutro-100'),
+        150: v('neutro-150'),
+        200: v('neutro-200'),
+        300: v('neutro-300'),
+        400: v('neutro-400'),
+        500: v('neutro-500'),
+        700: v('neutro-700'),
       },
     },
     fontFamily: {
@@ -97,8 +109,8 @@ const config: Config = {
         xl: '24px',
       },
       boxShadow: {
-        1: '0 1px 2px rgba(20, 33, 61, .06), 0 4px 14px rgba(20, 33, 61, .06)',
-        2: '0 12px 32px rgba(20, 33, 61, .16)',
+        1: '0 1px 2px rgb(var(--c-marinho) / .06), 0 4px 14px rgb(var(--c-marinho) / .06)',
+        2: '0 12px 32px rgb(var(--c-marinho) / .16)',
       },
       maxWidth: {
         container: '1240px',
@@ -115,7 +127,16 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Paleta padrão no :root; a identidade da cidade sobrescreve no <html>.
+    plugin(({ addBase }) =>
+      addBase({
+        ':root': Object.fromEntries(
+          Object.entries(PALETA_PADRAO).map(([chave, hex]) => [`--c-${chave}`, triplo(hex)]),
+        ),
+      }),
+    ),
+  ],
 };
 
 export default config;

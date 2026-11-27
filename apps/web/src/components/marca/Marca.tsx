@@ -1,5 +1,6 @@
 /**
- * Logotipo "<Cidade> Tem": nome da cidade + etiqueta de roupa com pesponto.
+ * Logotipo: texto + etiqueta de roupa com pesponto. Vem da identidade da cidade
+ * (tenant.logo): "Cianorte" + "Tem" ou, na apresentação genérica, "MKT" + "Local".
  *
  * [DECIDIDO 18/11/2026] A marca NÃO muda de cor no hover. No protótipo, o
  * `a:hover` global pintava o texto de marinho sobre o fundo marinho e o nome
@@ -8,12 +9,14 @@
  */
 export function Marca({
   nome,
+  etiqueta = 'Tem',
   escura = false,
   corNome,
   corEtiqueta,
   corTextoEtiqueta,
 }: {
   nome: string;
+  etiqueta?: string;
   escura?: boolean;
   corNome?: string;
   corEtiqueta?: string;
@@ -37,7 +40,7 @@ export function Marca({
             : undefined
         }
       >
-        Tem
+        {etiqueta}
       </span>
     </span>
   );

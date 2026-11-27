@@ -19,12 +19,15 @@ Legenda: **[DECIDIDO]** regra confirmada · **[PROPOSTA]** usada no protótipo, 
 - **Categorias na demonstração:** Admin › Categorias permite criar, editar e excluir categorias e subcategorias. As alterações ficam no navegador, separadas por cidade, e aparecem no catálogo e no editor de produtos do mesmo navegador. Os identificadores existentes permanecem ao alterar o nome. A exclusão de itens vinculados a produtos ou lojas exige reclassificação prévia. Na versão real, o cadastro, a integridade das referências e a publicação devem ser gerenciados pela API e pelo banco.
 
 - Cada cidade é um **tenant** com: `slug`, `nome`, `marca`, `uf`, `cepPadrao`, `acento` (cor da etiqueta "Tem"), `associacao`, `slogan`, `cepsAtendidos` e domínio/subdomínio.
-- Iguais em todas as cidades: layout, tipografia, marinho, azul de ação, neutros, verde de "loja local", pesponto e etiqueta.
+- Iguais em todas as cidades: layout, tipografia, verde de "loja local", pesponto e o formato da etiqueta.
 - Muda por cidade: nome, cor do acento (tirada da bandeira da cidade), associação parceira, textos institucionais e base de CEPs.
+- **[DECIDIDO pelo PO 27/11/2026] Identidade visual por cidade:** nome do sistema, logo (texto + etiqueta) e paleta (marinho, azul de ação, fundos, bordas e neutros) vêm de uma identidade (`src/mocks/identidades.ts`). Hoje Cianorte se apresenta como **MKT Local**, marca genérica para investidores e sócios; a identidade **Cianorte Tem** aprovada pela cidade fica guardada para o lançamento (§13.20).
 - No front atual, essa configuração vem de `src/mocks/tenants.ts`, passa por `getTenant()` e pelo `TenantProvider`; o middleware resolve a cidade pelo domínio. No back-end, ela deve vir de `GET /v1/tenant` resolvido pelo domínio. `window.CITY` pertencia ao protótipo antigo.
 - Lojas, produtos, pedidos e anúncios sempre pertencem a um tenant. Nenhuma consulta cruza tenants.
 
 ## 3. Identidade visual (tokens)
+
+Valores da identidade **Cianorte Tem** (guardada para o lançamento; é também a paleta padrão do CSS). A identidade em uso hoje, **MKT Local**, está na §13.20.
 
 | Token | Hex | Uso |
 | --- | --- | --- |
@@ -580,7 +583,7 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 
 **Carregamento, erros e ambiente de desenvolvimento**
 
-- `src/components/ui/Carregando.tsx` exibe a marca da cidade no centro, pulsando suavemente sobre uma camada clara que desfoca a página. `role=status` e texto anunciam o carregamento; `prefers-reduced-motion` desativa a animação. É usado no fallback de rota `src/app/[tenant]/loading.tsx`, na hidratação do admin e do painel e na verificação da sessão do lojista. O `TenantProvider` no layout raiz fornece a marca também durante o fallback.
+- `src/components/ui/Carregando.tsx` exibe a marca da cidade no centro, pulsando suavemente sobre uma camada clara que desfoca a página. `role=status` e texto anunciam o carregamento; `prefers-reduced-motion` desativa a animação. É usado no fallback de rota (`loading.tsx` das seções busca, ofertas, categorias, lojas, painel e admin; ver §13.21), na hidratação do admin e do painel e na verificação da sessão do lojista. O `TenantProvider` no layout raiz fornece a marca também durante o fallback.
 - `src/app/[tenant]/error.tsx` apresenta uma mensagem e o botão “Tentar novamente” para erros capturados pelo limite de erro da rota. Isso não cobre todos os erros possíveis, inclusive falhas que ocorram antes da montagem do React.
 - A lentidão observada no Windows incluiu compilação na primeira visita pelo `next dev`, pouca memória livre e tentativas de rede para fontes. Houve também 404 de arquivos `/_next/static` quando duas instâncias de desenvolvimento disputaram a mesma pasta `.next`. Isso não prova que todos os problemas de desempenho ou recarga tenham a mesma causa.
 - O Playwright usa `NEXT_DIST_DIR=.next-e2e`; `npm run demo -- <porta>` usa `.next-demo-<porta>`. Não iniciar dois builds/servidores que escrevam na mesma pasta, nem ocupar a mesma porta. `EADDRINUSE` na porta 3000 indica outro processo escutando; identificar o processo antes de encerrá-lo. A demo otimizada ainda requer um build bem-sucedido; desde a correção em §13.17, as fontes do projeto não precisam ser baixadas durante o build.
@@ -627,6 +630,41 @@ O lojista vê um **mapa do site** com cada vaga, a situação dela (Livre, Em la
 - **Segurança (§15):** só as 4 telas de acesso com `?previa=1` podem ser abertas num iframe, e só pela própria origem (`X-Frame-Options: SAMEORIGIN` e `frame-ancestors 'self'`). Todo o resto continua com `DENY` / `'none'`.
 - O banner ligado mas fora do período aparece na prévia como fica hoje (oculto), com um aviso no editor.
 - **Testes:** Vitest (`previaAcesso.test.ts`) e Playwright (`e2e/configuracao-acesso-atributos.spec.ts`: abre o editor sem menu lateral e confere a prévia mudando antes de salvar).
+
+### 13.19 Destaque no painel do lojista e estado para continuar (27/11/2026)
+- **[DECIDIDO pelo PO]** Painel › Visão geral: o bloco "O que precisa da sua atenção" fica em destaque para não passar despercebido. Fundo `marinho-2` (o mesmo do topo das categorias), texto branco, pesponto, ícone de alerta em círculo na cor do acento, cada item com ícone em caixa clara e realce ao passar o mouse. Textos no singular quando o número é 1 ("1 pedido esperando separação"). Arquivo: `components/painel/TelasOperacao.tsx` (PR #7).
+
+**Estado do repositório para quem continuar (Claude ou Codex)**
+- O repositório de trabalho é **`AranhaLab/cianorte-tem`**. Tudo até o PR #7 está no `main` (PR #6: editor das telas de acesso; PR #7: destaque acima).
+- O remoto `origin` local ainda aponta para `ViniciusAranhaQA/cianorte-tem`, que **não existe mais** ("Repository not found"). Envie com `git push https://github.com/AranhaLab/cianorte-tem.git <branch>` ou ajuste o remoto.
+- O push usa a credencial salva no Gerenciador de Credenciais do Windows (conta com acesso à AranhaLab). Se ela sumir, abre uma janela de login do GitHub que o dono do projeto precisa concluir; rodar o push numa aba de terminal visível ajuda.
+- A conta do GitHub CLI (`gh`) desta máquina, `vinicius-aranha-tl`, **não é colaboradora** da AranhaLab: não consegue enviar nem abrir PR. O PR é aberto pelo link que o GitHub devolve no push.
+- Padrões: branch `<tipo>/<descricao-curta>` saindo do `main`; commit `#<descrição curta>`; título do PR `[<tipo>] - <Descrição>` (tipos `feat`, `fix` ou `bug`); nada de assinatura de IA em commits e PRs.
+- **Cuidado com o Prettier:** vários arquivos não estão formatados e usam fim de linha CRLF. Rodar `prettier --write` numa pasta inteira reformata arquivos que você não alterou; formate só os arquivos editados.
+- **Builds e testes:** `npm run demo -- <porta>` para apresentar (build em `.next-demo-<porta>`); Playwright usa `.next-e2e`. O build às vezes inclui as pastas `.next-*` no `tsconfig.json`; não comitar essa alteração.
+- **Teste intermitente conhecido:** em `e2e/configuracao-acesso-atributos.spec.ts`, "atributos e variações aprovados viram filtros da categoria" às vezes falha no celular (o clique em "Editar" do produto não abre o editor). Passa ao rodar de novo; a causa não foi investigada.
+
+### 13.20 Marca genérica MKT Local para apresentações (27/11/2026)
+- **[DECIDIDO pelo PO]** Para apresentar a investidores, sócios e clientes sem o nome da cidade, o sistema se chama **MKT Local** (MKT = marketplace). Mudam só o nome do sistema, o logo e as cores; produtos, lojas, fotos, categorias, anúncios e textos que citam Cianorte continuam iguais.
+- **Logo:** "MKT" + etiqueta vermelha "Local", no mesmo formato da etiqueta "Tem" (pesponto e bolinha). Assim a troca para "Cianorte Tem" mantém a referência visual.
+- **Paleta (opção A escolhida pelo PO):** chumbo no lugar do azul-marinho (cabeçalho, rodapé e títulos `#1E2125`), botões e links em chumbo (`#2B2F36`), fundos em cinza claro (`#F4F4F5`) e vermelho (`#C8102E`) só na etiqueta, nas ofertas e nos alertas. O verde de "loja local" e de sucesso continua.
+- **Como funciona:**
+    - `src/mocks/identidades.ts` guarda as identidades `cianorte-tem` (azul aprovado) e `mkt-local`, cada uma com marca, logo, acento e paleta.
+    - `src/mocks/tenants.ts` escolhe a identidade da cidade (`IDENTIDADE_CIANORTE`). **Para lançar em Cianorte, troque `'mkt-local'` por `'cianorte-tem'`**; nada mais muda.
+    - Os tokens `marinho`, `azul`, `linho`, `borda`, `sobre-marinho` e `neutro` do Tailwind viraram variáveis CSS (`--c-*`). A paleta de Cianorte entra no `:root` (padrão) e a da identidade da cidade é aplicada no `<html>` pelo layout, como o acento. Os nomes das classes não mudaram.
+    - `Marca` recebe `nome` e `etiqueta` de `tenant.logo`. O ícone do app (PWA), o manifest, a cor do tema do navegador e as cores iniciais das telas de acesso seguem a identidade.
+    - Maringá continua como "Maringá Tem", com a paleta padrão (placeholder).
+- **Atenção:**
+    - A foto de fundo do login mostra o site antigo, com "Cianorte Tem" escrito na tela do notebook. Para apresentar sem o nome da cidade, trocar a foto.
+    - Telas de acesso já personalizadas no admin guardaram as cores antigas no navegador; use "Restaurar padrão" no editor para pegar a paleta nova.
+    - O título das telas de acesso ainda diz "Tudo o que Cianorte tem" (texto da cidade, permitido pelo PO).
+
+### 13.21 "Não encontrado" volta a responder 404 (27/11/2026)
+- **Problema:** desde o commit 2920cea, um produto, categoria, loja ou aba de conta inexistente (e produto de outra cidade, como `/p/p1` em maringa.) mostrava a página "não encontrado" com status **200**. Isso quebrava o isolamento entre cidades (§13.3), o SEO e o teste "white label" de `e2e/compra.spec.ts`.
+- **Causa:** o `loading.tsx` na raiz da cidade (`src/app/[tenant]/loading.tsx`) colocava todas as páginas num carregamento progressivo; o Next enviava o status 200 antes de a página descobrir que não existia.
+- **Correção:** a tela de carregamento saiu da raiz e foi para as seções que nunca respondem "não encontrado": `(comprador)/busca`, `ofertas`, `categorias`, `lojas`, `painel` e `admin`.
+- **Regra:** não pôr `loading.tsx` na raiz da cidade nem acima de `p/[produto]`, `c/[categoria]`, `loja/[loja]` ou `conta/[aba]`. Produto e loja são ISR (abrem rápido) e a categoria é renderizada no servidor em cerca de 0,1 s.
+- A cor do tema do navegador (`theme-color`) da identidade vai como `<meta>` no layout da cidade, com `viewport` estático (sem `generateViewport` assíncrono, por precaução).
 
 ## 14. Infraestrutura **[DECIDIDO 18/11/2026]**
 

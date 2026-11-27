@@ -1,4 +1,13 @@
 import type { Tenant } from '@/types/domain';
+import { IDENTIDADES } from './identidades';
+
+/**
+ * Identidade visual de cada cidade. [DECIDIDO pelo PO 27/11/2026] Cianorte se
+ * apresenta como "MKT Local" (marca genérica para investidores e sócios). Para o
+ * lançamento na cidade, troque para 'cianorte-tem': a identidade aprovada continua
+ * guardada em identidades.ts. Produtos, lojas e textos da cidade não mudam.
+ */
+const IDENTIDADE_CIANORTE = IDENTIDADES['mkt-local']!;
 
 /**
  * Registro de cidades (mock de GET /v1/tenant).
@@ -9,10 +18,13 @@ export const TENANTS: Record<string, Tenant> = {
   cianorte: {
     slug: 'cianorte',
     nome: 'Cianorte',
-    marca: 'Cianorte Tem',
+    identidade: IDENTIDADE_CIANORTE.id,
+    marca: IDENTIDADE_CIANORTE.marca,
+    logo: IDENTIDADE_CIANORTE.logo,
+    paleta: { ...IDENTIDADE_CIANORTE.paleta },
     uf: 'PR',
     cepPadrao: '87200-000',
-    acento: '#D7263D',
+    acento: IDENTIDADE_CIANORTE.acento,
     associacao: 'ACIC',
     slogan: 'Tudo o que a cidade tem, num lugar só.',
     fundoAcesso: {
@@ -31,6 +43,7 @@ export const TENANTS: Record<string, Tenant> = {
     slug: 'maringa',
     nome: 'Maringá',
     marca: 'Maringá Tem',
+    logo: { nome: 'Maringá', etiqueta: 'Tem' },
     uf: 'PR',
     cepPadrao: '87000-000',
     acento: '#1F7A3F',

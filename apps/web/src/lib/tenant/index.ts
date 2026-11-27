@@ -14,11 +14,15 @@ export async function getTenant(slug: string): Promise<Tenant> {
   return tenant;
 }
 
-/** Variáveis CSS do acento da cidade, aplicadas no <html> pelo layout do tenant. */
+/** Variáveis CSS do acento e da paleta da cidade, aplicadas no <html> pelo layout do tenant. */
 export function tenantCssVars(t: Tenant): Record<string, string> {
   return {
     '--acento-rgb': hexToRgbTriplet(t.acento),
     '--acento-escuro-rgb': mixRgb(t.acento, 'preto', 0.22),
     '--acento-claro-rgb': mixRgb(t.acento, 'branco', 0.9),
+    // Cores da marca da identidade da cidade (sem paleta, vale a padrão do :root)
+    ...Object.fromEntries(
+      Object.entries(t.paleta ?? {}).flatMap(([chave, hex]) => (hex ? [[`--c-${chave}`, hexToRgbTriplet(hex)]] : [])),
+    ),
   };
 }

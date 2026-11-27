@@ -112,7 +112,8 @@ export function FundoAcesso({
           <div className="flex items-center justify-between gap-3">
             <Link href="/" aria-label={`${tenant.marca} — voltar à página inicial`}>
               <Marca
-                nome={tenant.nome}
+                nome={tenant.logo.nome}
+                etiqueta={tenant.logo.etiqueta}
                 corNome={config?.corMarca}
                 corEtiqueta={config?.corEtiqueta}
                 corTextoEtiqueta={config?.corTextoEtiqueta}

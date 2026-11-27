@@ -40,7 +40,7 @@ export function MenuAdmin() {
       <div className="flex items-center justify-between gap-3">
         <span className="flex shrink-0 flex-col gap-0.5 px-1.5">
           <Link href="/" aria-label={`${tenant.marca} — marketplace`}>
-            <Marca nome={tenant.nome} escura />
+            <Marca nome={tenant.logo.nome} etiqueta={tenant.logo.etiqueta} escura />
           </Link>
           <span className="text-xs text-grafite-2">Administração da plataforma</span>
         </span>

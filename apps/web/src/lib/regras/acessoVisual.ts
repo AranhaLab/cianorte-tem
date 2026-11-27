@@ -3,20 +3,22 @@ import type { ConfigAcesso, TelaAcesso } from '@/stores/acessoVisual';
 
 /* eslint-disable no-restricted-syntax -- Valores iniciais do cadastro de cores, editáveis pelo administrador. */
 export function padraoAcesso(t: Tenant, tela: TelaAcesso): ConfigAcesso {
+  // Cores iniciais = paleta da identidade da cidade (padrão: a de Cianorte).
+  const p = (chave: string, padrao: string) => t.paleta?.[chave] ?? padrao;
   const comum = {
     fundo: t.fundoAcesso?.src ?? '',
-    corFundo: '#14213D',
+    corFundo: p('marinho', '#14213D'),
     corTexto: '#FFFFFF',
     corMarca: '#FFFFFF',
     corEtiqueta: t.acento,
     corTextoEtiqueta: '#FFFFFF',
-    corDestaque: '#8FB0EA',
-    corCartoes: '#14213D',
+    corDestaque: p('azul-claro', '#8FB0EA'),
+    corCartoes: p('marinho', '#14213D'),
     corFormulario: '#FFFFFF',
     corTextoFormulario: '#1A1F2B',
-    corBotao: '#1F4FA3',
+    corBotao: p('azul', '#1F4FA3'),
     corTextoBotao: '#FFFFFF',
-    corLinks: '#1F4FA3',
+    corLinks: p('azul', '#1F4FA3'),
     opacidade: 65,
     mostrarConteudoMobile: false,
     tituloFormulario: '',

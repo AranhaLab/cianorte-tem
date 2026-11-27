@@ -46,7 +46,7 @@ export function Cabecalho({
       <header className="sticky top-0 z-30 bg-marinho text-branco">
         <div className="mx-auto flex max-w-container flex-wrap items-center gap-3 px-4 py-2.5 lg:flex-nowrap lg:gap-5 lg:px-6 lg:py-3">
           <Link href="/" aria-label={`${tenant.marca} — início`} className="inline-flex items-center py-1">
-            <Marca nome={tenant.nome} />
+            <Marca nome={tenant.logo.nome} etiqueta={tenant.logo.etiqueta} />
           </Link>
           <BotaoCep />
           <Busca cidade={tenant.nome} />

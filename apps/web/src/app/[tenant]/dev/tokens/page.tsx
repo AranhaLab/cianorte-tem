@@ -47,10 +47,10 @@ export default async function Tokens({ params }: { params: Promise<{ tenant: str
         <h2>Marca</h2>
         <div className="flex flex-wrap items-center gap-6">
           <div className="rounded-lg bg-marinho px-6 py-5">
-            <Marca nome={t.nome} />
+            <Marca nome={t.logo.nome} etiqueta={t.logo.etiqueta} />
           </div>
           <div className="rounded-lg border border-borda bg-branco px-6 py-5">
-            <Marca nome={t.nome} escura />
+            <Marca nome={t.logo.nome} etiqueta={t.logo.etiqueta} escura />
           </div>
         </div>
         <p className="m-0 text-sm text-grafite-2">

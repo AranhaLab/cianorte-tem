@@ -14,7 +14,13 @@ export type Centavos = number;
 export interface Tenant {
   slug: string; // 'cianorte'
   nome: string; // 'Cianorte'
-  marca: string; // 'Cianorte Tem'
+  marca: string; // nome do sistema: 'Cianorte Tem' ou, na apresentação, 'MKT Local'
+  /** Logo: texto + etiqueta de roupa (ex.: Cianorte + Tem, MKT + Local). */
+  logo: { nome: string; etiqueta: string };
+  /** Cores da marca desta cidade (variáveis --c-*); sem elas, vale a paleta padrão. */
+  paleta?: Partial<Record<string, string>>;
+  /** Identidade visual em uso (src/mocks/identidades.ts). */
+  identidade?: string;
   uf: string;
   cepPadrao: string; // '87200-000'
   acento: string; // hex da etiqueta "Tem" (bandeira da cidade)

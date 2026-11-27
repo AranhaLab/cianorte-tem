@@ -196,7 +196,7 @@ function Editor({ telaInicial }: { telaInicial: TelaAcesso }) {
           Voltar ao admin
         </Link>
         <span className="hidden items-center gap-2 3xl:flex">
-          <Marca nome={tenant.nome} escura />
+          <Marca nome={tenant.logo.nome} etiqueta={tenant.logo.etiqueta} escura />
           <span className="text-sm text-grafite-2">Editor da tela de acesso</span>
         </span>
         <label className="flex min-w-0 items-center gap-2 text-sm font-semibold">

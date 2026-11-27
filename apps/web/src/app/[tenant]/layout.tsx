@@ -1,3 +1,4 @@
+import { PALETA_PADRAO } from '@/mocks/identidades';
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import type { CSSProperties, ReactNode } from 'react';
@@ -69,11 +70,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
+// Viewport estático: um generateViewport assíncrono faz o Next enviar a página antes de
+// saber se ela existe, e o "não encontrado" passa a responder 200 em vez de 404.
+// A cor do tema (theme-color) vai como <meta> no layout, com a cor da identidade.
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#14213D', // eslint-disable-line no-restricted-syntax -- meta exige hex; = token marinho
 };
 
 export default async function TenantRootLayout({ children, params }: Params & { children: ReactNode }) {
@@ -94,6 +97,8 @@ export default async function TenantRootLayout({ children, params }: Params & { 
         </head>
       )}
       <body suppressHydrationWarning>
+        {/* Cor da barra do navegador = cabeçalho (token marinho) da identidade; o React leva ao <head>. */}
+        <meta name="theme-color" content={t.paleta?.marinho ?? PALETA_PADRAO.marinho} />
         <TenantProvider tenant={t}>{children}</TenantProvider>
         <RegistrarSW />
       </body>

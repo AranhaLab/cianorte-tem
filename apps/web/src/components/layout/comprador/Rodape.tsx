@@ -36,7 +36,7 @@ export function Rodape({ tenant }: { tenant: Tenant }) {
     <footer className="mt-10 bg-marinho pb-7 pt-8 text-[13px] text-sobre-marinho">
       <div className="mx-auto grid max-w-container grid-cols-2 gap-5 px-4 lg:grid-cols-[2fr_1fr_1fr_1fr]">
         <div className="col-span-2 flex flex-col gap-3 lg:col-span-1">
-          <Marca nome={tenant.nome} />
+          <Marca nome={tenant.logo.nome} etiqueta={tenant.logo.etiqueta} />
           <span>
             {tenant.slogan} Marketplace regional com lojas de {tenant.nome} e região, em parceria com a{' '}
             {tenant.associacao}.

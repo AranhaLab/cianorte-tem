@@ -2,11 +2,11 @@ import { ImageResponse } from 'next/og';
 import { monograma, tenantDoHost } from '@/lib/tenant/doHost';
 
 /**
- * Ícones do app por cidade (mesmo desenho do protótipo: monograma + etiqueta "Tem"
- * com pesponto, na cor da bandeira da cidade).
+ * Ícones do app por cidade (mesmo desenho do protótipo: sigla + etiqueta da marca
+ * com pesponto, nas cores da identidade da cidade: "CT" + "Tem" ou "MKT" + "Local").
  *   /icons/icon.svg  /icons/192.png  /icons/512.png  /icons/maskable-512.png  /icons/apple-180.png
  */
-const MARINHO = '#14213D';
+const MARINHO_PADRAO = '#14213D';
 const BRANCO = '#FFFFFF';
 
 const PNG: Record<string, { lado: number; maskable?: boolean }> = {
@@ -16,19 +16,26 @@ const PNG: Record<string, { lado: number; maskable?: boolean }> = {
   'apple-180.png': { lado: 180, maskable: true }, // iOS arredonda sozinho: fundo cheio
 };
 
-function svg(sigla: string, acento: string) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="${MARINHO}"/><text x="256" y="236" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-weight="800" font-size="120" fill="${BRANCO}">${sigla}</text><g transform="translate(136 280)"><rect width="240" height="110" rx="22" fill="${acento}"/><rect x="10" y="10" width="220" height="90" rx="14" fill="none" stroke="${BRANCO}" stroke-opacity=".6" stroke-width="4" stroke-dasharray="12 10"/><circle cx="44" cy="55" r="12" fill="${MARINHO}"/><text x="140" y="78" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-weight="700" font-size="64" fill="${BRANCO}">Tem</text></g></svg>`;
+function svg(sigla: string, acento: string, etiqueta: string, MARINHO: string) {
+  // Etiqueta mais longa ("Local") ganha caixa mais larga e letra menor.
+  const larga = etiqueta.length > 3;
+  const w = larga ? 300 : 240;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="${MARINHO}"/><text x="256" y="236" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-weight="800" font-size="120" fill="${BRANCO}">${sigla}</text><g transform="translate(${(512 - w) / 2} 280)"><rect width="${w}" height="110" rx="22" fill="${acento}"/><rect x="10" y="10" width="${w - 20}" height="90" rx="14" fill="none" stroke="${BRANCO}" stroke-opacity=".6" stroke-width="4" stroke-dasharray="12 10"/><circle cx="44" cy="55" r="12" fill="${MARINHO}"/><text x="${(w + 50) / 2}" y="${larga ? 74 : 78}" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-weight="700" font-size="${larga ? 54 : 64}" fill="${BRANCO}">${etiqueta}</text></g></svg>`;
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ arquivo: string }> }) {
   const { arquivo } = await params;
   const t = tenantDoHost(req.headers.get('host'));
   if (!t) return new Response('Cidade não encontrada', { status: 404 });
-  const sigla = monograma(t.marca);
+  // Logo curto (ex.: "MKT") vira a própria sigla; nome de cidade vira monograma ("CT").
+  const sigla = t.logo.nome.length <= 3 ? t.logo.nome : monograma(t.marca);
+  const etiqueta = t.logo.etiqueta;
+  const MARINHO = t.paleta?.marinho ?? MARINHO_PADRAO;
+  const larga = etiqueta.length > 3;
   const cache = { 'Cache-Control': 'public, max-age=86400', Vary: 'Host' };
 
   if (arquivo === 'icon.svg')
-    return new Response(svg(sigla, t.acento), { headers: { 'Content-Type': 'image/svg+xml', ...cache } });
+    return new Response(svg(sigla, t.acento, etiqueta, MARINHO), { headers: { 'Content-Type': 'image/svg+xml', ...cache } });
 
   const cfg = PNG[arquivo];
   if (!cfg) return new Response('Não encontrado', { status: 404 });
@@ -82,7 +89,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ arquivo:
               background: MARINHO,
             }}
           />
-          <div style={{ color: BRANCO, fontSize: 64 * k * escala, fontWeight: 700, lineHeight: 1 }}>Tem</div>
+          <div style={{ color: BRANCO, fontSize: (larga ? 54 : 64) * k * escala, fontWeight: 700, lineHeight: 1 }}>
+            {etiqueta}
+          </div>
         </div>
       </div>
     </div>,

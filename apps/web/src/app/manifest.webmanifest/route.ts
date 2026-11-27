@@ -2,7 +2,7 @@ import { tenantDoHost } from '@/lib/tenant/doHost';
 
 /**
  * Manifest do PWA por cidade: nome, ícones e cor vêm do tenant resolvido pelo host.
- * "Adicionar à tela inicial" em cianorte.* instala "Cianorte Tem"; em maringa.*, "Maringá Tem".
+ * "Adicionar à tela inicial" instala com o nome da identidade da cidade (ex.: "MKT Local").
  */
 export function GET(req: Request) {
   const t = tenantDoHost(req.headers.get('host'));
@@ -18,8 +18,8 @@ export function GET(req: Request) {
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#F7F6F2', // token linho
-    theme_color: '#14213D', // token marinho
+    background_color: t.paleta?.linho ?? '#F7F6F2', // token linho da identidade
+    theme_color: t.paleta?.marinho ?? '#14213D', // token marinho da identidade
     categories: ['shopping'],
     icons: [
       { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
